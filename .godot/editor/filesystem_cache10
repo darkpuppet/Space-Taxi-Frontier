@@ -1,0 +1,8 @@
+78098b89c88a74ebe8c20117b8754620
+::res://::1793472169
+Main.tscn::PackedScene::-1::1793472027::0::1::::<><><>0<>0<><>::res://scripts/main.gd
+README.md::TextFile::-1::1793472027::0::1::::<><><>0<>0<><>::
+Taxi.tscn::PackedScene::-1::1793472027::0::1::::<><><>0<>0<><>::res://scripts/taxi.gd
+::res://scripts/::1793472027
+main.gd::GDScript::1203746411158718196::1793472027::0::1::::<>Node2D<><>0<>0<><>::
+taxi.gd::GDScript::801940138816082753::1793472027::0::1::::<>CharacterBody2D<><>0<>0<><>::
