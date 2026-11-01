@@ -1,12 +1,13 @@
 extends RefCounted
 ## Waiting riders have independent patience. Dispatch never creates a rider at
-## the occupied/last-landed pad or at an existing rider's destination.
+## service platforms, the occupied/last-landed pad, or assigned destinations.
 var waiting: Array[Dictionary] = []
 var active: Dictionary = {}
 var pads: Array = []
 var level: int = 0
 var serial: int = 0
 var missed: int = 0
+var killed: int = 0
 var spawn_clock: float = 0.0
 var max_waiting: int = 1
 
@@ -17,6 +18,7 @@ func configure(index: int, terminals: Array) -> void:
     active.clear()
     serial = 0
     missed = 0
+    killed = 0
     spawn_clock = 0.0
     max_waiting = 2 if level >= 2 else 1
 
@@ -37,7 +39,7 @@ func refill(excluded_pad: int, position: Vector2) -> void:
         var candidates: Array[int] = []
         for pad in pads:
             var id: int = int(pad["id"])
-            if id == excluded_pad or _contains_source(id):
+            if not pad.get("services", []).is_empty() or id == excluded_pad or _contains_source(id):
                 continue
             if not active.is_empty() and id == int(active["destination"]):
                 continue
@@ -60,13 +62,13 @@ func refill(excluded_pad: int, position: Vector2) -> void:
         var destinations: Array[int] = []
         for pad in pads:
             var id: int = int(pad["id"])
-            if id != origin and not _contains_source(id):
+            if pad.get("services", []).is_empty() and id != origin and not _contains_source(id):
                 destinations.append(id)
+        if destinations.is_empty():
+            return
         var destination: int = destinations[0]
         if level < 2:
-            destination = 3 if origin == 2 and serial % 2 == 0 else 1
-            if destination == origin:
-                destination = 2
+            destination = destinations[serial % mini(2, destinations.size())]
         else:
             destination = destinations[(serial + level + 1) % destinations.size()]
         serial += 1
@@ -89,6 +91,15 @@ func tick(dt: float, excluded_pad: int, position: Vector2) -> Array[int]:
         spawn_clock = 0.0
         refill(excluded_pad, position)
     return departed
+
+func kill(fare_id: int) -> bool:
+    for index in range(waiting.size()):
+        if int(waiting[index]["id"]) == fare_id:
+            waiting.remove_at(index)
+            killed += 1
+            spawn_clock = 0.0
+            return true
+    return false
 
 func board(pad_id: int) -> bool:
     if not active.is_empty():

@@ -1,7 +1,9 @@
 extends CharacterBody2D
 const SPRITES = preload("res://scripts/sprites.gd")
+const ART = preload("res://scripts/game_art.gd")
 
 signal landed(pad_id: int)
+signal flight_motion(start: Vector2, finish: Vector2)
 signal damaged(amount: float)
 signal black_hole_entered(center: Vector2)
 signal black_hole_lost
@@ -77,12 +79,24 @@ func _physics_process(dt: float) -> void:
     if landed_on != -1:
         engine_on = false
         thrust_level = 0.0
-        velocity = Vector2.ZERO
-        if up and fuel > 0.0:
+        var dock: Dictionary = {}
+        for pad in pads:
+            if int(pad["id"]) == landed_on:
+                dock = pad
+                break
+        if not dock.is_empty():
+            var dock_response: float = 600.0
+            velocity.x = move_toward(velocity.x, axis * 105.0, dock_response * dt)
+            global_position.x += velocity.x * dt
+        if dock.is_empty() or support_fraction(dock, global_position.x) <= 0.5:
+            landed_on = -1
+            velocity.y = 0
+        elif up and fuel > 0.0:
             landed_on = -1
             global_position.y -= 7.0
             velocity.y = -75.0
         else:
+            velocity.y = 0
             queue_redraw()
             return
     var old_pos: Vector2 = global_position
@@ -128,18 +142,28 @@ func _physics_process(dt: float) -> void:
             var damage: float = impact_damage(float(collision["speed"]))
             if damage > 0:
                 _take_damage(damage, str(collision["name"]))
+    flight_motion.emit(old_pos, global_position)
     # Pads are one-way surfaces. Detect crossing from above; a generous landing
     # corridor and auto-stabilization replace the previous collision lottery.
     if velocity.y >= -5.0 and bounce_timer <= 0.0:
         for pad in pads:
             var pad_x: float = float(pad["x"])
             var pad_y: float = float(pad["y"])
-            var pad_width: float = float(pad["width"])
             var surface: float = pad_y - 21.0
             var crossing: bool = old_pos.y <= surface + 0.01 and global_position.y >= surface
             var fraction: float = clampf((surface - old_pos.y) / maxf(global_position.y - old_pos.y, 0.001), 0.0, 1.0)
             var touchdown_x: float = lerpf(old_pos.x, global_position.x, fraction)
-            if crossing and absf(touchdown_x - pad_x) <= pad_width * 0.5 - 35.0:
+            var support: float = support_fraction(pad, touchdown_x)
+            if crossing and support > 0 and support <= 0.5:
+                # An unsupported craft slides across the top corner, then drops.
+                # Keeping its bottom on the surface prevents tunnelling into the deck.
+                global_position.y = surface
+                velocity.x = signf(touchdown_x - pad_x) * maxf(absf(velocity.x), 75.0)
+                velocity.y = 0
+                _take_damage(impact_damage(maxf(0, (global_position.y - old_pos.y) / dt)), "PLATFORM EDGE")
+                queue_redraw()
+                return
+            if crossing and support > 0.5:
                 global_position.x = touchdown_x
                 global_position.y = surface
                 if absf(velocity.x) <= landing_horizontal + stabilizer_level * 20.0 and velocity.y <= landing_vertical + stabilizer_level * 18.0:
@@ -180,6 +204,13 @@ func _physics_process(dt: float) -> void:
             _take_damage(impact_damage(ground_speed), "GROUND STRIKE")
             bounce_timer = 0.65
     queue_redraw()
+
+func support_fraction(pad: Dictionary, craft_x: float) -> float:
+    if pad.is_empty():
+        return 0.0
+    var left: float = float(pad["x"]) - float(pad["width"]) * 0.5
+    var right: float = float(pad["x"]) + float(pad["width"]) * 0.5
+    return maxf(0, minf(craft_x + 37.0, right) - maxf(craft_x - 37.0, left)) / 74.0
 
 func impact_damage(speed: float) -> float:
     return ceilf(clampf((speed - 45.0) * 0.09, 0.0, 45.0))
@@ -277,39 +308,6 @@ func _update_damage_smoke(dt: float) -> void:
             "radius": lerpf(3.0, 6.5, severity), "severity": severity
         })
 
-func _draw_hull_damage() -> void:
-    var stage: int = damage_stage()
-    if stage == 0:
-        return
-    # Marks stay in sprite coordinates so they turn and bank with the body.
-    draw_ellipse_scorch(Vector2(-23, 3), Vector2(8, 5), Color(0.14, 0.1, 0.08, 0.28 + stage * 0.09))
-    draw_polyline(PackedVector2Array([Vector2(-30, 5), Vector2(-24, 8), Vector2(-18, 5)]), Color("5c4840"), 1.5, true)
-    draw_line(Vector2(-29, 10), Vector2(-20, 11), Color("a2acaf"), 1, true)
-    if stage >= 2:
-        draw_ellipse_scorch(Vector2(17, 10), Vector2(10, 4), Color(0.1, 0.12, 0.14, 0.48))
-        draw_polyline(PackedVector2Array([Vector2(8, 9), Vector2(12, 12), Vector2(18, 8), Vector2(25, 11)]), Color("4b3430"), 2, true)
-        draw_line(Vector2(-32, -3), Vector2(-21, 0), Color("211c1a"), 2, true)
-    if stage >= 3:
-        draw_polyline(PackedVector2Array([Vector2(12, -9), Vector2(7, -4), Vector2(14, -1), Vector2(9, 4)]), Color("b6e6e5"), 1, true)
-        draw_line(Vector2(7, -4), Vector2(2, -6), Color("b6e6e5"), 1, true)
-        draw_line(Vector2(-31, 15), Vector2(-13, 17), Color("3e3837"), 3, true)
-        draw_circle(Vector2(-25, 1), 3.0, Color(1, 0.25, 0.04, 0.25 + sin(visual_time * 19) * 0.12))
-    if stage >= 4:
-        var flicker: float = 0.6 + sin(visual_time * 28) * 0.35
-        draw_circle(Vector2(-25, -2), 5, Color(1, 0.3, 0.03, flicker * 0.3))
-        draw_circle(Vector2(-25, -2), 2, Color(1, 0.75, 0.2, flicker))
-        for index in range(3):
-            var t: float = fposmod(visual_time * 2.5 + index * 0.33, 1.0)
-            var start := Vector2(-25 - t * 10, -2 - t * 14)
-            draw_line(start, start + Vector2(-2, -3), Color(1, 0.7, 0.1, 1.0 - t), 1, true)
-
-func draw_ellipse_scorch(center: Vector2, radius: Vector2, color: Color) -> void:
-    var points := PackedVector2Array()
-    for index in range(20):
-        var angle: float = float(index) / 20.0 * TAU
-        points.append(center + Vector2(cos(angle), sin(angle)) * radius)
-    draw_colored_polygon(points, color)
-
 func _draw() -> void:
     for particle in damage_smoke:
         var progress: float = 1.0 - float(particle["life"]) / float(particle["lifetime"])
@@ -318,20 +316,23 @@ func _draw() -> void:
         var shade: float = lerpf(0.62, 0.19, severity)
         var radius: float = float(particle["radius"]) * (0.6 + progress * 2.7)
         var center: Vector2 = to_local(particle["position"])
-        draw_circle(center, radius, Color(shade, shade + 0.025, shade + 0.04, opacity * 0.65))
-        draw_circle(center + Vector2(-radius * 0.25, -radius * 0.2), radius * 0.65, Color(shade + 0.1, shade + 0.12, shade + 0.14, opacity * 0.2))
+        ART.effect(self, ART.Effect.SMOKE, Rect2(center - Vector2.ONE * radius, Vector2.ONE * radius * 2), Color(shade, shade + 0.025, shade + 0.04, opacity * 0.8))
     for particle in exhaust:
         var life: float = float(particle["life"]) / 0.45
-        draw_circle(particle["position"] - global_position, 2.5 * life, Color(0.38, 0.85, 1.0, life * 0.4))
+        ART.effect(self, ART.Effect.SPARK, Rect2(Vector2(particle["position"]) - global_position - Vector2.ONE * 3, Vector2.ONE * 6), Color(0.38, 0.85, 1.0, life * 0.4))
     draw_set_transform(Vector2.ZERO, visual_tilt, Vector2(facing, 1))
     if engine_on:
         var flame: float = 32.0 + sin(visual_time * 63) * 6.0
         for x in [-14, 14]:
-            draw_circle(Vector2(x, 19), 17, Color(0.2, 0.7, 1.0, 0.06))
-            draw_colored_polygon(PackedVector2Array([Vector2(x - 6, 13), Vector2(x + 6, 13), Vector2(x, flame)]), Color("4fbae5"))
-            draw_colored_polygon(PackedVector2Array([Vector2(x - 3, 13), Vector2(x + 3, 13), Vector2(x, flame - 7)]), Color("d5fbff"))
+            ART.effect(self, ART.Effect.GLOW, Rect2(x - 17, 2, 34, 34), Color(0.2, 0.7, 1.0, 0.15))
+            ART.effect(self, ART.Effect.THRUSTER, Rect2(x - 6, 13, 12, flame - 13))
     var sprite: int = 1 if Input.is_action_pressed("brake") and fuel > 0 and not input_locked else 0
-    SPRITES.ship(self, sprite, Rect2(-37, -18, 74, 39))
-    _draw_hull_damage()
+    var stage: int = damage_stage()
+    if stage == 0:
+        SPRITES.ship(self, sprite, Rect2(-37, -18, 74, 39))
+    else:
+        draw_texture_rect(ART.damage_texture(stage, sprite == 1), Rect2(-37, -18, 74, 39), false)
+    if stage >= 4:
+        ART.effect(self, ART.Effect.EMBER, Rect2(-29, -10, 8, 14), Color(1, 1, 1, 0.6 + sin(visual_time * 28) * 0.3))
     if invulnerable_timer > 0.0:
-        draw_arc(Vector2.ZERO, 41, 0, TAU, 40, Color(1.0, 0.35, 0.18, invulnerable_timer * 0.7), 2.0, true)
+        ART.effect(self, ART.Effect.RING, Rect2(-41, -41, 82, 82), Color(1.0, 0.35, 0.18, invulnerable_timer * 0.7))

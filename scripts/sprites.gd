@@ -77,3 +77,31 @@ static func walking_rider(canvas: CanvasItem, foot: Vector2, variant: int, clock
     canvas.draw_set_transform(foot, 0, Vector2(-1 if direction < 0 else 1, 1))
     canvas.draw_texture_rect(texture, Rect2(Vector2(-size.x * 0.5, -size.y), size), false)
     canvas.draw_set_transform(Vector2.ZERO)
+
+## Two toe taps followed by a brief impatient pause. Only the boot pivots;
+## the passenger's body and supporting foot remain anchored to the platform.
+static func foot_tap_angle(clock: float) -> float:
+    var phase: float = fposmod(clock, 1.05)
+    if phase >= 0.42:
+        return 0.0
+    return -0.28 * absf(sin(phase * PI / 0.21))
+
+static func impatient_rider(canvas: CanvasItem, foot: Vector2, variant: int, clock: float) -> void:
+    _ensure()
+    var first: int = 4 + posmod(variant, 3) * 4
+    var texture: Texture2D = frames[first + 3]
+    var pixels: Vector2 = texture.get_size()
+    var scale: float = 42.0 / frames[first].get_height()
+    var size: Vector2 = pixels * scale
+    var origin: Vector2 = foot - Vector2(size.x * 0.5, size.y)
+    var boot_x: float = floorf(pixels.x * 0.55)
+    var boot_y: float = floorf(pixels.y * 0.84)
+    # Draw the upper body and supporting boot from the original impatient pose.
+    canvas.draw_texture_rect_region(texture, Rect2(origin, Vector2(size.x, boot_y * scale)), Rect2(0, 0, pixels.x, boot_y))
+    canvas.draw_texture_rect_region(texture, Rect2(origin + Vector2(0, boot_y * scale), Vector2(boot_x, pixels.y - boot_y) * scale), Rect2(0, boot_y, boot_x, pixels.y - boot_y))
+    # Pivot at the cuff so the boot stays attached as its toe rises.
+    var ankle: Vector2 = origin + Vector2(boot_x, boot_y) * scale
+    var boot_size: Vector2 = Vector2(pixels.x - boot_x, pixels.y - boot_y) * scale
+    canvas.draw_set_transform(ankle, foot_tap_angle(clock))
+    canvas.draw_texture_rect_region(texture, Rect2(Vector2.ZERO, boot_size), Rect2(boot_x, boot_y, pixels.x - boot_x, pixels.y - boot_y))
+    canvas.draw_set_transform(Vector2.ZERO)

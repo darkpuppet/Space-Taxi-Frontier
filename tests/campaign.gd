@@ -58,7 +58,7 @@ func _run() -> void:
         previous = config
         check(game.sector.aliens.size() == config["aliens"] and game.sector.holes.size() == config["holes"], "Configured hazards spawned")
         for pad in game.pads:
-            check(float(pad["y"]) > 300 and float(pad["y"]) < 1360 and float(pad["width"]) >= 170, "Pad remains reachable with full craft clearance")
+            check(float(pad["y"]) > 300 and float(pad["y"]) < 1360 and float(pad["width"]) >= 105, "Pad remains reachable with full craft clearance")
         for x in range(50, 2400, 85):
             for y in range(150, 1360, 85):
                 var field: Vector2 = game.sector.field_at(Vector2(x, y))
@@ -148,10 +148,10 @@ func _run() -> void:
     taxi.bounce_timer = 0
     taxi._physics_process(1.0 / 60)
     check(taxi.landed_on == -1, "Cannot snap onto a pad from underneath")
-    taxi.position = Vector2(pad["x"] + pad["width"] * 0.5 - 20, pad["y"] - 23)
+    taxi.position = Vector2(pad["x"] + pad["width"] * 0.5 + 2, pad["y"] - 23)
     taxi.velocity = Vector2(0, 130)
     taxi._physics_process(1.0 / 60)
-    check(taxi.landed_on == -1, "Taxi cannot land with half its hull hanging over an edge")
+    check(taxi.landed_on == -1, "Taxi cannot dock when most of its hull hangs past an edge")
     taxi.position = Vector2(400, 100)
     taxi.velocity = Vector2(0, 130)
     taxi.fuel = 100

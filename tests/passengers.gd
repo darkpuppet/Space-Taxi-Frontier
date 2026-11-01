@@ -23,6 +23,33 @@ func _run() -> void:
             check(fare["source"] != 1 and fare["source"] != fare["destination"], "Riders never spawn on the taxi pad or request the same destination")
             for other in dispatch.waiting:
                 check(fare["destination"] != other["source"], "Dropoff pads have no waiting rider ready for an instant next trip")
+    # Repeated mission completion and expiry must never put fares on service pads.
+    for level in range(20):
+        var terminals: Array = CAMPAIGN.pads_for(level)
+        dispatch.configure(level, terminals)
+        var excluded: int = 1
+        for trip in range(24):
+            dispatch.refill(excluded, Vector2(terminals[excluded - 1]["x"], terminals[excluded - 1]["y"]))
+            check(not dispatch.waiting.is_empty(), "Terminal-only dispatch remains available throughout the campaign")
+            for rider in dispatch.waiting:
+                check(terminals[int(rider["source"]) - 1]["services"].is_empty() and terminals[int(rider["destination"]) - 1]["services"].is_empty(), "New and replacement fares use terminal platforms only")
+            if trip % 3 == 0:
+                dispatch.tick(100, excluded, Vector2.ZERO)
+                dispatch.tick(4.1, excluded, Vector2.ZERO)
+            else:
+                var rider: Dictionary = dispatch.waiting[0]
+                excluded = int(rider["destination"])
+                dispatch.board(int(rider["source"]))
+                dispatch.finish()
+    var service_fixture: Array = CAMPAIGN.pads_for(0)
+    service_fixture[1]["services"] = ["fuel"]
+    service_fixture[3]["services"] = ["repair"]
+    dispatch.configure(2, service_fixture)
+    for trip in range(12):
+        dispatch.refill(1, Vector2.ZERO)
+        for rider in dispatch.waiting:
+            check(int(rider["source"]) not in [2, 4] and int(rider["destination"]) not in [2, 4], "Separate fuel-only and repair-only pads are excluded from fares")
+        dispatch.tick(100, 1, Vector2.ZERO)
     dispatch.configure(2, CAMPAIGN.pads_for(2))
     dispatch.refill(1, Vector2(240, 569))
     var chosen: Dictionary = dispatch.waiting[1].duplicate(true)
@@ -45,10 +72,14 @@ func _run() -> void:
     game.taxi.set_physics_process(false)
     game.sector.set_physics_process(false)
     var patience: float = game.dispatcher.waiting[0]["patience"]
+    var animation_clock: float = game.pulse
     game._show_pause()
     game._process(10)
     check(game.dispatcher.waiting[0]["patience"] == patience, "Pausing freezes rider patience")
+    check(game.pulse == animation_clock, "Pausing freezes impatient foot tapping")
     game._resume()
+    game._process(0.1)
+    check(game.pulse > animation_clock, "Resuming advances the passenger animation clock")
     # Test movement independently of the dispatcher recommendation and boarding timer.
     game.level = 2
     game._start_level()
@@ -114,6 +145,17 @@ func _run() -> void:
         if index < 2:
             check(not game.gate_active and game.source_pad != destination, "Next rider requires a different pickup and gate remains closed")
     check(game.gate_active and game.mission_done and game.level == 0, "Last fare opens the star gate without advancing automatically")
+    check(is_instance_valid(game.gate_fx) and game.gate_fx.position == game.gate_position, "Particle gate is placed at the actual randomized exit")
+    var mote: Vector2 = game.gate_fx.vortex_point(17)
+    game._process(0.25)
+    check(game.gate_fx.vortex_point(17).distance_to(mote) > 1, "Vortex particles move while the gate is active")
+    for particle in range(game.gate_fx.VORTEX_COUNT):
+        check(game.gate_fx.vortex_point(particle).length() <= 103, "Vortex particles stay within their bounded visual field")
+    var gate_age: float = game.gate_fx.age
+    game._show_pause()
+    game._process(1)
+    check(game.gate_fx.age == gate_age, "Pause freezes gate particle animation")
+    game._resume()
     game.taxi.position = game.gate_position
     game.taxi.landed_on = 1
     game._process(0.1)
@@ -121,6 +163,9 @@ func _run() -> void:
     game.taxi.landed_on = -1
     game._process(0.1)
     check(game.level == 1 and not game.gate_active, "Flying through the gate advances and closes it in the new level")
+    check(game.gate_fx == null and game.gate_warp.age < game.gate_warp.DURATION, "Entry clears the old particle gate and starts the warp burst")
+    game._process(0.5)
+    check(game.gate_warp.age == game.gate_warp.DURATION, "Warp burst clears itself after the transition")
     var test_save: String = game.save_file
     game.audio.shutdown()
     await create_timer(0.5).timeout

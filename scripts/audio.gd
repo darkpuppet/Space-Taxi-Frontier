@@ -1,10 +1,11 @@
 extends Node
-## Original, synthesized audio: no samples, downloads, or external dependencies.
+## Synthesized sound and bundled offline CB dispatch voice clips.
 var engine: AudioStreamPlayer
 var engine_playback: AudioStreamGeneratorPlayback
 var phase: float = 0.0
 var muted: bool = false
 var taxi: CharacterBody2D
+var radio: Node
 var music: AudioStreamPlayer
 
 func _ready() -> void:
@@ -23,8 +24,12 @@ func _ready() -> void:
     music.volume_db = -27.0
     add_child(music)
     music.play()
+    radio = preload("res://scripts/dispatch_radio.gd").new()
+    add_child(radio)
 
 func _process(_dt: float) -> void:
+    var speaking: bool = is_instance_valid(radio) and radio.player.playing and not get_tree().paused
+    music.volume_db = move_toward(music.volume_db, -35.0 if speaking else -27.0, _dt * 35.0)
     if not engine_playback:
         return
     var active: bool = is_instance_valid(taxi) and taxi.engine_on and not get_tree().paused
@@ -39,6 +44,8 @@ func _process(_dt: float) -> void:
 
 func toggle_mute() -> bool:
     muted = not muted
+    if muted:
+        radio.silence()
     AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), muted)
     return muted
 
@@ -54,11 +61,38 @@ func cue(kind: String) -> void:
         "land": notes = [130.81, 196.0]
         "low": notes = [220.0, 0.0, 220.0]
     var player := AudioStreamPlayer.new()
-    player.stream = _explosion_blast() if kind == "explosion" else _tones(notes, 0.10 if kind != "complete" else 0.16)
+    if kind == "explosion":
+        player.stream = _explosion_blast()
+    elif kind == "squish":
+        player.stream = _squish_sound()
+    else:
+        player.stream = _tones(notes, 0.10 if kind != "complete" else 0.16)
     player.volume_db = -13.0
     add_child(player)
     player.finished.connect(player.queue_free)
     player.play()
+
+func _squish_sound() -> AudioStreamWAV:
+    var data := PackedByteArray()
+    var rng := RandomNumberGenerator.new()
+    rng.seed = 77219
+    var wet_noise: float = 0.0
+    for i in range(7056):
+        var t: float = float(i) / 22050.0
+        wet_noise = lerpf(wet_noise, rng.randf_range(-1, 1), 0.35)
+        var pitch: float = TAU * (48 * t + 180 * (1 - exp(-t * 21)) / 21)
+        var slap: float = wet_noise * exp(-t * 23) * 0.75
+        var squelch: float = sin(pitch + wet_noise * 2.5) * exp(-t * 12) * 0.6
+        var bubble: float = sin(TAU * 105 * t) * exp(-pow((t - 0.085) / 0.028, 2)) * 0.22
+        var fade: float = minf(t * 1200, 1) * maxf(0, 1 - t / 0.32)
+        var value: int = int(clampf((slap + squelch + bubble) * fade, -1, 1) * 28000)
+        data.append(value & 255)
+        data.append((value >> 8) & 255)
+    var stream := AudioStreamWAV.new()
+    stream.format = AudioStreamWAV.FORMAT_16_BITS
+    stream.mix_rate = 22050
+    stream.data = data
+    return stream
 
 func _explosion_blast() -> AudioStreamWAV:
     var data := PackedByteArray()
@@ -106,6 +140,8 @@ func _music_loop() -> AudioStreamWAV:
     return stream
 
 func shutdown() -> void:
+    if is_instance_valid(radio):
+        radio.shutdown()
     for child in get_children():
         if child is AudioStreamPlayer:
             child.stop()

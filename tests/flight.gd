@@ -85,6 +85,7 @@ func _run() -> void:
         var target_id: int = -1
         var chosen_fare: int = -1
         var refueling: bool = false
+        var fuel_stop_progress: int = -1
         var points := PackedVector2Array()
         var waypoint: int = 0
         var path_age: float = 99
@@ -103,14 +104,19 @@ func _run() -> void:
                 target_id = -1
                 chosen_fare = -1
                 refueling = false
+                fuel_stop_progress = -1
             if game.screen_state == "game_over":
                 break
+            var mission_progress: int = game.fares_in_level * 2 + (1 if game.passenger_onboard else 0)
             if refueling and ship.landed_on == 2:
                 refueling = false
+                fuel_stop_progress = mission_progress
                 target_id = -1
                 if ship.hull < 65 and game.credits >= 75:
                     game._unhandled_key_input(key(KEY_4))
-            if ship.fuel < 45 and ship.landed_on != 2 and not game.gate_active:
+            # After a fuel stop, finish the current pickup/dropoff before using
+            # the normal reserve threshold again; otherwise long routes loop.
+            if ship.fuel < 45 and ship.landed_on != 2 and not game.gate_active and (mission_progress != fuel_stop_progress or ship.fuel < 15):
                 refueling = true
             var selected: Dictionary = {}
             if not game.passenger_onboard and not game.gate_active:
@@ -127,6 +133,8 @@ func _run() -> void:
                 release_controls()
             else:
                 var final: Vector2 = game.gate_position if next_id == 6 else Vector2(game.pads[next_id - 1]["x"], game.pads[next_id - 1]["y"] - 21)
+                if next_id != 6 and not game.passenger_onboard and not refueling:
+                    final.x -= 20 # Land beside the rider, leaving room for the boarding walk.
                 var staging: Vector2 = final if next_id == 6 else final - Vector2(0, 90)
                 if next_id != target_id or path_age > 2.0:
                     points = route(game, staging)

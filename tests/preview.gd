@@ -70,6 +70,7 @@ func _capture() -> void:
     root.get_texture().get_image().save_png("res://tests/passengers.png")
     for index in range(3):
         game.taxi.landed_on = game.source_pad
+        game.taxi.position = Vector2(game.pads[game.source_pad - 1]["x"], game.pads[game.source_pad - 1]["y"] - 21)
         game._on_landed(game.source_pad)
         game._process(1.1)
         var destination: int = game.destination_pad
@@ -77,10 +78,11 @@ func _capture() -> void:
         game.taxi.position = Vector2(game.pads[destination - 1]["x"], game.pads[destination - 1]["y"] - 21)
         game._on_landed(destination)
         game._process(0.01)
+    assert(game.gate_active, "Preview must finish three separate fares before capturing the gate")
     game.taxi.position = game.gate_position + Vector2(-125, 45)
     game.taxi.landed_on = -1
     game.taxi.engine_on = true
-    game._process(0.01)
+    game._process(1.2)
     game.camera.reset_smoothing()
     await process_frame
     await RenderingServer.frame_post_draw

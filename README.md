@@ -1,10 +1,10 @@
 # Space Taxi: Frontier - Playable v0.7
 
-A Godot 4.3+ arcade flight game inspired by classic Space Taxi. Original sprite artwork is bundled with the project, each of the 20 environments has its own painted bitmap background, and sound is synthesized locally. No asset downloads or plugins are required to play.
+A Godot 4.7 arcade flight game inspired by classic Space Taxi. Original sprite artwork is bundled with the project, each of the 20 environments has its own painted bitmap background, and sound combines local synthesis with bundled CB radio dispatch clips. No asset downloads or plugins are required to play.
 
 ## Play
 
-Open `project.godot` in Godot and press **F5**. Choose **New Game** to start Level 1 with **three lives**, fresh credits, and no upgrades.
+Use **Godot 4.7.2 stable**, installed at `C:\software\godot\Godot_v4.7.2-stable_win64.exe`. Open `project.godot` with that executable and press **F5**. Choose **New Game** to start Level 1 with **three lives**, fresh credits, and no upgrades.
 
 | Control | Action |
 | --- | --- |
@@ -20,9 +20,13 @@ Open `project.godot` in Godot and press **F5**. Choose **New Game** to start Lev
 
 Controller flight: left stick steers, bottom face button lifts, right face button brakes.
 
+The resizable window scales the entire game and HUD from a 1280 x 720 design viewport. The 16:9 aspect ratio stays fixed; wider or taller window shapes add borders instead of stretching or cropping the picture.
+
+Pickup calls announce each new waiting customer's pad over a crackly CB radio voice. Calls play one at a time, pause with the game, and respect **M** to mute. Music dips during speech. Voice clips work offline on every platform without installed speech software.
+
 ## Passengers and star gates
 
-1. Start on PAD 01 and fly to a marked pickup pad. Riders never spawn on the taxi's occupied or last-landed platform. They also avoid assigned dropoff pads, so each new trip needs a separate pickup.
+1. Start on PAD 01 and fly to a marked pickup pad. Passenger pickups and dropoffs use terminal platforms only. Fuel and repair platforms are reserved for service and never receive fares. Riders never spawn on the taxi's occupied or last-landed platform. They also avoid assigned dropoff pads, so each new trip needs a separate pickup.
 2. Land and stay docked while the rider walks over to your taxi. Boarding takes at least one second and finishes when they reach the cabin. Taking off early makes them walk back to their waiting spot. Their destination is shown above the pad, in the cockpit, and on the map.
 3. Deliver the rider to the marked destination. Faster trips earn a bonus. The next pickup is on another platform.
 4. Complete three deliveries to open a **star gate at a random reachable location**. The last fare supplies 35 departure fuel for the flight to the exit. Gate locations vary in both horizontal position and height; follow the two-dimensional map and distance readout.
@@ -30,15 +34,17 @@ Controller flight: left stick steers, bottom face button lifts, right face butto
 
 Levels 1 and 2 have one waiting fare at a time. **Level 3 onward can have two simultaneous waiting fares**, and the player can choose either by landing at its pickup pad. The cockpit recommends a pickup while listing both riders and their remaining patience.
 
+Land beside waiting passengers rather than on top of them. A descending taxi that strikes a fare kills that passenger and incurs a 250-credit fine, including debt when necessary. It does not count as a delivery or cost a taxi life. A short squish sound and a small red human or green alien splatter mark the accident. A little gravestone rises immediately afterward, stays for at least three seconds, and clears when a replacement fare spawns. Pausing freezes the effect; restarting clears memorials. Dispatch replaces the lost fare after a delay.
+
 Waiting passengers become impatient and leave when their countdown reaches zero. Their markers turn red and they wave faster near the deadline. A missed fare increases the missed count; it does not count as a delivery or cost a life. Dispatch sends replacements after a short delay, so a missed rider cannot permanently block the level. Pausing freezes patience. Once boarded, passengers stay aboard while other waiting fares continue counting down.
 
 ## Flight, collisions, and lives
 
-Normal flight uses consistent downward gravity on every level. **Planetary gravity fields, floating gravity objects, wind forces, and the gravity HUD have been removed.** Planets in the environmental backgrounds are decorative. Black holes exert a stronger inward pull within 340 units, with inward-streaming particles showing the danger. The taxi visibly accelerates toward them before contact. Entering a core triggers a comedic spin, stretch, and shrink capture sequence and costs exactly one life.
+Normal flight uses consistent downward gravity on every level. **Planetary gravity fields, floating gravity objects, wind forces, and the gravity HUD have been removed.** Planets in the environmental backgrounds are decorative. Black holes exert a stronger inward pull within 340 units, with inward-streaming particles showing the danger. The taxi visibly accelerates toward them before contact. Their sprite-based accretion disks counter-rotate and pulse, with contracting light ripples, 64 inward-spiraling dust motes, and hot sparks racing around the core. The glow intensifies as the taxi approaches; animation follows the paused game clock. Entering a core triggers a comedic spin, stretch, and shrink capture sequence and costs exactly one life.
 
 Hull damage is visible on the taxi: scratches and scorching at 75% hull, light gray smoke at 55%, cracked glass and heavier dark smoke at 30%, then glowing engine damage and sparks at 15%. Smoke rises from the damaged rear vent, leaves a trail during flight, and continues while docked. Repairing the hull reduces the damage effects; above 55% it stops smoking, and a full repair restores its clean appearance.
 
-The taxi coasts when steering is released. Asteroids, moving gates, active beams, enemies, mines, meteors, and platform sides and undersides are solid. A collision stops the taxi at the surface and rebounds it; faster impacts cause more damage. Damage protection never disables solid collisions. The whole taxi must fit on the platform for a safe landing. Hold brake for a slow descent.
+The taxi coasts when steering is released. Asteroids, moving gates, active beams, enemies, mines, meteors, and platform sides and undersides are solid. A collision stops the taxi at the surface and rebounds it; faster impacts cause more damage. Damage protection never disables solid collisions. More than half of the taxi must overlap the platform to stay supported. A/D can move the taxi along a dock; moving too far over an edge makes it slide off and fall. Platforms have five different widths per level, narrowing gradually from 200–260 units in Level 1 to 105–165 in Level 20. Hold brake for a slow descent.
 
 PAD 02 refuels on arrival and sells upgrades. Fuel use is balanced for separate pickup and delivery flights. Drones stop chasing into docking approaches, and docked taxis are protected.
 
@@ -48,9 +54,13 @@ A destroyed taxi erupts in a 1.4-second explosion: a white-hot flash, expanding 
 
 Every level is **2400 x 1440**, roughly two screens across and two screens high. The camera scrolls horizontally and vertically. Pads span over 800 vertical units, and enemies, mines, asteroids, beams, meteors, and black holes occupy different heights. The starting fuel tank holds 140 units; upgrades add 40 units each. Dispatch guidance accounts for vertical travel and avoids recommending fares whose pickup deadlines are already unrealistic.
 
-The star gate is chosen randomly after the last delivery, at least 500 units from the taxi. Placement checks solid obstacles, platforms, the full black-hole drift area, and a connected navigation route. Its two-dimensional map marker helps locate an offscreen gate. Drones break off pursuit near the exit instead of camping inside it.
+The star gate is chosen randomly after the last delivery, at least 500 units from the taxi. Placement checks solid obstacles, platforms, the full black-hole drift area, and a connected navigation route. The gate has additive cyan/violet particles spiraling into its core, counter-rotating energy rings, orbiting sparks, and an opening shockwave. It brightens as the taxi approaches, and entry produces a brief screen-space warp burst. Particle animation freezes while paused, and old emitters are cleared when the level changes. Its two-dimensional map marker helps locate an offscreen gate. Drones break off pursuit near the exit instead of camping inside it.
 
 The taxi, purple alien scouts, red hunter drones, and three passenger designs use a transparent sprite atlas. Passengers animate between idle and waving poses, then adopt an impatient pose near their deadline. The taxi turns with steering, has a brake-jet sprite, and retains animated exhaust and black-hole deformation. The source atlas and built-in imagegen prompt are documented in `assets/sprites/README.md`.
+
+## Gameplay sprites
+
+All in-world actors, platforms, service equipment, obstacles, portal hardware, and floor tiles use sprite artwork. Four hull-damage stages each have normal and braking sprites. Smoke, fireballs, sparks, thruster flames, glows, shockwaves, and accident markers use textured particles. Dynamic energy trails and the scalable HUD remain native drawing. Sprite artwork is documented in `assets/sprites/README.md`, with exact new generation prompts in `assets/sprites/gameplay-prompts.json`.
 
 ## Bitmap environment artwork
 
@@ -95,7 +105,7 @@ In PowerShell from the project directory:
 ./tests/run.ps1
 ```
 
-If needed, specify the executable:
+The test runner defaults to the Godot 4.7.2 installation above. To use another installation, specify the executable:
 
 ```powershell
 ./tests/run.ps1 -GodotPath 'C:\path\to\godot.exe'

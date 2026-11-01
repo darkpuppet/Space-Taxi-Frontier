@@ -72,7 +72,8 @@ static func pads_for(index: int) -> Array:
     var result: Array = []
     var heights: Array = [1300.0, 1000.0, 740.0, 400.0, 1150.0]
     var positions: Array = [240.0, 720.0, 1250.0, 1800.0, 2180.0]
+    var widths: Array[float] = [240, 260, 220, 200, 230]
     for i in range(5):
         var variation: float = sin(float(n) * 0.7 + i * 1.8) * minf(n * 3.0, 48.0)
-        result.append({"id": i + 1, "x": positions[i] + sin(n * 0.81 + i * 1.4) * minf(n * 4.0, 62.0), "y": clampf(heights[i] + variation, 340, 1340), "width": 220.0 - n * 2.5 + (20 if i == 1 else 0)})
+        result.append({"id": i + 1, "x": positions[i] + sin(n * 0.81 + i * 1.4) * minf(n * 4.0, 62.0), "y": clampf(heights[i] + variation, 340, 1340), "width": widths[i] - n * 5.0, "services": ["fuel", "repair"] if i == 1 else []})
     return result

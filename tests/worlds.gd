@@ -102,6 +102,28 @@ func _run() -> void:
     check(SPRITES.WALK_ATLAS.get_image().detect_alpha() != Image.ALPHA_NONE, "Walking sprites retain genuine transparency")
     for frame in SPRITES.walk_frames:
         check(frame.get_width() > 20 and frame.get_height() > 100, "Walking frame contains a complete visible character")
+    var game_art = preload("res://scripts/game_art.gd")
+    game_art.prepare_hazards()
+    game_art.prepare_effects()
+    game_art.prepare_damage()
+    check(game_art.hazard_frames.size() == 9, "Every remaining hazard, portal and floor category has a sprite")
+    check(game_art.effect_frames.size() == 8 and game_art.damage_frames.size() == 8, "Particle textures and all hull/brake variants load")
+    for atlas in [game_art.HAZARDS, game_art.EFFECTS, game_art.DAMAGE]:
+        check(atlas.get_image().detect_alpha() != Image.ALPHA_NONE, "New sprite atlas preserves transparent backgrounds")
+    for frame in game_art.hazard_frames + game_art.damage_frames:
+        check(frame.get_width() > 15 and frame.get_height() > 15, "Gameplay sprite region contains visible art")
+        check(Rect2(Vector2.ZERO, frame.atlas.get_size()).encloses(frame.region), "Gameplay sprite region stays inside its atlas")
+    var portal: Image = game_art.hazard_frames[game_art.Hazard.STAR_GATE].get_image()
+    check(portal.get_pixel(portal.get_width() / 2, portal.get_height() / 2).a < 0.05, "Stargate hardware keeps a transparent opening")
+    var ring: Image = game_art.effect_frames[game_art.Effect.RING].get_image()
+    check(ring.get_pixel(ring.get_width() / 2, ring.get_height() / 2).a < 0.01, "Shockwave particle sprite has a clean transparent center")
+    var singularity = preload("res://scripts/black_hole_fx.gd")
+    check(singularity.dust_point(7, 0).distance_to(singularity.dust_point(7, 0.3)) > 8, "Black-hole dust visibly travels around the animated disk")
+    check(singularity.dust_point(0, 1.8).length() < singularity.dust_point(0, 0.4).length() - 30, "Black-hole dust spirals inward rather than just orbiting")
+    for mote in range(singularity.DUST_COUNT):
+        for clock in [0.0, 0.3, 2.0, 35.0]:
+            var distance: float = singularity.dust_point(mote, clock).length()
+            check(distance >= 24 and distance <= 155, "Black-hole visual particles stay in a bounded field")
     var test_save: String = game.save_file
     game.audio.shutdown()
     await create_timer(0.5).timeout

@@ -5,6 +5,7 @@ const SAVE_PATH: String = "user://frontier_save.cfg"
 var save_file: String = SAVE_PATH
 const WORLD = preload("res://scripts/world.gd")
 const SPRITES = preload("res://scripts/sprites.gd")
+const ART = preload("res://scripts/game_art.gd")
 const WIDTH: float = WORLD.WIDTH
 const FLOOR: float = WORLD.FLOOR
 const CAMPAIGN = preload("res://scripts/campaign.gd")
@@ -14,6 +15,8 @@ var sector: Node2D
 var sector_data: Dictionary = {}
 var dispatcher = preload("res://scripts/fares.gd").new()
 var last_landed_pad: int = 1
+var gate_fx: Node2D
+var gate_warp: CanvasLayer
 var gate_active: bool = false
 var gate_position := Vector2.ZERO
 var gate_rng := RandomNumberGenerator.new()
@@ -56,6 +59,9 @@ var resume_button: Button
 var boarding_time: float = 0.0
 const PASSENGER_WALK_SPEED: float = 72.0
 var passenger_walk: Dictionary = {}
+var passenger_accidents: Array[Dictionary] = []
+var accident_layer: Node2D
+const PASSENGER_STRIKE_FINE: int = 250
 var trip_time: float = 0.0
 var low_fuel_warned: bool = false
 var tow_available: bool = true
@@ -66,6 +72,13 @@ var menu_button: Button
 var exit_button: Button
 
 func _ready() -> void:
+    # Apply the design viewport even when running the scene in an embedded window.
+    var window: Window = get_window()
+    window.content_scale_size = Vector2i(1280, 720)
+    window.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
+    window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
+    window.content_scale_stretch = Window.CONTENT_SCALE_STRETCH_FRACTIONAL
+    window.unresizable = false
     gate_rng.randomize()
     process_mode = Node.PROCESS_MODE_ALWAYS
     audio = preload("res://scripts/audio.gd").new()
@@ -74,6 +87,12 @@ func _ready() -> void:
     for i in range(95):
         stars.append(Vector2(float((i * 337 + 67) % 2400), float((i * 149 + 39) % 480)))
     _build_ui()
+    accident_layer = Node2D.new()
+    accident_layer.z_index = 6
+    add_child(accident_layer)
+    accident_layer.draw.connect(_draw_passenger_accidents)
+    gate_warp = preload("res://scripts/gate_warp.gd").new()
+    add_child(gate_warp)
     level = 0
     _start_level()
     _show_main_menu()
@@ -82,6 +101,9 @@ func _make_pads() -> Array:
     return CAMPAIGN.pads_for(level)
 
 func _start_level() -> void:
+    if is_instance_valid(gate_fx):
+        gate_fx.queue_free()
+    gate_fx = null
     explosion_active = false
     if is_instance_valid(explosion):
         explosion.queue_free()
@@ -89,6 +111,7 @@ func _start_level() -> void:
     if is_instance_valid(camera):
         camera.offset = Vector2.ZERO
     level = clampi(level, 0, CAMPAIGN.STAGES.size() - 1)
+    audio.radio.begin_level(level)
     sector_data = CAMPAIGN.sector(level)
     pads = _make_pads()
     if is_instance_valid(sector):
@@ -99,6 +122,8 @@ func _start_level() -> void:
     add_child(sector)
     dispatcher.configure(level, pads)
     passenger_walk.clear()
+    passenger_accidents.clear()
+    accident_layer.queue_redraw()
     last_landed_pad = 1
     gate_active = false
     passenger_onboard = false
@@ -132,6 +157,7 @@ func _start_level() -> void:
     audio.taxi = taxi
     sector.taxi = taxi
     taxi.landed.connect(_on_landed)
+    taxi.flight_motion.connect(_on_taxi_flight_motion)
     taxi.damaged.connect(_on_damaged)
     taxi.black_hole_entered.connect(_on_black_hole_entered)
     taxi.black_hole_lost.connect(_on_black_hole_lost)
@@ -154,9 +180,14 @@ func _start_level() -> void:
     queue_redraw()
 
 func _process(dt: float) -> void:
+    if is_instance_valid(gate_warp):
+        gate_warp.advance(dt)
     if get_tree().paused:
         return
     pulse += dt
+    if gate_active and is_instance_valid(gate_fx):
+        gate_fx.advance(dt, taxi.position)
+    _update_passenger_accidents(dt)
     if explosion_active:
         var finished: bool = explosion.advance(dt)
         camera.offset = explosion.shake_offset()
@@ -176,6 +207,7 @@ func _process(dt: float) -> void:
                     boarding_time = 0.0
                 _announce("Passenger at PAD %02d got tired of waiting and left!" % departed[0])
             _sync_dispatch()
+            _update_passenger_accidents(0)
         if gate_active and taxi.landed_on == -1 and not taxi.capture_active and taxi.position.distance_to(gate_position) < 43:
             _enter_star_gate()
             return
@@ -205,7 +237,7 @@ func _process(dt: float) -> void:
         var waiting_text: String = ""
         for fare in dispatcher.waiting:
             waiting_text += "PAD %02d > %02d  %ds   " % [int(fare["source"]), int(fare["destination"]), ceili(float(fare["patience"]))]
-        mission_panel.text = "%02d / %s\nDELIVERED %d / 3   |   MISSED %d\n%s\n%s" % [level + 1, str(sector_data["name"]), fares_in_level, dispatcher.missed, str(sector_data["hint"]), waiting_text]
+        mission_panel.text = "%02d / %s\nDELIVERED %d / 3   |   MISSED %d   |   LOST %d\n%s\n%s" % [level + 1, str(sector_data["name"]), fares_in_level, dispatcher.missed, dispatcher.killed, str(sector_data["hint"]), waiting_text]
         if gate_active:
             navigation.text = "STAR GATE / %04d m\nFLY THROUGH TO %s" % [int(taxi.position.distance_to(gate_position)), "FINISH" if level == 19 else "NEXT LEVEL"]
         if passenger_onboard and not game_over:
@@ -227,10 +259,8 @@ func _process(dt: float) -> void:
 
 func _draw() -> void:
     preload("res://scripts/scenery.gd").paint(self, sector_data, pulse, WORLD.HEIGHT)
-    draw_rect(Rect2(0, FLOOR, WIDTH, 40), Color("101c27"))
-    draw_line(Vector2(0, FLOOR), Vector2(WIDTH, FLOOR), Color("365968"), 2)
-    for i in range(60):
-        draw_line(Vector2(i * 42, FLOOR + 8), Vector2(i * 42 + 15, FLOOR + 40), Color("1c303d"), 2)
+    for tile in range(10):
+        ART.hazard(self, ART.Hazard.FLOOR, Rect2(tile * 240, FLOOR, 240, 40))
     for pad in pads:
         var px: float = float(pad["x"])
         var py: float = float(pad["y"])
@@ -264,12 +294,14 @@ func _draw() -> void:
         draw_string(ThemeDB.fallback_font, Vector2(left + 8, py + 43), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, accent)
         if not waiting_fare.is_empty() and not mission_done:
             var walk: Dictionary = passenger_walk.get(int(waiting_fare["id"]), {})
-            var person := Vector2(float(walk.get("x", px + 46)), py - 2)
-            var variant: int = int(waiting_fare["id"]) - 1 + level
+            var person := Vector2(float(walk.get("x", _fare_home_x(pad))), py - 2)
+            var variant: int = _passenger_variant(waiting_fare)
             if walk.get("moving", false):
                 SPRITES.walking_rider(self, person, variant, float(walk["clock"]), float(walk["direction"]))
+            elif impatient:
+                SPRITES.impatient_rider(self, person, variant, pulse + int(waiting_fare["id"]) * 0.17)
             else:
-                var pose: int = 3 if impatient else int(pulse * 3.0 + int(waiting_fare["id"])) % 3
+                var pose: int = int(pulse * 3.0 + int(waiting_fare["id"])) % 3
                 SPRITES.rider(self, person, variant, pose)
             draw_string(ThemeDB.fallback_font, person + Vector2(-34, -58), "%ds / PAD %02d" % [ceili(float(waiting_fare["patience"])), int(waiting_fare["destination"])], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, accent)
         if id == 2:
@@ -277,16 +309,6 @@ func _draw() -> void:
             art.sprite(self, 8, Rect2(left + 57, py - 31, 18, 31))
             art.sprite(self, 7, Rect2(left + 13, py + 53, 27, 22))
 
-    if gate_active:
-        for ring in range(6, 0, -1):
-            draw_circle(gate_position, 47 + ring * 4, Color(0.25, 0.8, 1.0, 0.02))
-        draw_circle(gate_position, 44, Color("0c1835"))
-        for ring in range(3):
-            draw_arc(gate_position, 45 + ring * 5, pulse * (0.6 + ring * 0.2), pulse * (0.6 + ring * 0.2) + TAU * 0.88, 80, Color("7ce9ec"), 2, true)
-        for star in range(16):
-            var point: Vector2 = gate_position + Vector2.from_angle(star * 2.4 + pulse * 0.2) * (8 + star * 2)
-            draw_circle(point, 1, Color("b9f4ff"))
-        draw_string(ThemeDB.fallback_font, gate_position + Vector2(-44, 83), "STAR GATE", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("8ff8ed"))
 
 func _style(color: Color, border: Color = Color("29434f")) -> StyleBoxFlat:
     var style := StyleBoxFlat.new()
@@ -438,6 +460,7 @@ func _open_overlay(title: String, copy: String, action: String) -> void:
     resume_button.grab_focus()
 
 func _show_main_menu() -> void:
+    audio.radio.reset()
     screen_state = "menu"
     _open_overlay("SPACE TAXI", "FRONTIER / A 20-sector arcade campaign\n\nEvery new game begins at Level 1 with 3 lives.\nA / D steer. W / SPACE lift. S brake to land.\nCollect waiting riders before their patience runs out.\nThree deliveries open the star gate to the next level.", "NEW GAME / LEVEL 1 / ENTER")
 
@@ -452,6 +475,7 @@ func _primary_action() -> void:
         _resume()
 
 func _reset_run() -> void:
+    audio.radio.reset_campaign()
     level = 0
     lives = 3
     credits = 0
@@ -490,10 +514,12 @@ func _resume() -> void:
     overlay.visible = false
     shade.visible = false
     get_tree().paused = false
+    _sync_dispatch()
 
 func _explode_taxi() -> void:
     if explosion_active or screen_state != "playing":
         return
+    audio.radio.silence()
     explosion_active = true
     game_over = true
     taxi.input_locked = true
@@ -526,11 +552,54 @@ func _lose_life(reason: String = "TAXI DESTROYED") -> void:
         _open_overlay("GAME OVER", "All three taxis lost.\nYou reached Level %02d and completed %d fares.\n\nStart a new game at Level 1 with three fresh lives,\nor return to the main menu." % [level + 1, deliveries], "NEW GAME / LEVEL 1 / ENTER")
 
 func _sync_dispatch() -> void:
+    if screen_state == "playing" and not mission_done and not explosion_active:
+        audio.radio.sync_fares(dispatcher.waiting, audio.muted)
     if passenger_onboard:
         return
     var recommended: Dictionary = dispatcher.suggested(taxi.position)
     source_pad = int(recommended["source"]) if not recommended.is_empty() else 0
     _refresh_ui()
+
+func _passenger_variant(fare: Dictionary) -> int:
+    return posmod(int(fare["id"]) - 1 + level, 3)
+
+func _update_passenger_accidents(dt: float) -> void:
+    for index in range(passenger_accidents.size() - 1, -1, -1):
+        var accident: Dictionary = passenger_accidents[index]
+        accident["age"] += dt
+        # Keep the memorial visible for a few seconds and until dispatch replaces a fare.
+        if float(accident["age"]) >= 3.0 and (dispatcher.serial > int(accident["spawn_serial"]) or mission_done):
+            passenger_accidents.remove_at(index)
+    accident_layer.queue_redraw()
+
+func _draw_passenger_accidents() -> void:
+    for accident in passenger_accidents:
+        preload("res://scripts/passenger_accident_fx.gd").draw(accident_layer, accident)
+
+func _fare_home_x(pad: Dictionary) -> float:
+    return float(pad["x"]) + minf(46.0, float(pad["width"]) * 0.5 - 8.0)
+
+func _on_taxi_flight_motion(start: Vector2, finish: Vector2) -> void:
+    if game_over or mission_done or taxi.capture_active or finish.y <= start.y:
+        return
+    # Swept hull against standing passenger bounds, before landing can start boarding.
+    for fare in dispatcher.waiting.duplicate():
+        var fare_id: int = int(fare["id"])
+        var pad: Dictionary = pads[int(fare["source"]) - 1]
+        var person := Vector2(float(passenger_walk.get(fare_id, {}).get("x", _fare_home_x(pad))), float(pad["y"]) - 2)
+        var hit: Dictionary = sector._box_hit(start, finish, person + Vector2(0, -21), Vector2(43, 42))
+        if not hit.is_empty() and dispatcher.kill(fare_id):
+            passenger_walk.erase(fare_id)
+            boarding_time = 0.0
+            credits -= PASSENGER_STRIKE_FINE
+            var alien: bool = _passenger_variant(fare) == 1
+            passenger_accidents.append({"position": person, "age": 0.0, "spawn_serial": dispatcher.serial, "alien": alien, "color": Color("75ee45") if alien else Color("e34443")})
+            accident_layer.queue_redraw()
+            audio.cue("squish")
+            _sync_dispatch()
+            _announce("PASSENGER KILLED / -250 CR fine. Land clear of waiting riders!")
+            _save_game()
+            queue_redraw()
 
 func _update_passenger_walk(dt: float) -> void:
     var present: Dictionary = {}
@@ -538,7 +607,7 @@ func _update_passenger_walk(dt: float) -> void:
         var fare_id: int = int(fare["id"])
         present[fare_id] = true
         var pad: Dictionary = pads[int(fare["source"]) - 1]
-        var home_x: float = float(pad["x"]) + 46.0
+        var home_x: float = _fare_home_x(pad)
         if not passenger_walk.has(fare_id):
             passenger_walk[fare_id] = {"x": home_x, "clock": 0.0, "direction": 1.0, "moving": false}
         var walk: Dictionary = passenger_walk[fare_id]
@@ -574,10 +643,16 @@ func _board_passenger() -> void:
     _refresh_ui()
 
 func _open_star_gate() -> void:
+    audio.radio.silence()
     gate_active = true
     taxi.refuel(35.0)
     dispatcher.waiting.clear()
     gate_position = _choose_gate_position()
+    if is_instance_valid(gate_fx):
+        gate_fx.queue_free()
+    gate_fx = preload("res://scripts/stargate_fx.gd").new()
+    add_child(gate_fx)
+    gate_fx.activate(gate_position)
     sector.exit_open = true
     sector.exit_position = gate_position
     audio.cue("complete")
@@ -660,6 +735,7 @@ func _enter_star_gate() -> void:
     if not gate_active or not mission_done or taxi.landed_on != -1 or taxi.position.distance_to(gate_position) >= 43:
         return
     gate_active = false
+    gate_warp.trigger()
     audio.cue("service")
     if level < CAMPAIGN.STAGES.size() - 1:
         level += 1
@@ -750,7 +826,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
         return
     if event.physical_keycode == KEY_T and not game_over and tow_available:
         tow_available = false
-        credits = maxi(0, credits - 100)
+        credits -= mini(100, maxi(0, credits))
         taxi.position = Vector2(float(pads[1]["x"]), float(pads[1]["y"]) - 21.0)
         taxi.velocity = Vector2.ZERO
         taxi.landed_on = 2

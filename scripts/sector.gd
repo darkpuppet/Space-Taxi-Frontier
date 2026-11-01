@@ -1,4 +1,6 @@
 extends Node2D
+const ART = preload("res://scripts/game_art.gd")
+const BLACK_HOLE_FX = preload("res://scripts/black_hole_fx.gd")
 const SPRITES = preload("res://scripts/sprites.gd")
 ## Shared source of truth for rendered hazards and sampled gravity.
 var config: Dictionary = {}
@@ -218,61 +220,55 @@ func contact_at(position: Vector2) -> Dictionary:
 func _draw() -> void:
     for hole in holes:
         var center: Vector2 = hole["position"]
-        for ring in range(6, 0, -1):
-            draw_arc(center, 18 + ring * 6, elapsed * (0.3 + ring * 0.08), elapsed * (0.3 + ring * 0.08) + 4.5, 60, Color(0.72, 0.4, 1.0, 0.55 - ring * 0.07), 2, true)
-        for mote in range(12):
-            var progress: float = fposmod(elapsed * 0.34 + mote / 12.0, 1.0)
-            var radius: float = lerpf(170, 22, progress)
-            var angle: float = mote * 2.4 + elapsed * 0.9 + progress * 2.0
-            var point: Vector2 = center + Vector2.from_angle(angle) * radius
-            draw_circle(point, 1.0 + progress, Color(0.76, 0.58, 1.0, progress * 0.7))
-        draw_circle(center, 18, Color("03020b"))
-        draw_arc(center, 19, 0, TAU, 60, Color("d4a3ff"), 2, true)
+        var proximity: float = 0.0
+        if is_instance_valid(taxi):
+            proximity = 1.0 - smoothstep(50, 250, taxi.position.distance_to(center))
+        BLACK_HOLE_FX.draw(self, center, elapsed + float(hole.get("phase", 0)), proximity)
         draw_string(ThemeDB.fallback_font, center + Vector2(-30, 69), "SINGULARITY", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("ba91de"))
     for alien in aliens:
         var center: Vector2 = alien["position"]
-        draw_circle(center, 34, Color(0.7, 0.2, 0.4, 0.06))
         SPRITES.ship(self, 2, Rect2(center - Vector2(29, 15), Vector2(58, 30)))
-
-    for asteroid in asteroids:
-        var center: Vector2 = asteroid["position"]
-        var points := PackedVector2Array()
-        for edge in range(9):
-            points.append(center + Vector2.from_angle(edge * TAU / 8) * (23 + edge % 3 * 3))
-        draw_colored_polygon(points, Color("756e70"))
-        draw_polyline(points, Color("c1a297"), 1.5, true)
-        draw_circle(center + Vector2(-7, -4), 7, Color("514c58"))
+    for index in range(asteroids.size()):
+        var center: Vector2 = asteroids[index]["position"]
+        _draw_rock_hazard(center, 28.0, index)
     for gate in gates:
         var center: Vector2 = gate["position"]
-        draw_rect(Rect2(center - Vector2(9, 48), Vector2(18, 96)), Color("6f7c84"))
-        for stripe in range(6):
-            draw_line(center + Vector2(-6, -39 + stripe * 16), center + Vector2(6, -31 + stripe * 16), Color("edbf70"), 4)
-        draw_line(center + Vector2(0, -100), center + Vector2(0, -55), Color(0.8, 0.6, 0.3, 0.15), 1)
-        draw_line(center + Vector2(0, 55), center + Vector2(0, 100), Color(0.8, 0.6, 0.3, 0.15), 1)
+        ART.hazard(self, ART.Hazard.BARRIER, Rect2(center - Vector2(9, 48), Vector2(18, 96)))
     for drone in drones:
         var center: Vector2 = drone["position"]
         SPRITES.ship(self, 3, Rect2(center - Vector2(22, 24), Vector2(44, 48)))
     for mine in mines:
         var center: Vector2 = mine["position"]
-        draw_arc(center, 35, 0, TAU, 40, Color(0.95, 0.4, 0.3, 0.15), 1, true)
-        for spike in range(8):
-            var direction := Vector2.from_angle(spike * TAU / 8)
-            draw_line(center + direction * 9, center + direction * 18, Color("b56c6c"), 3, true)
-        draw_circle(center, 10, Color("69394e"))
-        draw_circle(center, 3.0 + sin(elapsed * 5), Color("ffac88"))
+        ART.hazard(self, ART.Hazard.MINE, Rect2(center - Vector2.ONE * 18, Vector2.ONE * 36))
+        ART.effect(self, ART.Effect.GLOW, Rect2(center - Vector2.ONE * 9, Vector2.ONE * 18), Color(1, 0.3, 0.1, 0.3 + sin(elapsed * 5) * 0.15))
     for meteor in meteors:
         var center: Vector2 = meteor["position"]
-        draw_line(center - Vector2(23, 46), center, Color(0.95, 0.5, 0.25, 0.12), 12, true)
-        draw_line(center - Vector2(15, 30), center, Color("a76d43"), 4, true)
-        draw_circle(center, 12, Color("d99c65"))
-        draw_circle(center + Vector2(2, 2), 8, Color("726271"))
+        draw_set_transform(center, -0.45)
+        ART.effect(self, ART.Effect.EMBER, Rect2(-10, -58, 20, 58), Color(1, 0.6, 0.2, 0.6))
+        draw_set_transform(Vector2.ZERO)
+        ART.hazard(self, ART.Hazard.METEOR, Rect2(center - Vector2.ONE * 18, Vector2.ONE * 36))
     for beam in beams:
         var center: Vector2 = beam["position"]
         for side in [-1, 1]:
-            draw_rect(Rect2(center + Vector2(side * 96 - 6, -13), Vector2(12, 26)), Color("526b79"))
-        if bool(beam["active"]):
-            draw_line(center - Vector2(96, 0), center + Vector2(96, 0), Color(0.4, 0.8, 1.0, 0.15), 12, true)
-            draw_line(center - Vector2(96, 0), center + Vector2(96, 0), Color("9decff"), 3, true)
-        else:
-            for dash in range(12):
-                draw_line(center + Vector2(-90 + dash * 16, 0), center + Vector2(-82 + dash * 16, 0), Color(0.4, 0.8, 1.0, 0.2), 1, true)
+            draw_set_transform(center + Vector2(side * 96, 0), 0, Vector2(-side, 1))
+            ART.hazard(self, ART.Hazard.EMITTER, Rect2(-6, -13, 12, 26))
+            draw_set_transform(Vector2.ZERO)
+        ART.hazard(self, ART.Hazard.BEAM, Rect2(center - Vector2(96, 6), Vector2(192, 12)), Color(1, 1, 1, 1 if beam["active"] else 0.12))
+
+## Motion and amber perimeter lights distinguish solid foreground rocks from
+## the painted scenery. Rotation never changes the circular collision boundary.
+func _draw_rock_hazard(center: Vector2, radius: float, index: int) -> void:
+    var phase: float = elapsed * (0.32 + index * 0.05) + index * 1.7
+    var proximity: float = 0.0
+    if is_instance_valid(taxi):
+        proximity = 1.0 - smoothstep(100, 280, taxi.position.distance_to(center))
+    var pulse: float = 0.5 + 0.5 * sin(elapsed * 3.6 + index)
+    var rim: float = radius + 7.0
+    ART.effect(self, ART.Effect.RING, Rect2(center - Vector2.ONE * rim, Vector2.ONE * rim * 2), Color(1, 0.55, 0.16, 0.16 + pulse * 0.08 + proximity * 0.22))
+    draw_set_transform(center, phase * (1 if index % 2 == 0 else -1))
+    ART.hazard(self, ART.Hazard.ASTEROID, Rect2(-Vector2.ONE * radius, Vector2.ONE * radius * 2))
+    draw_set_transform(Vector2.ZERO)
+    for light in range(3):
+        var angle: float = -phase * 1.8 + light * TAU / 3
+        var point: Vector2 = center + Vector2.from_angle(angle) * rim
+        ART.effect(self, ART.Effect.SPARK, Rect2(point - Vector2.ONE * 4, Vector2.ONE * 8), Color(1, 0.65, 0.22, 0.65 + pulse * 0.3))
