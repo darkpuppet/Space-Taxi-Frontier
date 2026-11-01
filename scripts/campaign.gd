@@ -67,13 +67,36 @@ static func sector(index: int) -> Dictionary:
     result["difficulty"] = 1.0 + n * 0.05
     return result
 
+# Authored positions in pad-ID order. Broad height changes make the skyline
+# and flight routes visibly different, while clear horizontal lanes separate docks.
+const PAD_LAYOUTS: Array[Array] = [
+    [Vector2(240,1300), Vector2(720,1000), Vector2(1250,740), Vector2(1800,400), Vector2(2180,1150)],
+    [Vector2(390,1130), Vector2(650,690), Vector2(1330,1300), Vector2(1720,370), Vector2(2110,950)],
+    [Vector2(230,1300), Vector2(790,1020), Vector2(1220,760), Vector2(1840,380), Vector2(2190,1150)],
+    [Vector2(380,980), Vector2(640,1300), Vector2(1340,410), Vector2(1740,690), Vector2(2120,1110)],
+    [Vector2(240,1290), Vector2(800,730), Vector2(1190,1080), Vector2(1840,370), Vector2(2200,930)],
+    [Vector2(390,730), Vector2(660,1110), Vector2(1330,1290), Vector2(1730,870), Vector2(2110,360)],
+    [Vector2(230,1120), Vector2(790,380), Vector2(1210,850), Vector2(1850,1300), Vector2(2190,690)],
+    [Vector2(380,390), Vector2(650,1300), Vector2(1340,1080), Vector2(1740,690), Vector2(2120,940)],
+    [Vector2(240,1300), Vector2(800,900), Vector2(1200,380), Vector2(1840,1140), Vector2(2200,700)],
+    [Vector2(390,980), Vector2(660,1290), Vector2(1320,730), Vector2(1730,360), Vector2(2110,1120)],
+    [Vector2(230,1290), Vector2(790,700), Vector2(1220,1090), Vector2(1850,390), Vector2(2190,880)],
+    [Vector2(380,740), Vector2(650,1080), Vector2(1340,380), Vector2(1740,1300), Vector2(2120,980)],
+    [Vector2(240,1110), Vector2(800,390), Vector2(1190,1300), Vector2(1840,900), Vector2(2200,690)],
+    [Vector2(390,380), Vector2(660,950), Vector2(1330,710), Vector2(1730,1120), Vector2(2110,1290)],
+    [Vector2(230,1300), Vector2(790,1090), Vector2(1210,880), Vector2(1850,380), Vector2(2190,690)],
+    [Vector2(380,930), Vector2(650,1290), Vector2(1340,380), Vector2(1740,700), Vector2(2120,1120)],
+    [Vector2(240,390), Vector2(800,730), Vector2(1200,1110), Vector2(1840,1300), Vector2(2200,930)],
+    [Vector2(390,1290), Vector2(660,1080), Vector2(1320,880), Vector2(1730,380), Vector2(2110,710)],
+    [Vector2(230,980), Vector2(790,700), Vector2(1220,1300), Vector2(1850,1110), Vector2(2190,380)],
+    [Vector2(380,390), Vector2(650,1290), Vector2(1340,950), Vector2(1740,710), Vector2(2120,1120)]
+]
+
 static func pads_for(index: int) -> Array:
     var n: int = clampi(index, 0, STAGES.size() - 1)
     var result: Array = []
-    var heights: Array = [1300.0, 1000.0, 740.0, 400.0, 1150.0]
-    var positions: Array = [240.0, 720.0, 1250.0, 1800.0, 2180.0]
     var widths: Array[float] = [240, 260, 220, 200, 230]
     for i in range(5):
-        var variation: float = sin(float(n) * 0.7 + i * 1.8) * minf(n * 3.0, 48.0)
-        result.append({"id": i + 1, "x": positions[i] + sin(n * 0.81 + i * 1.4) * minf(n * 4.0, 62.0), "y": clampf(heights[i] + variation, 340, 1340), "width": widths[i] - n * 5.0, "services": ["fuel", "repair"] if i == 1 else []})
+        var point: Vector2 = PAD_LAYOUTS[n][i]
+        result.append({"id": i + 1, "x": point.x, "y": point.y, "width": widths[i] - n * 5.0, "services": ["fuel", "repair"] if i == 1 else []})
     return result

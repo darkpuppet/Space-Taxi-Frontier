@@ -4,7 +4,7 @@ A Godot 4.7 arcade flight game inspired by classic Space Taxi. Original sprite a
 
 ## Play
 
-Use **Godot 4.7.2 stable**, installed at `C:\software\godot\Godot_v4.7.2-stable_win64.exe`. Open `project.godot` with that executable and press **F5**. Choose **New Game** to start Level 1 with **three lives**, fresh credits, and no upgrades.
+Use **Godot 4.7.2 stable**, installed at `C:\software\godot\godot.exe`. Open `project.godot` with that executable and press **F5**. Choose **New Game** to start Level 1 with **three lives**, fresh credits, and no upgrades.
 
 | Control | Action |
 | --- | --- |
@@ -22,12 +22,14 @@ Controller flight: left stick steers, bottom face button lifts, right face butto
 
 The resizable window scales the entire game and HUD from a 1280 x 720 design viewport. The 16:9 aspect ratio stays fixed; wider or taller window shapes add borders instead of stretching or cropping the picture.
 
-Pickup calls announce each new waiting customer's pad over a crackly CB radio voice. Calls play one at a time, pause with the game, and respect **M** to mute. Music dips during speech. Voice clips work offline on every platform without installed speech software.
+Accidentally landing on a passenger plays a brief cartoon scream alongside the squish, with distinct human and alien voices.
+
+Pickup calls announce each new waiting customer's pad over a crackly CB radio voice. Each level randomly selects a male, female, or robot dispatcher and keeps that voice through retries. Each voice has six pickup phrases, shuffled without immediate repeats; every call names the actual pickup pad. Pickup calls last about three to five seconds. When the stargate appears, the same dispatcher announces that it is open and tells you to head for it. Calls play one at a time, pause with the game, and respect **M** to mute. Music dips during speech. Voice clips work offline on every platform without installed speech software.
 
 ## Passengers and star gates
 
 1. Start on PAD 01 and fly to a marked pickup pad. Passenger pickups and dropoffs use terminal platforms only. Fuel and repair platforms are reserved for service and never receive fares. Riders never spawn on the taxi's occupied or last-landed platform. They also avoid assigned dropoff pads, so each new trip needs a separate pickup.
-2. Land and stay docked while the rider walks over to your taxi. Boarding takes at least one second and finishes when they reach the cabin. Taking off early makes them walk back to their waiting spot. Their destination is shown above the pad, in the cockpit, and on the map.
+2. Land and stay docked while the rider walks over to your taxi. Once aboard, the passenger says their actual destination, such as "Platform three, please." Boarding takes at least one second and finishes when they reach the cabin. Taking off early makes them walk back to their waiting spot. Their destination is shown above the pad, in the cockpit, and on the map.
 3. Deliver the rider to the marked destination. Faster trips earn a bonus. The next pickup is on another platform.
 4. Complete three deliveries to open a **star gate at a random reachable location**. The last fare supplies 35 departure fuel for the flight to the exit. Gate locations vary in both horizontal position and height; follow the two-dimensional map and distance readout.
 5. Take off and **fly through the star gate** to enter the next level. There is no N-key shortcut. The final gate completes the 20-level campaign.
@@ -130,3 +132,23 @@ The runner checks import, mission integration, every level, solid collision phys
 - `assets/sprites/`: bundled sprite atlas and generation prompt.
 
 This remains a playable prototype. Automated flights establish feasibility; human playtesting is needed for final feel, accessibility, and difficulty tuning. The soundtrack currently uses one shared synthesized music loop.
+
+
+Each of the 20 levels now has an authored platform layout with broad changes to dock heights and horizontal spacing. Positions stay consistent on retries; PAD 02 remains the fuel/repair platform. Later levels still narrow the landing surfaces. `tests/platform-layouts-preview.gd` renders a contact sheet of all 20 layouts, including the service pad in cyan.
+
+
+## Developer level testing
+
+From the project directory, open any level directly in Godot's debug/editor build:
+
+```powershell
+& 'C:\software\godot\godot.exe' --path . -- --dev-level=9
+```
+
+Replace `9` with any level from **1 to 20**. Arguments after `--` are passed to the game. The selected level opens immediately with three lives, a fresh stock taxi, its real layout, and its hazards. Retries stay on that level; New Game still starts at Level 1. The window is marked DEVELOPER TEST. Career loading and saving are disabled for the entire session. Close it and launch normally to return to normal play. Release exports ignore the developer flag; invalid values also use the ordinary Level 1 main menu.
+
+To run the automated flight pilot on just one level instead:
+
+```powershell
+& 'C:\software\godot\godot.exe' --headless --path . --script tests/flight.gd -- --trace-level=9
+```

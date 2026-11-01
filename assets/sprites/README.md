@@ -37,3 +37,7 @@ Passengers with less than 15 seconds of patience use their original impatient po
 ## Foreground rock animation
 
 Solid asteroid sprites rotate slowly in alternating directions. An amber ring and three orbiting warning lights distinguish them from painted background planets; the ring brightens near the taxi. These effects use existing sprite textures and the sector simulation clock, so pausing also freezes the animation. The rendered rock stays within its original 28-pixel collision radius. Background planets remain decorative and have no gravity field or collision.
+
+## Tombstone clearing
+
+When a memorial is ready to clear, its original sprite dissolves into the platform over 0.9 seconds. Small textured sections fade at staggered times while the stone sinks through a clipped ground boundary. A few gray dust sprites settle at the surface. The existing minimum display time and replacement-fare trigger are preserved. Pause freezes the dissolve; level resets clear old effects.

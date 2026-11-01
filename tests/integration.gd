@@ -38,6 +38,7 @@ func _run() -> void:
     game._on_landed(game.source_pad)
     game._process(1.1)
     check(game.passenger_onboard, "A waiting rider boards after docking at their pickup pad")
+    check(game.audio.radio.pending.size() > 0 and game.audio.radio.pending[0].get("kind", "") == "destination" and int(game.audio.radio.pending[0]["pad"]) == game.destination_pad, "Boarding queues the customer's actual spoken destination")
     var wrong: int = 5 if game.destination_pad != 5 else 4
     game._on_landed(wrong)
     check(game.deliveries == 0 and game.passenger_onboard, "Wrong destination cannot complete a fare")
@@ -54,6 +55,7 @@ func _run() -> void:
             game._on_landed(game.source_pad)
             game._process(1.1)
     check(game.mission_done and game.deliveries == 3 and game.credits > 0, "Three separate pickups and deliveries finish a shift")
+    check(game.audio.radio.gate_announced, "Delivering the last fare triggers the CB stargate announcement")
     var old_level: int = game.level
     game._unhandled_key_input(key(KEY_N))
     check(game.level == old_level, "N cannot skip star-gate travel")

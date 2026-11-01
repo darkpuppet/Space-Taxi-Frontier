@@ -80,10 +80,35 @@ func _run() -> void:
         if voice is AudioStreamPlayer and voice.stream is AudioStreamWAV and voice.stream.data == squish.data:
             squish_voices += 1
     check(squish_voices == 1 and squish.data.size() == 14112, "Passenger impact plays the distinct squish sound exactly once")
+    var human_scream: AudioStreamWAV = game.audio._passenger_scream(false)
+    var alien_scream: AudioStreamWAV = game.audio._passenger_scream(true)
+    check(human_scream.data != alien_scream.data, "Human and alien screams have distinct voices")
+    for scream in [human_scream, alien_scream]:
+        check(scream.mix_rate == 22050 and scream.format == AudioStreamWAV.FORMAT_16_BITS and not scream.stereo, "Screams use valid mono PCM")
+        var energy: float = 0.0
+        var peak: int = 0
+        for byte in range(0, scream.data.size(), 2):
+            var sample: int = scream.data.decode_s16(byte)
+            energy += float(sample) * sample
+            peak = maxi(peak, absi(sample))
+        check(sqrt(energy / (scream.data.size() / 2)) > 1500 and peak < 30000, "Screams are audible and have clipping headroom")
+        check(absi(scream.data.decode_s16(0)) < 10 and absi(scream.data.decode_s16(scream.data.size() - 2)) < 10, "Scream envelopes start and finish without clicks")
+    check(human_scream.get_length() > 0.4 and human_scream.get_length() < 0.5 and alien_scream.get_length() < 0.55, "Passenger yelps stay brief")
+    var human_yelps: int = 0
+    for voice in game.audio.get_children():
+        if voice is AudioStreamPlayer and voice.stream == human_scream:
+            human_yelps += 1
+            check(voice.pitch_scale >= 0.95 and voice.pitch_scale <= 1.08, "Small pitch variation keeps screams lively")
+    check(human_yelps == 1, "Landing on a human plays one human scream alongside the squish")
     var start := Vector2(game._fare_home_x(pad), float(pad["y"]) - 150)
     var finish := Vector2(start.x, float(pad["y"]) - 21)
     game._on_taxi_flight_motion(start, finish)
     check(game.credits == 750 and game.dispatcher.killed == 1, "Repeated contact cannot charge a fine for the same fare twice")
+    var repeated_yelps: int = 0
+    for voice in game.audio.get_children():
+        if voice is AudioStreamPlayer and voice.stream == human_scream:
+            repeated_yelps += 1
+    check(repeated_yelps == human_yelps, "Repeated contact never repeats a dead passenger's scream")
     game._update_passenger_accidents(3.9)
     check(game.passenger_accidents.size() == 1, "Grave stays visible until dispatch supplies a replacement")
     game._show_pause()
@@ -95,7 +120,17 @@ func _run() -> void:
     game.dispatcher.tick(0.2, int(victim["source"]), ship.position)
     check(game.dispatcher.waiting.size() == 2, "Dispatch replaces a killed fare so the level remains completable")
     game._update_passenger_accidents(0.2)
-    check(game.passenger_accidents.is_empty(), "Replacement passenger clears the old grave")
+    check(game.passenger_accidents.size() == 1 and game.passenger_accidents[0].has("dissolve_age"), "Replacement passenger starts the grave dissolve")
+    game._update_passenger_accidents(0.4)
+    var dissolve_age: float = game.passenger_accidents[0]["dissolve_age"]
+    game._update_passenger_accidents(0)
+    check(game.passenger_accidents[0]["dissolve_age"] == dissolve_age, "Dispatch refresh does not restart or advance the dissolve")
+    game._show_pause()
+    game._process(10)
+    check(game.passenger_accidents[0]["dissolve_age"] == dissolve_age, "Pause freezes the grave dissolve")
+    game._resume()
+    game._update_passenger_accidents(0.51)
+    check(game.passenger_accidents.is_empty(), "Grave clears after its dissolve finishes")
     victim = game.dispatcher.waiting[0]
     pad = game.pads[int(victim["source"]) - 1]
     game.credits = 0
@@ -116,11 +151,18 @@ func _run() -> void:
     finish = Vector2(start.x, float(pad["y"]) - 21)
     game._on_taxi_flight_motion(start, finish)
     check(game.passenger_accidents.size() == 1 and game.passenger_accidents[0]["alien"] and game.passenger_accidents[0]["color"].g > game.passenger_accidents[0]["color"].r, "Alien casualty creates green splatter matching the rider sprite")
+    var alien_yelps: int = 0
+    for voice in game.audio.get_children():
+        if voice is AudioStreamPlayer and voice.stream == alien_scream:
+            alien_yelps += 1
+    check(alien_yelps == 1, "Landing on an alien plays its distinct alien scream")
     game.dispatcher.refill(1, Vector2.ZERO)
     game._update_passenger_accidents(1)
     check(game.passenger_accidents.size() == 1, "Grave has a minimum few-second display even if dispatch refills early")
     game._update_passenger_accidents(2.1)
-    check(game.passenger_accidents.is_empty(), "Early replacement grave clears after its minimum display time")
+    check(game.passenger_accidents.size() == 1 and game.passenger_accidents[0].has("dissolve_age"), "Early replacement grave dissolves after its minimum display time")
+    game._update_passenger_accidents(1)
+    check(game.passenger_accidents.is_empty(), "Completed dissolve removes the early replacement grave")
     var memorial_art = preload("res://scripts/passenger_accident_fx.gd")
     memorial_art.prepare()
     check(memorial_art.frames.size() == 4 and memorial_art.ATLAS.get_image().detect_alpha() != Image.ALPHA_NONE, "Splatter, splash and grave sprites load with transparency")

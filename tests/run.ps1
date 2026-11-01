@@ -1,4 +1,4 @@
-param([string]$GodotPath = "C:\software\godot\Godot_v4.7.2-stable_win64.exe")
+param([string]$GodotPath = "C:\software\godot\godot.exe")
 $ErrorActionPreference = 'Stop'
 $projectPath = Split-Path -Parent $PSScriptRoot
 $engine = (Get-Command $GodotPath -ErrorAction Stop).Source
@@ -7,7 +7,11 @@ $checks = @(
     @{ Name = 'window-scaling'; Args = '--path . --rendering-driver opengl3 --audio-driver Dummy --position -32000,-32000 --script tests/window-scaling.gd --quit-after 3000' },
     @{ Name = 'impatient-sprites'; Args = '--path . --rendering-driver opengl3 --audio-driver Dummy --position -32000,-32000 --script tests/impatient-sprites.gd --quit-after 3000' },
     @{ Name = 'hazard-animation'; Args = '--path . --rendering-driver opengl3 --audio-driver Dummy --position -32000,-32000 --script tests/hazard-animation.gd --quit-after 3000' },
+    @{ Name = 'tombstone-dissolve'; Args = '--path . --rendering-driver opengl3 --audio-driver Dummy --position -32000,-32000 --script tests/tombstone-dissolve.gd --quit-after 3000' },
     @{ Name = 'dispatch-radio'; Args = '--headless --path . --script tests/dispatch-radio.gd --quit-after 3000' },
+    @{ Name = 'developer-level-01'; Args = '--headless --path . --script tests/developer-launch.gd --quit-after 3000 -- --dev-level=1' },
+    @{ Name = 'developer-level-09'; Args = '--headless --path . --script tests/developer-launch.gd --quit-after 3000 -- --dev-level=9' },
+    @{ Name = 'developer-level-20'; Args = '--headless --path . --script tests/developer-launch.gd --quit-after 3000 -- --dev-level=20' },
     @{ Name = 'integration'; Args = '--headless --path . --script tests/integration.gd --quit-after 3000' },
     @{ Name = 'campaign'; Args = '--headless --path . --script tests/campaign.gd --quit-after 3000' },
     @{ Name = 'menus'; Args = '--headless --path . --script tests/menus.gd --quit-after 3000' },

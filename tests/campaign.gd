@@ -27,6 +27,7 @@ func _run() -> void:
     var previous: Dictionary = {}
     var palettes: Array = []
     var layouts: Array = []
+    var previous_pads: Array = []
     var seen_types: Array = []
     for level in range(CAMPAIGN.STAGES.size()):
         game.level = level
@@ -45,6 +46,24 @@ func _run() -> void:
         palettes.append(config["color"])
         check(not layouts.has(str(game.pads)), "Every sector has a different pad layout")
         layouts.append(str(game.pads))
+        var coordinates: Array[Vector2] = []
+        var substantial_moves: int = 0
+        for pad_index in range(game.pads.size()):
+            var pad: Dictionary = game.pads[pad_index]
+            var point := Vector2(pad["x"], pad["y"])
+            coordinates.append(point)
+            check(point.x - float(pad["width"]) * 0.5 > 50 and point.x + float(pad["width"]) * 0.5 < 2350, "Platform stays inside world edges")
+            if not previous_pads.is_empty():
+                var distance: float = point.distance_to(previous_pads[pad_index])
+                check(distance >= 75, "Each platform visibly relocates between levels")
+                if distance >= 200:
+                    substantial_moves += 1
+            if pad_index > 0:
+                check(point.x - coordinates[pad_index - 1].x >= 250, "Dock columns leave safe transit corridors")
+        if not previous_pads.is_empty():
+            check(substantial_moves >= 3, "Most platforms move several hundred pixels in each new level")
+        check(CAMPAIGN.pads_for(level) == game.pads, "Authored layout stays stable across retries")
+        previous_pads = coordinates
         check(config["introduces"].size() <= 1, "At most one enemy or obstacle family is introduced")
         var new_types: Array = []
         for family in ["planet_count", "asteroids", "gates", "aliens", "wind", "beams", "holes", "drones", "mines", "meteors"]:

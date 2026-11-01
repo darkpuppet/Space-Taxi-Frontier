@@ -3,6 +3,7 @@ extends Node2D
 const TAXI_SCENE: PackedScene = preload("res://Taxi.tscn")
 const SAVE_PATH: String = "user://frontier_save.cfg"
 var save_file: String = SAVE_PATH
+var developer_mode: bool = false
 const WORLD = preload("res://scripts/world.gd")
 const SPRITES = preload("res://scripts/sprites.gd")
 const ART = preload("res://scripts/game_art.gd")
@@ -71,7 +72,18 @@ var screen_state: String = "menu"
 var menu_button: Button
 var exit_button: Button
 
+static func developer_level_from_args(arguments: PackedStringArray) -> int:
+    for argument in arguments:
+        if argument.begins_with("--dev-level="):
+            var value: String = argument.trim_prefix("--dev-level=")
+            if value.is_valid_int() and int(value) >= 1 and int(value) <= CAMPAIGN.STAGES.size():
+                return int(value)
+            return 0
+    return 0
+
 func _ready() -> void:
+    var developer_level: int = developer_level_from_args(OS.get_cmdline_user_args()) if OS.is_debug_build() else 0
+    developer_mode = developer_level > 0
     # Apply the design viewport even when running the scene in an embedded window.
     var window: Window = get_window()
     window.content_scale_size = Vector2i(1280, 720)
@@ -93,9 +105,18 @@ func _ready() -> void:
     accident_layer.draw.connect(_draw_passenger_accidents)
     gate_warp = preload("res://scripts/gate_warp.gd").new()
     add_child(gate_warp)
-    level = 0
-    _start_level()
-    _show_main_menu()
+    if developer_mode:
+        _reset_run()
+        level = developer_level - 1
+        screen_state = "playing"
+        _start_level()
+        _resume()
+        window.title = "Space Taxi: Frontier / DEVELOPER TEST / SAVING DISABLED"
+        _announce("DEVELOPER TEST / LEVEL %02d / Career saves disabled." % developer_level)
+    else:
+        level = 0
+        _start_level()
+        _show_main_menu()
 
 func _make_pads() -> Array:
     return CAMPAIGN.pads_for(level)
@@ -567,9 +588,13 @@ func _update_passenger_accidents(dt: float) -> void:
     for index in range(passenger_accidents.size() - 1, -1, -1):
         var accident: Dictionary = passenger_accidents[index]
         accident["age"] += dt
-        # Keep the memorial visible for a few seconds and until dispatch replaces a fare.
-        if float(accident["age"]) >= 3.0 and (dispatcher.serial > int(accident["spawn_serial"]) or mission_done):
-            passenger_accidents.remove_at(index)
+        # Keep the memorial until replacement, then dissolve it into the pad.
+        if accident.has("dissolve_age"):
+            accident["dissolve_age"] += dt
+            if float(accident["dissolve_age"]) >= preload("res://scripts/passenger_accident_fx.gd").DISSOLVE_DURATION:
+                passenger_accidents.remove_at(index)
+        elif float(accident["age"]) >= 3.0 and (dispatcher.serial > int(accident["spawn_serial"]) or mission_done):
+            accident["dissolve_age"] = 0.0
     accident_layer.queue_redraw()
 
 func _draw_passenger_accidents() -> void:
@@ -596,6 +621,7 @@ func _on_taxi_flight_motion(start: Vector2, finish: Vector2) -> void:
             passenger_accidents.append({"position": person, "age": 0.0, "spawn_serial": dispatcher.serial, "alien": alien, "color": Color("75ee45") if alien else Color("e34443")})
             accident_layer.queue_redraw()
             audio.cue("squish")
+            audio.cue("scream_alien" if alien else "scream_human")
             _sync_dispatch()
             _announce("PASSENGER KILLED / -250 CR fine. Land clear of waiting riders!")
             _save_game()
@@ -636,6 +662,7 @@ func _board_passenger() -> void:
     passenger_walk.erase(int(dispatcher.active["id"]))
     passenger_onboard = true
     destination_pad = int(dispatcher.active["destination"])
+    audio.radio.announce_destination(int(dispatcher.active["id"]), destination_pad, _passenger_variant(dispatcher.active), audio.muted)
     boarding_time = 0.0
     trip_time = 0.0
     audio.cue("pickup")
@@ -643,7 +670,6 @@ func _board_passenger() -> void:
     _refresh_ui()
 
 func _open_star_gate() -> void:
-    audio.radio.silence()
     gate_active = true
     taxi.refuel(35.0)
     dispatcher.waiting.clear()
@@ -655,6 +681,7 @@ func _open_star_gate() -> void:
     gate_fx.activate(gate_position)
     sector.exit_open = true
     sector.exit_position = gate_position
+    audio.radio.announce_gate(audio.muted)
     audio.cue("complete")
     _announce("LAST FARE / +35 departure fuel. Fly through the star gate to %s." % ("finish the campaign" if level == 19 else "reach the next level"))
 
@@ -866,6 +893,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
         _save_game()
 
 func _save_game() -> void:
+    if developer_mode:
+        return
     var cfg: ConfigFile = ConfigFile.new()
     cfg.set_value("career", "lives", lives)
     cfg.set_value("career", "credits", credits)
@@ -878,6 +907,8 @@ func _save_game() -> void:
     cfg.save(save_file)
 
 func _load_game() -> void:
+    if developer_mode:
+        return
     var cfg: ConfigFile = ConfigFile.new()
     if cfg.load(save_file) != OK:
         return

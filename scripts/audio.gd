@@ -5,6 +5,7 @@ var engine_playback: AudioStreamGeneratorPlayback
 var phase: float = 0.0
 var muted: bool = false
 var taxi: CharacterBody2D
+var screams: Dictionary = {}
 var radio: Node
 var music: AudioStreamPlayer
 
@@ -26,6 +27,8 @@ func _ready() -> void:
     music.play()
     radio = preload("res://scripts/dispatch_radio.gd").new()
     add_child(radio)
+    _passenger_scream(false)
+    _passenger_scream(true)
 
 func _process(_dt: float) -> void:
     var speaking: bool = is_instance_valid(radio) and radio.player.playing and not get_tree().paused
@@ -65,12 +68,59 @@ func cue(kind: String) -> void:
         player.stream = _explosion_blast()
     elif kind == "squish":
         player.stream = _squish_sound()
+    elif kind in ["scream_human", "scream_alien"]:
+        player.stream = _passenger_scream(kind == "scream_alien")
+        player.pitch_scale = randf_range(0.95, 1.08)
     else:
         player.stream = _tones(notes, 0.10 if kind != "complete" else 0.16)
     player.volume_db = -13.0
     add_child(player)
     player.finished.connect(player.queue_free)
     player.play()
+
+## Brief vowel-shaped cartoon yelps, cached before gameplay to avoid impact hitches.
+func _passenger_scream(alien: bool) -> AudioStreamWAV:
+    if screams.has(alien):
+        return screams[alien]
+    var count: int = 10584 if alien else 9702
+    var samples := PackedFloat32Array()
+    samples.resize(count)
+    var rng := RandomNumberGenerator.new()
+    rng.seed = 8329 if alien else 7291
+    var voice_phase: float = 0.0
+    var peak: float = 0.001
+    for i in range(count):
+        var t: float = float(i) / 22050.0
+        var progress: float = float(i) / (count - 1)
+        # A quick rise into an "aaah", followed by a descending comic tail.
+        var pitch: float = 300 + sin(progress * PI) * 260 - progress * 100
+        pitch += sin(t * TAU * 24) * 12
+        if alien:
+            pitch = pitch * 1.45 + sin(t * TAU * 38) * 65
+        voice_phase = fposmod(voice_phase + pitch / 22050.0, 1.0)
+        var vowel: float = 0.0
+        for harmonic in range(1, 21):
+            var frequency: float = pitch * harmonic
+            var formant: float = 0.04 + exp(-pow((frequency - 820) / 210, 2)) * 0.9
+            formant += exp(-pow((frequency - 1250) / 260, 2)) * 0.6
+            formant += exp(-pow((frequency - 2700) / 420, 2)) * 0.3
+            vowel += sin(voice_phase * TAU * harmonic) * formant / pow(float(harmonic), 0.7)
+        var envelope: float = minf(t / 0.008, 1.0) * pow(sin(progress * PI), 0.65)
+        var sample: float = (vowel + rng.randf_range(-0.025, 0.025)) * envelope
+        if alien:
+            sample *= 0.8 + sin(t * TAU * 62) * 0.2
+        samples[i] = sample
+        peak = maxf(peak, absf(sample))
+    var data := PackedByteArray()
+    data.resize(count * 2)
+    for i in range(count):
+        data.encode_s16(i * 2, int(samples[i] / peak * 24000))
+    var stream := AudioStreamWAV.new()
+    stream.format = AudioStreamWAV.FORMAT_16_BITS
+    stream.mix_rate = 22050
+    stream.data = data
+    screams[alien] = stream
+    return stream
 
 func _squish_sound() -> AudioStreamWAV:
     var data := PackedByteArray()
