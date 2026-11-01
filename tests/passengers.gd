@@ -1,6 +1,7 @@
 ﻿extends SceneTree
 const DISPATCH = preload("res://scripts/fares.gd")
 const CAMPAIGN = preload("res://scripts/campaign.gd")
+const TYPES = preload("res://scripts/passenger_types.gd")
 var failures: int = 0
 
 func _initialize() -> void:
@@ -15,11 +16,21 @@ func check(value: bool, description: String) -> void:
 
 func _run() -> void:
     var dispatch = DISPATCH.new()
+    for level_index in range(20):
+        var seen: Dictionary = {}
+        for fare_id in range(1, 31):
+            var variant: int = TYPES.for_fare(level_index, fare_id)
+            check(int(TYPES.TYPES[variant]["unlock"]) <= level_index + 1, "Passenger type never appears before its introduction")
+            seen[variant] = true
+        check(seen.size() == TYPES.available_count(level_index), "Later levels retain every unlocked passenger type")
+    for debut in [5, 10, 15]:
+        check(TYPES.for_fare(debut, 1) == TYPES.available_count(debut) - 1, "First fare introduces the new passenger on its debut level")
     for level in range(20):
         dispatch.configure(level, CAMPAIGN.pads_for(level))
         dispatch.refill(1, Vector2(240, 569))
         check(dispatch.waiting.size() == (1 if level < 2 else 2), "Level %02d has the correct concurrent fare count" % (level + 1))
         for fare in dispatch.waiting:
+            check(fare["variant"] == TYPES.for_fare(level, int(fare["id"])), "Passenger appearance is assigned when the fare spawns")
             check(fare["source"] != 1 and fare["source"] != fare["destination"], "Riders never spawn on the taxi pad or request the same destination")
             for other in dispatch.waiting:
                 check(fare["destination"] != other["source"], "Dropoff pads have no waiting rider ready for an instant next trip")

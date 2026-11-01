@@ -5,6 +5,7 @@ const ART = preload("res://scripts/game_art.gd")
 signal landed(pad_id: int)
 signal flight_motion(start: Vector2, finish: Vector2)
 signal damaged(amount: float)
+signal solid_impact(speed: float)
 signal black_hole_entered(center: Vector2)
 signal black_hole_lost
 
@@ -12,6 +13,7 @@ signal black_hole_lost
 @export var lift: float = 520.0
 @export var steering: float = 950.0
 @export var top_speed: float = 330.0
+@export var idle_fuel_drain: float = 0.10
 var fuel: float = 140.0
 var hull: float = 100.0
 var fuel_capacity: float = 140.0
@@ -41,6 +43,9 @@ var capture_time: float = 0.0
 var capture_center := Vector2.ZERO
 var capture_offset := Vector2.ZERO
 var last_damage_reason: String = "HARD IMPACT"
+const BEAM_DAMAGE_PER_SECOND: float = 24.0
+var beam_notice_timer: float = 0.0
+var beam_notice_damage: float = 0.0
 
 func _physics_process(dt: float) -> void:
     dt = clampf(dt, 0.0, 0.05)
@@ -57,6 +62,7 @@ func _physics_process(dt: float) -> void:
         exhaust.append({"position": global_position + Vector2(randf_range(-12, 12), 22), "velocity": Vector2(randf_range(-15, 15), randf_range(45, 110)), "life": 0.45})
     invulnerable_timer = maxf(0.0, invulnerable_timer - dt)
     bounce_timer = maxf(0.0, bounce_timer - dt)
+    beam_notice_timer = maxf(0.0, beam_notice_timer - dt)
     if capture_active:
         _animate_capture(dt)
         return
@@ -64,18 +70,13 @@ func _physics_process(dt: float) -> void:
         engine_on = false
         queue_redraw()
         return
+    # Life support and the idling power plant run even while docked or coasting.
+    fuel = maxf(0.0, fuel - idle_fuel_drain * dt)
     var axis: float = Input.get_axis("move_left", "move_right")
     if absf(axis) > 0.05:
         facing = signf(axis)
     var up: bool = Input.is_action_pressed("thrust")
     var brake: bool = Input.is_action_pressed("brake")
-    # Physical-key fallbacks ensure controls work with imported projects/keyboards.
-    if Input.is_physical_key_pressed(KEY_LEFT) or Input.is_physical_key_pressed(KEY_A):
-        axis = -1.0
-    if Input.is_physical_key_pressed(KEY_RIGHT) or Input.is_physical_key_pressed(KEY_D):
-        axis = 1.0
-    up = up or Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP) or Input.is_key_pressed(KEY_SPACE)
-    brake = brake or Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN)
     if landed_on != -1:
         engine_on = false
         thrust_level = 0.0
@@ -97,6 +98,7 @@ func _physics_process(dt: float) -> void:
             velocity.y = -75.0
         else:
             velocity.y = 0
+            _apply_beam_exposure(global_position, global_position, dt)
             queue_redraw()
             return
     var old_pos: Vector2 = global_position
@@ -128,8 +130,11 @@ func _physics_process(dt: float) -> void:
     global_position.x = clampf(global_position.x, 35.0, world_width - 35.0)
     global_position.y = maxf(global_position.y, 128.0)
     if global_position.y <= 128.0 and velocity.y < 0.0:
+        solid_impact.emit(absf(velocity.y))
         velocity.y = 0.0
     if global_position.x <= 35.0 or global_position.x >= world_width - 35.0:
+        if (global_position.x <= 35.0 and velocity.x < 0) or (global_position.x >= world_width - 35.0 and velocity.x > 0):
+            solid_impact.emit(absf(velocity.x))
         velocity.x = 0.0
     if is_instance_valid(environment):
         var collision: Dictionary = environment.resolve_motion(old_pos, global_position, velocity)
@@ -139,9 +144,11 @@ func _physics_process(dt: float) -> void:
         global_position = collision["position"]
         velocity = collision["velocity"]
         if collision.get("collided", false):
+            solid_impact.emit(float(collision["speed"]))
             var damage: float = impact_damage(float(collision["speed"]))
             if damage > 0:
                 _take_damage(damage, str(collision["name"]))
+    _apply_beam_exposure(old_pos, global_position, dt)
     flight_motion.emit(old_pos, global_position)
     # Pads are one-way surfaces. Detect crossing from above; a generous landing
     # corridor and auto-stabilization replace the previous collision lottery.
@@ -155,6 +162,7 @@ func _physics_process(dt: float) -> void:
             var touchdown_x: float = lerpf(old_pos.x, global_position.x, fraction)
             var support: float = support_fraction(pad, touchdown_x)
             if crossing and support > 0 and support <= 0.5:
+                solid_impact.emit(maxf(0, velocity.y))
                 # An unsupported craft slides across the top corner, then drops.
                 # Keeping its bottom on the surface prevents tunnelling into the deck.
                 global_position.y = surface
@@ -167,12 +175,14 @@ func _physics_process(dt: float) -> void:
                 global_position.x = touchdown_x
                 global_position.y = surface
                 if absf(velocity.x) <= landing_horizontal + stabilizer_level * 20.0 and velocity.y <= landing_vertical + stabilizer_level * 18.0:
+                    solid_impact.emit(maxf(0, velocity.y))
                     velocity = Vector2.ZERO
                     engine_on = false
                     landed_on = int(pad["id"])
                     landed.emit(landed_on)
                 else:
                     var impact: float = maxf(velocity.y, absf(velocity.x) * 0.75)
+                    solid_impact.emit(impact)
                     velocity.y = -maxf(45.0, velocity.y * 0.48)
                     velocity.x *= 0.42
                     bounce_timer = 0.35
@@ -188,6 +198,7 @@ func _physics_process(dt: float) -> void:
             if not hit.is_empty():
                 var normal: Vector2 = hit["normal"]
                 var normal_speed: float = maxf(0.0, -velocity.dot(normal))
+                solid_impact.emit(normal_speed)
                 global_position = hit["position"]
                 if velocity.dot(normal) < 0:
                     velocity -= normal * velocity.dot(normal) * 1.48
@@ -201,9 +212,26 @@ func _physics_process(dt: float) -> void:
         var ground_speed: float = maxf(0.0, velocity.y)
         velocity = Vector2(velocity.x * 0.65, -maxf(35.0, ground_speed * 0.48))
         if bounce_timer <= 0.0:
+            solid_impact.emit(ground_speed)
             _take_damage(impact_damage(ground_speed), "GROUND STRIKE")
             bounce_timer = 0.65
     queue_redraw()
+
+## Sustained energy damage bypasses the solid-impact grace period. Notifications
+## are throttled independently; hull loss still accrues every physics step.
+func _apply_beam_exposure(start: Vector2, finish: Vector2, dt: float) -> void:
+    if not is_instance_valid(environment) or capture_active or input_locked or hull <= 0:
+        return
+    var amount: float = environment.beam_exposure(start, finish) * BEAM_DAMAGE_PER_SECOND * dt
+    if amount <= 0:
+        return
+    hull = maxf(0.0, hull - amount)
+    last_damage_reason = "ENERGY BEAM"
+    beam_notice_damage += amount
+    if beam_notice_timer <= 0 or hull <= 0:
+        damaged.emit(beam_notice_damage)
+        beam_notice_damage = 0.0
+        beam_notice_timer = 0.25
 
 func support_fraction(pad: Dictionary, craft_x: float) -> float:
     if pad.is_empty():

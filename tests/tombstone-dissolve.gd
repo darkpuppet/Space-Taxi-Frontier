@@ -57,7 +57,11 @@ func _run() -> void:
     for index in range(1, stages.size()):
         for y in range(190, 210):
             for x in range(25, 135):
-                if picture.get_pixel(x, y) != picture.get_pixel(x + index * 160, y):
+                var a: Color = picture.get_pixel(x, y)
+                var b: Color = picture.get_pixel(x + index * 160, y)
+                # Identical atlas samples may round one color step differently
+                # at another screen position; visible spill still fails here.
+                if maxf(absf(a.r - b.r), maxf(absf(a.g - b.g), absf(a.b - b.b))) > 1.5 / 255.0:
                     check(false, "Dissolve remains clipped above the platform")
                     break
     picture.save_png("res://tests/tombstone-dissolve.png")

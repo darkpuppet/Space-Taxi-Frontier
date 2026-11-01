@@ -6,17 +6,17 @@ const STAGES: Array[Dictionary] = [
     {"name": "ICE MOON", "hint": "The first asteroids block the lower flight lane."},
     {"name": "COPPER RIDGE", "hint": "Moving gates require timing your crossing."},
     {"name": "FIRST CONTACT", "hint": "Alien scouts patrol between the terminals."},
-    {"name": "NEON CROSSING", "hint": "Watch patrols through the neon rain."},
+    {"name": "NEON CROSSING", "hint": "Crystal travelers join the fares. Watch patrols through the neon rain."},
     {"name": "TWIN HORIZONS", "hint": "Choose between waiting fares under the twin suns."},
     {"name": "ALIEN OUTPOST", "hint": "Electric beams flash on a timer. Cross while dark."},
     {"name": "EVENT HORIZON", "hint": "Violet rings mark a drifting gravity well."},
     {"name": "DRIFTER'S REACH", "hint": "Hunter drones pursue nearby airborne taxis."},
-    {"name": "BINARY DUSK", "hint": "Prioritize impatient fares before they leave."},
+    {"name": "BINARY DUSK", "hint": "Insectoid travelers join the fares. Prioritize impatient riders."},
     {"name": "SCOUT BELT", "hint": "Proximity mines guard the lower approach."},
     {"name": "SINGULARITY ROW", "hint": "Two drifting wells cross the sector."},
     {"name": "CRIMSON TRANSIT", "hint": "Meteors streak across the volcanic shipping lanes."},
     {"name": "FLOATING GARDEN", "hint": "Floating terminals and mines demand precise approaches."},
-    {"name": "NIGHT PATROL", "hint": "Four scouts patrol the night ocean. Docking is safe."},
+    {"name": "NIGHT PATROL", "hint": "Robot couriers join the fares. Four scouts patrol the night ocean."},
     {"name": "VIOLET CURRENT", "hint": "Three wells and two drones control the nebula."},
     {"name": "OUTER RIM", "hint": "Narrow station docks demand low lateral speed."},
     {"name": "LAST LIGHT", "hint": "Twin meteor streams cross the eclipse approach."},
@@ -64,6 +64,9 @@ static func sector(index: int) -> Dictionary:
     result["landing_horizontal"] = 155.0 - n * 2.0
     result["landing_vertical"] = 225.0 - n * 2.0
     result["fares"] = 3
+    # Required cash in hand, after upgrades, repairs, and fines. Level 1: 750 CR;
+    # Level 20: 53,000 CR. Extra fares remain available below the target.
+    result["required_balance"] = 750 * (n + 1) + 100 * n * (n + 1)
     result["difficulty"] = 1.0 + n * 0.05
     return result
 
@@ -98,5 +101,5 @@ static func pads_for(index: int) -> Array:
     var widths: Array[float] = [240, 260, 220, 200, 230]
     for i in range(5):
         var point: Vector2 = PAD_LAYOUTS[n][i]
-        result.append({"id": i + 1, "x": point.x, "y": point.y, "width": widths[i] - n * 5.0, "services": ["fuel", "repair"] if i == 1 else []})
+        result.append({"id": i + 1, "x": point.x, "y": point.y, "width": widths[i] - n * 5.0, "services": ["fuel", "repair", "upgrades"] if i == 1 else []})
     return result

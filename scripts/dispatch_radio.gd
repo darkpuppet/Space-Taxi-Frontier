@@ -145,32 +145,107 @@ const GATE_CLIPS: Array[AudioStream] = [
     preload("res://assets/audio/cb-female-stargate-v2.wav"),
     preload("res://assets/audio/cb-robot-stargate-v2.wav")
 ]
+const CUSTOMER_VOICES_PER_SPECIES: int = 6
+const ROBOT_CUSTOMER_VOICE: int = 12
 const DESTINATION_CLIPS: Array[Array] = [
     [
-        preload("res://assets/audio/customer-male-pad-01-v1.wav"),
-        preload("res://assets/audio/customer-male-pad-02-v1.wav"),
-        preload("res://assets/audio/customer-male-pad-03-v1.wav"),
-        preload("res://assets/audio/customer-male-pad-04-v1.wav"),
-        preload("res://assets/audio/customer-male-pad-05-v1.wav")
+        preload("res://assets/audio/customer-human-1-pad-01-v2.wav"),
+        preload("res://assets/audio/customer-human-1-pad-02-v2.wav"),
+        preload("res://assets/audio/customer-human-1-pad-03-v2.wav"),
+        preload("res://assets/audio/customer-human-1-pad-04-v2.wav"),
+        preload("res://assets/audio/customer-human-1-pad-05-v2.wav")
     ],
     [
-        preload("res://assets/audio/customer-female-pad-01-v1.wav"),
-        preload("res://assets/audio/customer-female-pad-02-v1.wav"),
-        preload("res://assets/audio/customer-female-pad-03-v1.wav"),
-        preload("res://assets/audio/customer-female-pad-04-v1.wav"),
-        preload("res://assets/audio/customer-female-pad-05-v1.wav")
+        preload("res://assets/audio/customer-human-2-pad-01-v2.wav"),
+        preload("res://assets/audio/customer-human-2-pad-02-v2.wav"),
+        preload("res://assets/audio/customer-human-2-pad-03-v2.wav"),
+        preload("res://assets/audio/customer-human-2-pad-04-v2.wav"),
+        preload("res://assets/audio/customer-human-2-pad-05-v2.wav")
     ],
     [
-        preload("res://assets/audio/customer-robot-pad-01-v1.wav"),
-        preload("res://assets/audio/customer-robot-pad-02-v1.wav"),
-        preload("res://assets/audio/customer-robot-pad-03-v1.wav"),
-        preload("res://assets/audio/customer-robot-pad-04-v1.wav"),
-        preload("res://assets/audio/customer-robot-pad-05-v1.wav")
+        preload("res://assets/audio/customer-human-3-pad-01-v2.wav"),
+        preload("res://assets/audio/customer-human-3-pad-02-v2.wav"),
+        preload("res://assets/audio/customer-human-3-pad-03-v2.wav"),
+        preload("res://assets/audio/customer-human-3-pad-04-v2.wav"),
+        preload("res://assets/audio/customer-human-3-pad-05-v2.wav")
+    ],
+    [
+        preload("res://assets/audio/customer-human-4-pad-01-v2.wav"),
+        preload("res://assets/audio/customer-human-4-pad-02-v2.wav"),
+        preload("res://assets/audio/customer-human-4-pad-03-v2.wav"),
+        preload("res://assets/audio/customer-human-4-pad-04-v2.wav"),
+        preload("res://assets/audio/customer-human-4-pad-05-v2.wav")
+    ],
+    [
+        preload("res://assets/audio/customer-human-5-pad-01-v2.wav"),
+        preload("res://assets/audio/customer-human-5-pad-02-v2.wav"),
+        preload("res://assets/audio/customer-human-5-pad-03-v2.wav"),
+        preload("res://assets/audio/customer-human-5-pad-04-v2.wav"),
+        preload("res://assets/audio/customer-human-5-pad-05-v2.wav")
+    ],
+    [
+        preload("res://assets/audio/customer-human-6-pad-01-v2.wav"),
+        preload("res://assets/audio/customer-human-6-pad-02-v2.wav"),
+        preload("res://assets/audio/customer-human-6-pad-03-v2.wav"),
+        preload("res://assets/audio/customer-human-6-pad-04-v2.wav"),
+        preload("res://assets/audio/customer-human-6-pad-05-v2.wav")
+    ],
+    [
+        preload("res://assets/audio/customer-alien-1-pad-01-v2.wav"),
+        preload("res://assets/audio/customer-alien-1-pad-02-v2.wav"),
+        preload("res://assets/audio/customer-alien-1-pad-03-v2.wav"),
+        preload("res://assets/audio/customer-alien-1-pad-04-v2.wav"),
+        preload("res://assets/audio/customer-alien-1-pad-05-v2.wav")
+    ],
+    [
+        preload("res://assets/audio/customer-alien-2-pad-01-v2.wav"),
+        preload("res://assets/audio/customer-alien-2-pad-02-v2.wav"),
+        preload("res://assets/audio/customer-alien-2-pad-03-v2.wav"),
+        preload("res://assets/audio/customer-alien-2-pad-04-v2.wav"),
+        preload("res://assets/audio/customer-alien-2-pad-05-v2.wav")
+    ],
+    [
+        preload("res://assets/audio/customer-alien-3-pad-01-v2.wav"),
+        preload("res://assets/audio/customer-alien-3-pad-02-v2.wav"),
+        preload("res://assets/audio/customer-alien-3-pad-03-v2.wav"),
+        preload("res://assets/audio/customer-alien-3-pad-04-v2.wav"),
+        preload("res://assets/audio/customer-alien-3-pad-05-v2.wav")
+    ],
+    [
+        preload("res://assets/audio/customer-alien-4-pad-01-v2.wav"),
+        preload("res://assets/audio/customer-alien-4-pad-02-v2.wav"),
+        preload("res://assets/audio/customer-alien-4-pad-03-v2.wav"),
+        preload("res://assets/audio/customer-alien-4-pad-04-v2.wav"),
+        preload("res://assets/audio/customer-alien-4-pad-05-v2.wav")
+    ],
+    [
+        preload("res://assets/audio/customer-alien-5-pad-01-v2.wav"),
+        preload("res://assets/audio/customer-alien-5-pad-02-v2.wav"),
+        preload("res://assets/audio/customer-alien-5-pad-03-v2.wav"),
+        preload("res://assets/audio/customer-alien-5-pad-04-v2.wav"),
+        preload("res://assets/audio/customer-alien-5-pad-05-v2.wav")
+    ],
+    [
+        preload("res://assets/audio/customer-alien-6-pad-01-v2.wav"),
+        preload("res://assets/audio/customer-alien-6-pad-02-v2.wav"),
+        preload("res://assets/audio/customer-alien-6-pad-03-v2.wav"),
+        preload("res://assets/audio/customer-alien-6-pad-04-v2.wav"),
+        preload("res://assets/audio/customer-alien-6-pad-05-v2.wav")
+    ],
+    [
+        preload("res://assets/audio/customer-robot-pad-01-v2.wav"),
+        preload("res://assets/audio/customer-robot-pad-02-v2.wav"),
+        preload("res://assets/audio/customer-robot-pad-03-v2.wav"),
+        preload("res://assets/audio/customer-robot-pad-04-v2.wav"),
+        preload("res://assets/audio/customer-robot-pad-05-v2.wav")
     ]
 ]
 var spoken_destinations: Dictionary = {}
 var gate_announced: bool = false
 var voice_rng := RandomNumberGenerator.new()
+var customer_rng := RandomNumberGenerator.new()
+var customer_bags: Dictionary = {}
+var last_customer_voice: Dictionary = {}
 var phrase_rng := RandomNumberGenerator.new()
 var phrase_bag: Array[int] = []
 var last_phrase: int = -1
@@ -188,6 +263,7 @@ var gap: float = 0.4
 func _ready() -> void:
     voice_rng.randomize()
     phrase_rng.randomize()
+    customer_rng.randomize()
     process_mode = Node.PROCESS_MODE_PAUSABLE
     player = AudioStreamPlayer.new()
     player.volume_db = -5.0
@@ -293,8 +369,8 @@ func announce_gate(muted: bool = false) -> void:
         pending.append({"kind": "gate"})
         gap = 0.15
 
-## Passenger requests take priority over pickups, with voices matched to artwork:
-## orange human = male, green alien = robot, blue-suit human = female.
+## Passenger requests take priority over pickups. Each species has six voices.
+## Robot couriers have their own voice; other riders draw from species pools.
 func announce_destination(fare_id: int, pad: int, variant: int, muted: bool = false) -> void:
     if gate_announced or pad < 1 or pad > PAD_COUNT or spoken_destinations.has(fare_id):
         return
@@ -306,12 +382,35 @@ func announce_destination(fare_id: int, pad: int, variant: int, muted: bool = fa
     if player.playing and current_id > 0 and current_id != fare_id:
         remaining.push_front({"id": current_id, "pad": current_pad, "phrase": current_phrase})
     silence()
-    var voice: int = [0, 2, 1][posmod(variant, 3)]
+    var types = preload("res://scripts/passenger_types.gd")
+    var voice: int = ROBOT_CUSTOMER_VOICE if types.is_robot(variant) else _choose_customer_voice(types.is_alien(variant))
     pending.append({"kind": "destination", "id": fare_id, "pad": pad, "voice": voice})
     for call in remaining:
         if call.get("kind", "pickup") != "pickup" or int(call["id"]) != fare_id:
             pending.append(call)
     gap = 0.1
+
+## Draw every voice once before refilling, with no repeat across bag boundaries.
+## Separate pools keep aliens and humans varied without affecting dispatch RNG.
+func _choose_customer_voice(alien: bool) -> int:
+    var bag: Array = customer_bags.get(alien, [])
+    if bag.is_empty():
+        var offset: int = CUSTOMER_VOICES_PER_SPECIES if alien else 0
+        for index in range(CUSTOMER_VOICES_PER_SPECIES):
+            bag.append(offset + index)
+        for index in range(bag.size() - 1, 0, -1):
+            var other: int = customer_rng.randi_range(0, index)
+            var swap: int = bag[index]
+            bag[index] = bag[other]
+            bag[other] = swap
+        if bag.back() == last_customer_voice.get(alien, -1):
+            var swap: int = bag[0]
+            bag[0] = bag[-1]
+            bag[-1] = swap
+    var selected: int = bag.pop_back()
+    customer_bags[alien] = bag
+    last_customer_voice[alien] = selected
+    return selected
 
 ## Randomize complete sets of six phrases, avoiding repeats between sets.
 ## The phrase is attached to the fare so interruption never rerolls its wording.

@@ -1,0 +1,32 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/quip_library.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+phrases = PackedStringArray(
+"TRAFFIC UPDATE: Saturn's rings are a roundabout, not a parking lot.",
+"FRONTIER TAXI: We go the extra light-year. The meter does too.",
+"LOST & FOUND: One gravity. Last seen near the airlock.",
+"Passenger requests the scenic route. Passenger has not seen the fuel bill.",
+"REMINDER: A black hole is not a shortcut. Accounting checked.",
+"Now hiring drivers with three lives and at least one functioning brake.",
+"Please keep all tentacles inside the taxi until it has landed.",
+"Five-star review: Driver only screamed on two of the three landings.",
+"No refunds for time dilation. Your fare was expensive yesterday too.",
+"UFOs are not authorized rideshare partners. Do not follow the green light.",
+"Our taxis run on fuel, optimism, and increasingly creative insurance claims.",
+"Today's special: Complimentary existential dread with every wormhole transfer.",
+"Dispatch would like to remind pilots that reverse is not a personality.",
+"Robot passengers tip in cryptocurrency. We prefer actual currency.",
+"Please declare all emotional baggage before boarding. Suitcases ride free.",
+"The upgrade dock now offers brakes. Apparently this needed advertising.",
+"Your destination is on the left. Your other left. The one without the asteroid.",
+"All fares include one atmosphere. Additional atmospheres charged separately.",
+"Alien translation service available. Unfortunately, 'Are we there yet?' is universal.",
+"This station has gone 0 days without someone parking in a tractor beam.",
+"FRONTIER WEATHER: Scattered meteors with a chance of expensive noises.",
+"Taxi stand etiquette: Form one queue per species. Hive minds count as one.",
+"Warning: Objects in the rear-view mirror may be pursuing you for unpaid docking fees.",
+"A clean cab is a happy cab. Please stop feeding the upholstery."
+)

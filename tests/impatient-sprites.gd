@@ -11,9 +11,9 @@ func check(value: bool, description: String) -> void:
         push_error("FAIL: " + description)
 
 func _paint(canvas: Node2D) -> void:
-    canvas.draw_rect(Rect2(0, 0, 800, 560), Color("101c30"))
+    canvas.draw_rect(Rect2(0, 0, 1600, 560), Color("101c30"))
     for row in range(2):
-        for variant in range(3):
+        for variant in range(6):
             var anchor := Vector2(140 + variant * 250, 235 + row * 260)
             canvas.draw_line(anchor + Vector2(-65, 1), anchor + Vector2(65, 1), Color("57c5d0"), 2)
 
@@ -24,20 +24,23 @@ func _differences(image: Image, area: Rect2i) -> int:
     var count: int = 0
     for y in range(area.position.y, area.end.y):
         for x in range(area.position.x, area.end.x):
-            if image.get_pixel(x, y) != image.get_pixel(x, y + 260):
+            var a: Color = image.get_pixel(x, y)
+            var b: Color = image.get_pixel(x, y + 260)
+            # GPU sampling can differ by one channel step between identical rows.
+            if maxf(absf(a.r - b.r), maxf(absf(a.g - b.g), absf(a.b - b.b))) > 1.5 / 255.0:
                 count += 1
     return count
 
 func _run() -> void:
     root.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
     root.content_scale_size = Vector2i.ZERO
-    root.size = Vector2i(800, 560)
+    root.size = Vector2i(1600, 560)
     await process_frame
     var canvas := Node2D.new()
     root.add_child(canvas)
     canvas.draw.connect(_paint.bind(canvas))
     for row in range(2):
-        for variant in range(3):
+        for variant in range(6):
             var person := Node2D.new()
             person.position = Vector2(140 + variant * 250, 235 + row * 260)
             person.scale = Vector2(4, 4)
@@ -46,7 +49,7 @@ func _run() -> void:
     await process_frame
     await RenderingServer.frame_post_draw
     var image: Image = root.get_texture().get_image()
-    for variant in range(3):
+    for variant in range(6):
         var x: int = 140 + variant * 250
         check(_differences(image, Rect2i(x - 70, 55, 140, 140)) == 0, "Impatient passenger body stays still")
         check(_differences(image, Rect2i(x - 65, 205, 50, 28)) == 0, "Supporting foot stays planted")
@@ -55,5 +58,5 @@ func _run() -> void:
     check(absf(SPRITES.foot_tap_angle(0.105) - SPRITES.foot_tap_angle(1.155)) < 0.001, "Double tap loops smoothly")
     image.save_png("res://tests/impatient-sprites.png")
     canvas.free()
-    print("Impatient sprite rendering: 11 checks, %d failures" % failures)
+    print("Impatient sprite rendering: 20 checks, %d failures" % failures)
     quit(0 if failures == 0 else 1)

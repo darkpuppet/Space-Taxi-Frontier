@@ -10,6 +10,8 @@ static var effect_frames: Array[Texture2D] = []
 static var damage_frames: Array[Texture2D] = []
 
 static func slice(atlas: Texture2D, columns: int, rows: Array[float], threshold: float = 0.25) -> Array[Texture2D]:
+    if preload("res://scripts/atlas_regions.gd").REGIONS.has(atlas.resource_path):
+        return preload("res://scripts/atlas_regions.gd").frames_for(atlas)
     var result: Array[Texture2D] = []
     var source: Image = atlas.get_image()
     for row in range(rows.size() - 1):
