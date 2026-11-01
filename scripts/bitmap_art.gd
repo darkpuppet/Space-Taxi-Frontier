@@ -1,5 +1,5 @@
 extends RefCounted
-## Original PNGs stay intact; alpha bounds become runtime atlas regions.
+## Original PNGs stay intact; cached alpha bounds become atlas regions.
 const PROP_ATLAS: Texture2D = preload("res://assets/sprites/frontier-props-v1.png")
 static var backgrounds: Dictionary = {}
 static var props: Array[Texture2D] = []
@@ -16,28 +16,8 @@ static func paint(canvas: CanvasItem, index: int, size: Vector2) -> void:
     canvas.draw_rect(Rect2(Vector2.ZERO, size), Color(0.015, 0.035, 0.06, 0.14))
 
 static func prepare_props() -> void:
-    if not props.is_empty():
-        return
-    var source: Image = PROP_ATLAS.get_image()
-    var cuts: Array[float] = [0.0, 0.22, 0.59, 1.0]
-    for row in range(3):
-        for column in range(3):
-            var low := Vector2i(column * source.get_width() / 3, int(cuts[row] * source.get_height()))
-            var high := Vector2i((column + 1) * source.get_width() / 3, int(cuts[row + 1] * source.get_height()))
-            var minimum: Vector2i = high
-            var maximum: Vector2i = low - Vector2i.ONE
-            for y in range(low.y, high.y):
-                for x in range(low.x, high.x):
-                    if source.get_pixel(x, y).a >= 0.25:
-                        minimum.x = mini(minimum.x, x)
-                        minimum.y = mini(minimum.y, y)
-                        maximum.x = maxi(maximum.x, x)
-                        maximum.y = maxi(maximum.y, y)
-            var texture := AtlasTexture.new()
-            texture.atlas = PROP_ATLAS
-            texture.region = Rect2(minimum, maximum - minimum + Vector2i.ONE)
-            texture.filter_clip = true
-            props.append(texture)
+    if props.is_empty():
+        props = preload("res://scripts/atlas_regions.gd").frames_for(PROP_ATLAS)
 
 static func sprite(canvas: CanvasItem, index: int, rect: Rect2, tint: Color = Color.WHITE) -> void:
     prepare_props()

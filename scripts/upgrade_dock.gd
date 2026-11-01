@@ -7,20 +7,7 @@ static var texture: AtlasTexture
 
 static func draw(canvas: CanvasItem, pad: Dictionary, clock: float) -> void:
     if texture == null:
-        var image: Image = ART.get_image()
-        var minimum := Vector2i(image.get_width(), image.get_height())
-        var maximum := Vector2i.ZERO
-        for y in range(image.get_height()):
-            for x in range(image.get_width()):
-                if image.get_pixel(x, y).a >= 0.25:
-                    minimum.x = mini(minimum.x, x)
-                    minimum.y = mini(minimum.y, y)
-                    maximum.x = maxi(maximum.x, x)
-                    maximum.y = maxi(maximum.y, y)
-        texture = AtlasTexture.new()
-        texture.atlas = ART
-        texture.region = Rect2(minimum, maximum - minimum + Vector2i.ONE)
-        texture.filter_clip = true
+        texture = preload("res://scripts/atlas_regions.gd").frames_for(ART)[0]
     var width: float = float(pad["width"])
     var center := Vector2(float(pad["x"]), float(pad["y"]))
     var left: float = center.x - width * 0.5

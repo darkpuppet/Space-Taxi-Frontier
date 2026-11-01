@@ -4,6 +4,7 @@ $projectPath = Split-Path -Parent $PSScriptRoot
 $engine = (Get-Command $GodotPath -ErrorAction Stop).Source
 $checks = @(
     @{ Name = 'import'; Args = '--headless --path . --editor --quit' },
+    @{ Name = 'startup-cache'; Args = '--headless --path . --script tests/startup-cache.gd --quit-after 3000' },
     @{ Name = 'window-scaling'; Args = '--path . --rendering-driver opengl3 --audio-driver Dummy --position -32000,-32000 --script tests/window-scaling.gd --quit-after 3000' },
     @{ Name = 'impatient-sprites'; Args = '--path . --rendering-driver opengl3 --audio-driver Dummy --position -32000,-32000 --script tests/impatient-sprites.gd --quit-after 3000' },
     @{ Name = 'hazard-animation'; Args = '--path . --rendering-driver opengl3 --audio-driver Dummy --position -32000,-32000 --script tests/hazard-animation.gd --quit-after 3000' },
@@ -11,6 +12,8 @@ $checks = @(
     @{ Name = 'dispatch-radio'; Args = '--headless --path . --script tests/dispatch-radio.gd --quit-after 3000' },
     @{ Name = 'abductions'; Args = '--headless --path . --script tests/abductions.gd --quit-after 3000' },
     @{ Name = 'economy'; Args = '--headless --path . --script tests/economy.gd --quit-after 3000' },
+    @{ Name = 'settings-scores'; Args = '--headless --path . --script tests/settings-scores.gd --quit-after 3000' },
+    @{ Name = 'controller'; Args = '--headless --path . --script tests/controller.gd --quit-after 3000' },
     @{ Name = 'developer-level-01'; Args = '--headless --path . --script tests/developer-launch.gd --quit-after 3000 -- --dev-level=1' },
     @{ Name = 'developer-level-09'; Args = '--headless --path . --script tests/developer-launch.gd --quit-after 3000 -- --dev-level=9' },
     @{ Name = 'developer-level-20'; Args = '--headless --path . --script tests/developer-launch.gd --quit-after 3000 -- --dev-level=20' },

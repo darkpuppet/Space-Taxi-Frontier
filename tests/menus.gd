@@ -114,6 +114,10 @@ func _run() -> void:
     game._lose_life()
     check(game.lives == 0 and game.screen_state == "game_over" and paused, "Third loss ends the run")
     check(not game.death_quip.is_empty() and game.overlay_copy.text.contains(game.death_quip), "Final life loss also displays an insult on Game Over")
+    if not game.pending_high_score.is_empty():
+        game.menu_dialogs.score_name.text = "Test Pilot"
+        game.menu_dialogs._save_score()
+        game.menu_dialogs.close()
     if DisplayServer.get_name() != "headless":
         await process_frame
         await RenderingServer.frame_post_draw

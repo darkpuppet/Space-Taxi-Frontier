@@ -11,7 +11,7 @@ func point(position: Vector2) -> Vector2:
     return Vector2(position.x / WORLD.WIDTH * 260.0, 24 + position.y / WORLD.HEIGHT * 130.0)
 
 func _draw() -> void:
-    draw_string(ThemeDB.fallback_font, Vector2(0, 10), "SECTOR MAP / 2.4 x 1.4 KM", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("7d9aa9"))
+    draw_string(ThemeDB.fallback_font, Vector2(0, 10), "SECTOR MAP / 2.4 x 1.4 KM", HORIZONTAL_ALIGNMENT_CENTER, 260, 11, Color("7d9aa9"))
     draw_rect(Rect2(0, 20, 260, 136), Color(0.025, 0.06, 0.09, 0.7))
     draw_rect(Rect2(0, 20, 260, 136), Color("304b58"), false, 1)
     for pad in pads:

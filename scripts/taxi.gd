@@ -77,13 +77,6 @@ func _physics_process(dt: float) -> void:
         facing = signf(axis)
     var up: bool = Input.is_action_pressed("thrust")
     var brake: bool = Input.is_action_pressed("brake")
-    # Physical-key fallbacks ensure controls work with imported projects/keyboards.
-    if Input.is_physical_key_pressed(KEY_LEFT) or Input.is_physical_key_pressed(KEY_A):
-        axis = -1.0
-    if Input.is_physical_key_pressed(KEY_RIGHT) or Input.is_physical_key_pressed(KEY_D):
-        axis = 1.0
-    up = up or Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP) or Input.is_key_pressed(KEY_SPACE)
-    brake = brake or Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN)
     if landed_on != -1:
         engine_on = false
         thrust_level = 0.0

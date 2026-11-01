@@ -7,30 +7,8 @@ const LATER_RIDERS: Texture2D = preload("res://assets/sprites/frontier-passenger
 static var later_frames: Array[Texture2D] = []
 
 static func prepare_later_riders() -> void:
-	if not later_frames.is_empty():
-		return
-	var source: Image = LATER_RIDERS.get_image()
-	# Cuts follow the transparent row gaps, including crystal crown and antennae.
-	var cuts: Array[float] = [0.0, 0.36, 0.70, 1.0]
-	for row in range(3):
-		for column in range(8):
-			var low := Vector2i(column * source.get_width() / 8, int(cuts[row] * source.get_height()))
-			var high := Vector2i((column + 1) * source.get_width() / 8, int(cuts[row + 1] * source.get_height()))
-			var minimum: Vector2i = high
-			var maximum: Vector2i = low - Vector2i.ONE
-			for y in range(low.y, high.y):
-				for x in range(low.x, high.x):
-					if source.get_pixel(x, y).a >= 0.25:
-						minimum.x = mini(minimum.x, x)
-						minimum.y = mini(minimum.y, y)
-						maximum.x = maxi(maximum.x, x)
-						maximum.y = maxi(maximum.y, y)
-			var used := Rect2i(minimum - low, maximum - minimum + Vector2i.ONE)
-			var texture := AtlasTexture.new()
-			texture.atlas = LATER_RIDERS
-			texture.region = Rect2(low + used.position, used.size)
-			texture.filter_clip = true
-			later_frames.append(texture)
+	if later_frames.is_empty():
+		later_frames = preload("res://scripts/atlas_regions.gd").frames_for(LATER_RIDERS)
 
 static func _new_rider(canvas: CanvasItem, foot: Vector2, variant: int, pose: int) -> void:
 	prepare_later_riders()
@@ -56,31 +34,8 @@ static func _new_impatient_rider(canvas: CanvasItem, foot: Vector2, variant: int
 	canvas.draw_set_transform(Vector2.ZERO)
 
 static func _ensure() -> void:
-	if not frames.is_empty():
-		return
-	var source: Image = ATLAS.get_image()
-	var width: int = source.get_width()
-	var height: int = source.get_height()
-	# Generated rows have different padding; these cuts preserve raised hands.
-	var cuts: Array[float] = [0.0, 0.219, 0.488, 0.727, 1.0]
-	for row in range(4):
-		for column in range(4):
-			var region := Rect2i(column * width / 4, int(cuts[row] * height), width / 4, int(cuts[row + 1] * height) - int(cuts[row] * height))
-			var minimum: Vector2i = region.end
-			var maximum: Vector2i = region.position - Vector2i.ONE
-			for y in range(region.position.y, region.end.y):
-				for x in range(region.position.x, region.end.x):
-					if source.get_pixel(x, y).a >= 0.25:
-						minimum.x = mini(minimum.x, x)
-						minimum.y = mini(minimum.y, y)
-						maximum.x = maxi(maximum.x, x)
-						maximum.y = maxi(maximum.y, y)
-			var used := Rect2i(minimum - region.position, maximum - minimum + Vector2i.ONE)
-			var texture := AtlasTexture.new()
-			texture.atlas = ATLAS
-			texture.region = Rect2(region.position + used.position, used.size)
-			texture.filter_clip = true
-			frames.append(texture)
+	if frames.is_empty():
+		frames = preload("res://scripts/atlas_regions.gd").frames_for(ATLAS)
 
 static func ship(canvas: CanvasItem, type: int, rect: Rect2) -> void:
 	_ensure()
@@ -101,29 +56,8 @@ const WALK_ATLAS: Texture2D = preload("res://assets/sprites/frontier-walk-v1.png
 static var walk_frames: Array[Texture2D] = []
 
 static func prepare_walk() -> void:
-	if not walk_frames.is_empty():
-		return
-	var source: Image = WALK_ATLAS.get_image()
-	# Row boundaries follow the actual transparent gaps in the generated sheet.
-	var cuts: Array[float] = [0.0, 0.355, 0.655, 1.0]
-	for row in range(3):
-		for column in range(4):
-			var low := Vector2i(column * source.get_width() / 4, int(cuts[row] * source.get_height()))
-			var high := Vector2i((column + 1) * source.get_width() / 4, int(cuts[row + 1] * source.get_height()))
-			var minimum: Vector2i = high
-			var maximum: Vector2i = low - Vector2i.ONE
-			for y in range(low.y, high.y):
-				for x in range(low.x, high.x):
-					if source.get_pixel(x, y).a >= 0.25:
-						minimum.x = mini(minimum.x, x)
-						minimum.y = mini(minimum.y, y)
-						maximum.x = maxi(maximum.x, x)
-						maximum.y = maxi(maximum.y, y)
-			var texture := AtlasTexture.new()
-			texture.atlas = WALK_ATLAS
-			texture.region = Rect2(minimum, maximum - minimum + Vector2i.ONE)
-			texture.filter_clip = true
-			walk_frames.append(texture)
+	if walk_frames.is_empty():
+		walk_frames = preload("res://scripts/atlas_regions.gd").frames_for(WALK_ATLAS)
 
 static func walking_rider(canvas: CanvasItem, foot: Vector2, variant: int, clock: float, direction: float) -> void:
 	if variant >= 3:

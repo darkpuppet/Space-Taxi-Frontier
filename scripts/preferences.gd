@@ -62,6 +62,25 @@ func apply_controls() -> void:
                 space.physical_keycode = KEY_SPACE
                 InputMap.action_add_event(action, space)
         InputMap.action_set_deadzone(action, float(values["deadzone"]))
+    for item in [["move_left", JOY_BUTTON_DPAD_LEFT], ["move_right", JOY_BUTTON_DPAD_RIGHT], ["thrust", JOY_BUTTON_A], ["brake", JOY_BUTTON_B], ["ui_accept", JOY_BUTTON_A], ["ui_cancel", JOY_BUTTON_B], ["ui_left", JOY_BUTTON_DPAD_LEFT], ["ui_right", JOY_BUTTON_DPAD_RIGHT], ["ui_up", JOY_BUTTON_DPAD_UP], ["ui_down", JOY_BUTTON_DPAD_DOWN]]:
+        var button := InputEventJoypadButton.new()
+        button.button_index = item[1]
+        _ensure_event(item[0], button)
+    for item in [["move_left", JOY_AXIS_LEFT_X, -1.0], ["move_right", JOY_AXIS_LEFT_X, 1.0], ["thrust", JOY_AXIS_TRIGGER_RIGHT, 1.0], ["brake", JOY_AXIS_TRIGGER_LEFT, 1.0], ["ui_left", JOY_AXIS_LEFT_X, -1.0], ["ui_right", JOY_AXIS_LEFT_X, 1.0], ["ui_up", JOY_AXIS_LEFT_Y, -1.0], ["ui_down", JOY_AXIS_LEFT_Y, 1.0]]:
+        var axis := InputEventJoypadMotion.new()
+        axis.axis = item[1]
+        axis.axis_value = item[2]
+        _ensure_event(item[0], axis)
+
+func _ensure_event(action: String, event: InputEvent) -> void:
+    event.device = -1
+    for existing in InputMap.action_get_events(action):
+        var matches: bool = (existing is InputEventJoypadButton and event is InputEventJoypadButton and existing.button_index == event.button_index) or (existing is InputEventJoypadMotion and event is InputEventJoypadMotion and existing.axis == event.axis and signf(existing.axis_value) == signf(event.axis_value))
+        if matches:
+            if existing.device == -1:
+                return
+            InputMap.action_erase_event(action, existing)
+    InputMap.action_add_event(action, event)
 
 func reset_controls() -> void:
     keys = DEFAULT_KEYS.duplicate()
@@ -78,5 +97,7 @@ func save_settings() -> void:
         cfg.set_value("keys", action, keys[action])
     cfg.save(path)
 
-func control_hint() -> String:
+func control_hint(controller: bool = false) -> String:
+    if controller:
+        return "STICK / D-PAD STEER   A / RT LIFT   B / LT BRAKE"
     return "%s / %s STEER   %s LIFT   %s BRAKE" % [OS.get_keycode_string(keys["move_left"]), OS.get_keycode_string(keys["move_right"]), OS.get_keycode_string(keys["thrust"]), OS.get_keycode_string(keys["brake"])]

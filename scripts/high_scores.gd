@@ -21,10 +21,15 @@ func record(pilot: String, credits: int, level: int, fares: int, complete: bool)
     cfg.set_value("scores", "entries", entries)
     cfg.save(path)
 
+func qualifies(credits: int, level: int, fares: int) -> bool:
+    return entries.size() < 10 or _better({"credits": credits, "level": level, "fares": fares}, entries[-1])
+
+func _better(a: Dictionary, b: Dictionary) -> bool:
+    if a["credits"] != b["credits"]: return a["credits"] > b["credits"]
+    if a["level"] != b["level"]: return a["level"] > b["level"]
+    return a["fares"] > b["fares"]
+
 func _rank() -> void:
-    entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-        if a["credits"] != b["credits"]: return a["credits"] > b["credits"]
-        if a["level"] != b["level"]: return a["level"] > b["level"]
-        return a["fares"] > b["fares"])
+    entries.sort_custom(_better)
     if entries.size() > 10:
         entries.resize(10)

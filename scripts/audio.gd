@@ -1,5 +1,10 @@
 extends Node
 ## Synthesized sound and bundled offline CB dispatch voice clips.
+const CACHED_MUSIC = preload("res://assets/audio/synth/music-loop.res")
+const CACHED_HUMAN_SCREAM = preload("res://assets/audio/synth/scream-human.res")
+const CACHED_ALIEN_SCREAM = preload("res://assets/audio/synth/scream-alien.res")
+const CACHED_CLUNK = preload("res://assets/audio/synth/clunk.res")
+const CACHED_BEAM = preload("res://assets/audio/synth/beam-loop.res")
 var engine: AudioStreamPlayer
 var engine_playback: AudioStreamGeneratorPlayback
 var phase: float = 0.0
@@ -15,6 +20,10 @@ var impact_cooldown: float = 0.0
 
 func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
+    for bus in ["FrontierMusic", "FrontierEffects", "FrontierVoices"]:
+        if AudioServer.get_bus_index(bus) < 0:
+            AudioServer.add_bus()
+            AudioServer.set_bus_name(AudioServer.bus_count - 1, bus)
     engine = AudioStreamPlayer.new()
     var stream := AudioStreamGenerator.new()
     stream.mix_rate = 22050.0
@@ -22,29 +31,38 @@ func _ready() -> void:
     engine.stream = stream
     engine.volume_db = -22.0
     add_child(engine)
+    engine.bus = "FrontierEffects"
     engine.play()
     engine_playback = engine.get_stream_playback()
     music = AudioStreamPlayer.new()
-    music.stream = _music_loop()
+    music.stream = CACHED_MUSIC
     music.volume_db = -27.0
     add_child(music)
+    music.bus = "FrontierMusic"
     music.play()
     radio = preload("res://scripts/dispatch_radio.gd").new()
     add_child(radio)
-    _passenger_scream(false)
-    _passenger_scream(true)
-    clunk = _clunk_sound()
+    radio.player.bus = "FrontierVoices"
+    screams[false] = CACHED_HUMAN_SCREAM
+    screams[true] = CACHED_ALIEN_SCREAM
+    clunk = CACHED_CLUNK
     for index in range(4):
         var player := AudioStreamPlayer.new()
         player.process_mode = Node.PROCESS_MODE_PAUSABLE
         player.stream = clunk
         add_child(player)
+        player.bus = "FrontierEffects"
         impact_players.append(player)
     beam_player = AudioStreamPlayer.new()
     beam_player.process_mode = Node.PROCESS_MODE_PAUSABLE
-    beam_player.stream = _beam_loop()
+    beam_player.stream = CACHED_BEAM
     beam_player.volume_db = -80.0
     add_child(beam_player)
+    beam_player.bus = "FrontierEffects"
+
+func apply_volumes(values: Dictionary) -> void:
+    for pair in [["Master", "master"], ["FrontierMusic", "music"], ["FrontierEffects", "effects"], ["FrontierVoices", "voices"]]:
+        AudioServer.set_bus_volume_db(AudioServer.get_bus_index(pair[0]), linear_to_db(maxf(0.00001, float(values[pair[1]]))))
 
 func _process(_dt: float) -> void:
     impact_cooldown = maxf(0, impact_cooldown - _dt)
@@ -93,6 +111,7 @@ func cue(kind: String) -> void:
         player.stream = _tones(notes, 0.10 if kind != "complete" else 0.16)
     player.volume_db = -13.0
     add_child(player)
+    player.bus = "FrontierEffects"
     player.finished.connect(player.queue_free)
     player.play()
 

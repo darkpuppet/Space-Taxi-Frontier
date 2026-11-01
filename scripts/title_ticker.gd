@@ -105,4 +105,4 @@ func _draw() -> void:
     draw_rect(Rect2(0, 0, BADGE_WIDTH, size.y), Color("10212a"))
     draw_line(Vector2(BADGE_WIDTH, 8), Vector2(BADGE_WIDTH, size.y - 8), Color("73e0d3"), 1)
     draw_circle(Vector2(17, 21), 3, Color("ffb84d"))
-    draw_string(ThemeDB.fallback_font, Vector2(30, 26), "DISPATCH WIRE", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("73e0d3"))
+    draw_string(ThemeDB.fallback_font, Vector2(26, 26), "DISPATCH WIRE", HORIZONTAL_ALIGNMENT_CENTER, BADGE_WIDTH - 32, 12, Color("73e0d3"))

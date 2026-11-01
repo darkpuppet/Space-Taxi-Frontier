@@ -6,19 +6,25 @@ var binding_button: Button
 var notice: Label
 var back_button: Button
 var tab: String = ""
+var heading: Label
+var score_name: LineEdit
+var replace_score_name: bool = false
+var score_board: Control
+var panel: PanelContainer
 
 func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
     set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     mouse_filter = Control.MOUSE_FILTER_STOP
-    var panel := PanelContainer.new()
+    panel = PanelContainer.new()
     panel.custom_minimum_size = Vector2(700, 560)
     panel.add_theme_stylebox_override("panel", game._style(Color("0c1a29"), Color("73e0d3")))
     add_child(panel)
     var box := VBoxContainer.new()
     box.add_theme_constant_override("separation", 12)
     panel.add_child(box)
-    var heading: Label = game._label("", 32, Color("ffc76b"))
+    heading = game._label("", 32, Color("ffc76b"))
+    preload("res://scripts/art_deco.gd").skin_title(heading)
     heading.name = "Heading"
     box.add_child(heading)
     content = VBoxContainer.new()
@@ -36,17 +42,22 @@ func _button(text: String, callback: Callable) -> Button:
     button.text = text
     button.custom_minimum_size.y = 36
     button.pressed.connect(callback)
+    preload("res://scripts/art_deco.gd").skin_button(button)
     return button
 
 func _clear(title: String) -> void:
     binding = ""
+    panel.custom_minimum_size = Vector2(960, 640) if tab == "Scores" else Vector2(700, 560)
     for child in content.get_children():
         content.remove_child(child)
         child.queue_free()
-    get_node("PanelContainer/VBoxContainer/Heading").text = title
+    heading.text = title
+    preload("res://scripts/art_deco.gd").fit_title(heading, 32, 664)
     game.overlay.visible = false
+    game.title_ticker.visible = false
     visible = true
     notice.text = "Changes apply immediately and are saved."
+    back_button.text = "BACK / ESC"
 
 func show_settings(category: String = "Sound") -> void:
     tab = category
@@ -89,8 +100,13 @@ func show_settings(category: String = "Sound") -> void:
         content.add_child(_button("RESET CONTROLS", func() -> void:
             game.preferences.reset_controls()
             show_settings("Controls")))
+        content.add_child(game._label("Stick / D-pad steer | A / RT lift | B / LT brake", 15))
+        content.add_child(game._label("Start pause | X dock workshop | Y tow | Back mute", 15))
         notice.text = "Click an action, then press its new key. Controller bindings remain available."
-    back_button.grab_focus()
+    if game.controller_active and content.get_child_count() > 1:
+        content.get_child(0).get_child(0).grab_focus()
+    else:
+        back_button.grab_focus()
 
 func _slider(label: String, key: String, minimum: float, maximum: float, step: float) -> void:
     var row := HBoxContainer.new()
@@ -112,21 +128,93 @@ func _slider(label: String, key: String, minimum: float, maximum: float, step: f
         if key == "deadzone": game.preferences.apply_controls())
     content.add_child(row)
 
+func show_score_entry() -> void:
+    if game.pending_high_score.is_empty():
+        return
+    tab = "Score entry"
+    _clear("YOU MADE THE TOP TEN!")
+    var score: Dictionary = game.pending_high_score
+    content.add_child(game._label("%d CR  /  SECTOR %02d  /  %d FARES" % [score["credits"], score["level"], score["fares"]], 20, Color("73e0d3")))
+    content.add_child(game._label("Enter your name for the leaderboard", 20))
+    score_name = LineEdit.new()
+    score_name.max_length = 16
+    score_name.text = str(game.preferences.values["pilot"])
+    replace_score_name = true
+    score_name.text_changed.connect(func(_text: String) -> void: replace_score_name = false)
+    score_name.placeholder_text = "Pilot name"
+    score_name.custom_minimum_size.y = 44
+    score_name.add_theme_font_size_override("font_size", 22)
+    score_name.text_submitted.connect(func(_text: String) -> void: _save_score())
+    content.add_child(score_name)
+    var keyboard := GridContainer.new()
+    keyboard.columns = 10
+    keyboard.add_theme_constant_override("h_separation", 3)
+    keyboard.add_theme_constant_override("v_separation", 3)
+    content.add_child(keyboard)
+    for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789":
+        var button: Button = _button(letter, func() -> void: _append_name(letter))
+        button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        keyboard.add_child(button)
+    keyboard.add_child(_button("SPACE", func() -> void: _append_name(" ")))
+    keyboard.add_child(_button("DEL", _delete_name))
+    content.add_child(_button("SAVE HIGH SCORE / ENTER / A", _save_score))
+    notice.text = "Up to 16 characters. Your previous name is filled in for you."
+    back_button.text = "SKIP / ESC / B"
+    if game.controller_active:
+        keyboard.get_child(0).grab_focus()
+    else:
+        score_name.grab_focus()
+        score_name.select_all()
+
+func _append_name(letter: String) -> void:
+    if replace_score_name or score_name.has_selection():
+        score_name.text = ""
+        replace_score_name = false
+    if score_name.text.length() < 16:
+        score_name.text += letter
+
+func _delete_name() -> void:
+    score_name.text = "" if replace_score_name else score_name.text.left(maxi(0, score_name.text.length() - 1))
+    replace_score_name = false
+
+func show_workshop() -> void:
+    tab = "Workshop"
+    _clear("UPGRADE WORKSHOP")
+    content.add_child(game._label("BALANCE %d CR / HULL %d / FUEL %d" % [game.credits, ceili(game.taxi.hull), ceili(game.taxi.fuel)], 20, Color("73e0d3")))
+    for item in [["Engine / 400 CR", 1], ["Stabilizers / 350 CR", 2], ["Fuel tank / 300 CR", 3], ["Repair 40 hull / 75 CR", 4]]:
+        content.add_child(_button(item[0], func() -> void:
+            game._purchase_upgrade(item[1])
+            show_workshop()
+            notice.text = game.banner.text))
+    notice.text = "Choose an upgrade with D-pad / stick and A. B returns to Pause."
+    content.get_child(1).grab_focus()
+
+func show_retry() -> void:
+    tab = "Retry"
+    _clear("RETRY THIS SECTOR?")
+    content.add_child(game._label("This uses one life and restarts the current sector.\nCredits and upgrades are retained.", 19))
+    content.add_child(_button("CONFIRM RETRY / -1 LIFE", func() -> void:
+        visible = false
+        game._resume()
+        game._lose_life("RETRY REQUESTED")))
+    notice.text = "B / Back cancels without spending a life."
+    back_button.grab_focus()
+
+func _save_score() -> void:
+    if game.submit_high_score(score_name.text):
+        show_scores()
+    else:
+        notice.text = "Please enter a name before saving your high score."
+        score_name.grab_focus()
+
 func show_scores() -> void:
     tab = "Scores"
     _clear("HIGH SCORES")
     notice.text = "Local top 10 finished runs / ranked by final credits."
-    var grid := GridContainer.new()
-    grid.columns = 6
-    grid.add_theme_constant_override("h_separation", 22)
-    grid.add_theme_constant_override("v_separation", 9)
-    for title in ["#", "PILOT", "CREDITS", "SECTOR", "FARES", "RESULT"]:
-        grid.add_child(game._label(title, 13, Color("73e0d3")))
-    for index in range(game.high_scores.entries.size()):
-        var score: Dictionary = game.high_scores.entries[index]
-        for value in [str(index + 1), str(score["pilot"]), str(score["credits"]), "%02d" % score["level"], str(score["fares"]), "COMPLETE" if score["complete"] else "GAME OVER"]:
-            grid.add_child(game._label(value, 15))
-    content.add_child(grid)
+    score_board = preload("res://scripts/split_flap_board.gd").new()
+    score_board.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    content.add_child(score_board)
+    score_board.set_entries(game.high_scores.entries)
     if game.high_scores.entries.is_empty():
         content.add_child(game._label("No scores yet. Finish a run to claim the first spot!", 18))
     back_button.grab_focus()
@@ -143,7 +231,18 @@ func _input(event: InputEvent) -> void:
         notice.text = "That key is reserved or already assigned. Choose another key."
 
 func close() -> void:
+    if tab == "Score entry" and not game.pending_high_score.is_empty():
+        game.skip_high_score()
     binding = ""
     visible = false
-    game.overlay.visible = true
-    game.settings_button.grab_focus()
+    if game.screen_state == "menu":
+        game._show_main_menu()
+    elif game.screen_state == "paused":
+        game._show_pause()
+    else:
+        game.overlay.visible = true
+    game.apply_settings()
+    if game.settings_button.visible:
+        game.settings_button.grab_focus()
+    else:
+        game.scores_button.grab_focus()

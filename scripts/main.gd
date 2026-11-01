@@ -3,6 +3,20 @@ extends Node2D
 const TAXI_SCENE: PackedScene = preload("res://Taxi.tscn")
 const SAVE_PATH: String = "user://frontier_save.cfg"
 var save_file: String = SAVE_PATH
+var settings_file: String = ""
+var scores_file: String = ""
+var preferences = preload("res://scripts/preferences.gd").new()
+var high_scores = preload("res://scripts/high_scores.gd").new()
+var score_recorded: bool = false
+var pending_high_score: Dictionary = {}
+var run_active: bool = false
+var menu_dialogs: CenterContainer
+var settings_button: Button
+var scores_button: Button
+var workshop_button: Button
+var retry_button: Button
+var controller_active: bool = false
+var controller_device: int = -1
 var developer_mode: bool = false
 const WORLD = preload("res://scripts/world.gd")
 const SPRITES = preload("res://scripts/sprites.gd")
@@ -101,12 +115,21 @@ func _ready() -> void:
     window.unresizable = false
     gate_rng.randomize()
     process_mode = Node.PROCESS_MODE_ALWAYS
+    # Isolated test/developer career files also isolate settings and score writes.
+    var profile: String = "user://frontier" if save_file == SAVE_PATH else save_file.trim_suffix(".cfg")
+    preferences.path = settings_file if not settings_file.is_empty() else profile + "_settings.cfg"
+    high_scores.path = scores_file if not scores_file.is_empty() else profile + "_scores.cfg"
+    preferences.load_settings()
+    Input.joy_connection_changed.connect(_controller_connection_changed)
+    high_scores.load_scores()
     audio = preload("res://scripts/audio.gd").new()
     add_child(audio)
     _load_game()
     for i in range(95):
         stars.append(Vector2(float((i * 337 + 67) % 2400), float((i * 149 + 39) % 480)))
     _build_ui()
+    preferences.changed.connect(apply_settings)
+    apply_settings()
     accident_layer = Node2D.new()
     accident_layer.z_index = 6
     add_child(accident_layer)
@@ -233,7 +256,7 @@ func _process(dt: float) -> void:
     _update_passenger_accidents(dt)
     if explosion_active:
         var finished: bool = explosion.advance(dt)
-        camera.offset = explosion.shake_offset()
+        camera.offset = explosion.shake_offset() if preferences.values["camera_shake"] else Vector2.ZERO
         if finished:
             explosion_active = false
             camera.offset = Vector2.ZERO
@@ -306,6 +329,8 @@ func _process(dt: float) -> void:
     queue_redraw()
 
 func _draw() -> void:
+    if screen_state == "menu":
+        return
     preload("res://scripts/scenery.gd").paint(self, sector_data, pulse, WORLD.HEIGHT)
     for tile in range(10):
         ART.hazard(self, ART.Hazard.FLOOR, Rect2(tile * 240, FLOOR, 240, 40))
@@ -385,6 +410,7 @@ func _build_ui() -> void:
     hud = CanvasLayer.new()
     add_child(hud)
     var root := Control.new()
+    root.theme = preload("res://scripts/art_deco.gd").theme()
     root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     root.mouse_filter = Control.MOUSE_FILTER_IGNORE
     hud.add_child(root)
@@ -401,6 +427,7 @@ func _build_ui() -> void:
     var title_row := HBoxContainer.new()
     stack.add_child(title_row)
     var heading := _label("SPACE TAXI  /  FRONTIER", 22, Color("ffc76b"))
+    preload("res://scripts/art_deco.gd").skin_title(heading)
     heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     title_row.add_child(heading)
     telemetry = _label("", 15)
@@ -486,8 +513,10 @@ func _build_ui() -> void:
     content.add_theme_constant_override("separation", 18)
     panel.add_child(content)
     overlay_kicker = _label("F R O N T I E R   /   F L I G H T   O P E R A T I O N S", 14, Color("73e0d3"))
+    overlay_kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     content.add_child(overlay_kicker)
     overlay_title = _label("SPACE TAXI", 52, Color("ffc76b"))
+    preload("res://scripts/art_deco.gd").skin_title(overlay_title)
     content.add_child(overlay_title)
     overlay_copy = _label("", 18)
     overlay_copy.custom_minimum_size.x = 600
@@ -497,10 +526,35 @@ func _build_ui() -> void:
     resume_button.text = "BEGIN SHIFT   /   ENTER"
     resume_button.custom_minimum_size.y = 52
     resume_button.add_theme_font_size_override("font_size", 18)
-    resume_button.add_theme_stylebox_override("normal", _style(Color("284450"), Color("73e0d3")))
-    resume_button.add_theme_stylebox_override("hover", _style(Color("365f69"), Color("ffc76b")))
     resume_button.pressed.connect(_primary_action)
     content.add_child(resume_button)
+    var options := HBoxContainer.new()
+    options.add_theme_constant_override("separation", 10)
+    content.add_child(options)
+    settings_button = Button.new()
+    settings_button.text = "SETTINGS"
+    settings_button.custom_minimum_size.y = 36
+    settings_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    settings_button.pressed.connect(func() -> void: menu_dialogs.show_settings())
+    options.add_child(settings_button)
+    scores_button = Button.new()
+    scores_button.text = "HIGH SCORES"
+    scores_button.custom_minimum_size.y = 36
+    scores_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    scores_button.pressed.connect(func() -> void: menu_dialogs.show_scores())
+    options.add_child(scores_button)
+    workshop_button = Button.new()
+    workshop_button.text = "WORKSHOP"
+    workshop_button.custom_minimum_size.y = 36
+    workshop_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    workshop_button.pressed.connect(func() -> void: menu_dialogs.show_workshop())
+    options.add_child(workshop_button)
+    retry_button = Button.new()
+    retry_button.text = "RETRY"
+    retry_button.custom_minimum_size.y = 36
+    retry_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    retry_button.pressed.connect(func() -> void: menu_dialogs.show_retry())
+    options.add_child(retry_button)
     menu_button = Button.new()
     menu_button.text = "RETURN TO MAIN MENU"
     menu_button.custom_minimum_size.y = 40
@@ -511,6 +565,8 @@ func _build_ui() -> void:
     exit_button.custom_minimum_size.y = 40
     exit_button.pressed.connect(_exit_game)
     content.add_child(exit_button)
+    for button in [resume_button, settings_button, scores_button, workshop_button, retry_button, menu_button, exit_button]:
+        preload("res://scripts/art_deco.gd").skin_button(button)
     overlay_footer = _label("SPACE TAXI: FRONTIER / ORIGINAL ARCADE CAMPAIGN", 12, Color("7d9aa9"))
     content.add_child(overlay_footer)
     title_ticker = preload("res://scripts/title_ticker.gd").new()
@@ -518,6 +574,9 @@ func _build_ui() -> void:
     title_ticker.offset_top = -42
     title_ticker.visible = false
     root.add_child(title_ticker)
+    menu_dialogs = preload("res://scripts/menu_dialogs.gd").new()
+    menu_dialogs.game = self
+    root.add_child(menu_dialogs)
 
 func _open_overlay(title: String, copy: String, action: String) -> void:
     get_tree().paused = true
@@ -525,7 +584,11 @@ func _open_overlay(title: String, copy: String, action: String) -> void:
     shade.visible = true
     var title_screen: bool = screen_state == "menu"
     title_backdrop.visible = title_screen
-    title_ticker.visible = title_screen
+    title_ticker.visible = title_screen and bool(preferences.values["ticker"])
+    menu_dialogs.visible = false
+    settings_button.visible = screen_state in ["menu", "paused"]
+    workshop_button.visible = screen_state == "paused" and is_instance_valid(taxi) and taxi.landed_on == 2
+    retry_button.visible = screen_state == "paused" and not explosion_active
     overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     overlay_panel.custom_minimum_size = Vector2(500, 430) if title_screen else Vector2(640, 430)
     overlay_copy.custom_minimum_size.x = 440 if title_screen else 600
@@ -537,21 +600,32 @@ func _open_overlay(title: String, copy: String, action: String) -> void:
         overlay.offset_left = 36
         overlay.offset_right = -700
     overlay_title.text = title
+    preload("res://scripts/art_deco.gd").fit_title(overlay_title, 64 if title_screen else 52, 440 if title_screen else 600)
     overlay_copy.text = copy
     resume_button.text = action
+    _update_control_hints()
     menu_button.visible = screen_state != "menu"
     resume_button.grab_focus()
+    if not pending_high_score.is_empty() and screen_state in ["game_over", "campaign_complete"]:
+        menu_dialogs.show_score_entry()
 
 func _show_main_menu() -> void:
     audio.radio.reset()
     screen_state = "menu"
-    _open_overlay("SPACE TAXI", "Your next fare is somewhere out there.\n\n20 sectors. Three lives. One trusty taxi.\nDeliver three fares and reach the credit target.\nKeep your taxi fueled and repaired.\n\nA / D steer   W / SPACE lift   S brake", "NEW GAME / LEVEL 1 / ENTER")
+    # The opaque title bitmap covers the world; don't prepare hidden world art.
+    sector.visible = false
+    taxi.visible = false
+    abductions.visible = false
+    accident_layer.visible = false
+    _open_overlay("SPACE TAXI", "Your next fare is somewhere out there.\n\n20 sectors. Three lives. One trusty taxi.\nDeliver three fares and reach the credit target.\nKeep your taxi fueled and repaired.\n\n" + preferences.control_hint(), "NEW GAME / LEVEL 1 / ENTER")
 
 func _show_pause(_briefing: bool = false) -> void:
     screen_state = "paused"
-    _open_overlay("FLIGHT PAUSED", "LEVEL %02d / %s\nLIVES %d / 3   |   FARES %d / 3\nBALANCE %d / %d CR\n\nA / D steer  /  W or SPACE lift  /  S brake\nDeliver three fares and reach the balance target.\nFuel and hull carry into the next sector." % [level + 1, str(sector_data["name"]), lives, fares_in_level, credits, int(sector_data["required_balance"])], "RESUME FLIGHT / ENTER")
+    _open_overlay("FLIGHT PAUSED", "LEVEL %02d / %s\nLIVES %d / 3   |   FARES %d / 3\nBALANCE %d / %d CR\n\n%s\nDeliver three fares and reach the balance target.\nFuel and hull carry into the next sector." % [level + 1, str(sector_data["name"]), lives, fares_in_level, credits, int(sector_data["required_balance"]), preferences.control_hint()], "RESUME FLIGHT / ENTER")
 
 func _primary_action() -> void:
+    if menu_dialogs.visible:
+        return
     if screen_state in ["menu", "game_over", "campaign_complete"]:
         _new_game()
     else:
@@ -567,9 +641,13 @@ func _reset_run() -> void:
     stabilizer_level = 0
     tank_level = 0
     campaign_complete = false
+    score_recorded = false
+    pending_high_score.clear()
+    run_active = false
 
 func _new_game() -> void:
     _reset_run()
+    run_active = true
     screen_state = "playing"
     _start_level()
     _save_game()
@@ -598,6 +676,10 @@ func _resume() -> void:
     shade.visible = false
     title_backdrop.visible = false
     title_ticker.visible = false
+    sector.visible = true
+    taxi.visible = not explosion_active
+    abductions.visible = true
+    accident_layer.visible = true
     get_tree().paused = false
     _sync_dispatch()
 
@@ -641,6 +723,7 @@ func _lose_life(reason: String = "TAXI DESTROYED") -> void:
         _open_overlay("TAXI LOST", "%s\n\n%d %s remaining.\nRetry Level %02d with a repaired, refueled taxi.\nThis sector's fares restart; earned upgrades remain." % [loss_copy, lives, "life" if lives == 1 else "lives", level + 1], "RETRY LEVEL %02d / ENTER" % (level + 1))
     else:
         screen_state = "game_over"
+        _record_high_score()
         _open_overlay("GAME OVER", "%s\n\nAll three taxis lost.\nYou reached Level %02d and completed %d fares.\n\nStart a new game at Level 1 with three fresh lives,\nor return to the main menu." % [loss_copy, level + 1, deliveries], "NEW GAME / LEVEL 1 / ENTER")
 
 func _sync_dispatch() -> void:
@@ -870,6 +953,7 @@ func _enter_star_gate() -> void:
         _start_level(true)
     else:
         campaign_complete = true
+        _record_high_score()
         _save_game()
         _refresh_ui()
         screen_state = "campaign_complete"
@@ -936,8 +1020,74 @@ func _on_damaged(amount: float) -> void:
         return
     _announce("%s / -%d hull. Brake early and steer clear of hazards." % [taxi.last_damage_reason, int(amount)])
 
+func _controller_connection_changed(device: int, connected: bool) -> void:
+    if not connected and device == controller_device:
+        controller_active = false
+        _update_control_hints()
+        if screen_state == "playing" and not explosion_active and not taxi.capture_active:
+            _show_pause()
+            _announce("CONTROLLER DISCONNECTED / Reconnect or use the keyboard to resume.")
+
+func _input(event: InputEvent) -> void:
+    if event is InputEventKey and event.pressed:
+        if controller_active:
+            controller_active = false
+            _update_control_hints()
+        return
+    var button_press: bool = event is InputEventJoypadButton and event.pressed
+    if not button_press and not (event is InputEventJoypadMotion and absf(event.axis_value) > 0.35):
+        return
+    controller_device = event.device
+    if not controller_active:
+        controller_active = true
+        _update_control_hints()
+    if not button_press:
+        return
+    if event.button_index == JOY_BUTTON_START:
+        get_viewport().set_input_as_handled()
+        if menu_dialogs.visible:
+            return
+        if screen_state == "playing": _show_pause()
+        elif screen_state == "paused": _resume()
+        else: _primary_action()
+    elif event.button_index == JOY_BUTTON_B and get_tree().paused:
+        get_viewport().set_input_as_handled()
+        if menu_dialogs.visible:
+            if not menu_dialogs.binding.is_empty(): menu_dialogs.show_settings("Controls")
+            else: menu_dialogs.close()
+        elif screen_state == "paused": _resume()
+    elif screen_state == "playing" and not menu_dialogs.visible:
+        if event.button_index == JOY_BUTTON_X and taxi.landed_on == 2 and not game_over:
+            get_viewport().set_input_as_handled()
+            _show_pause()
+            menu_dialogs.show_workshop()
+        elif event.button_index in [JOY_BUTTON_Y, JOY_BUTTON_BACK]:
+            get_viewport().set_input_as_handled()
+            var key := InputEventKey.new()
+            key.pressed = true
+            key.physical_keycode = KEY_T if event.button_index == JOY_BUTTON_Y else KEY_M
+            _unhandled_key_input(key)
+
+func _update_control_hints() -> void:
+    if not is_instance_valid(controls):
+        return
+    var keyboard_hint: String = preferences.control_hint()
+    var controller_hint: String = preferences.control_hint(true)
+    var previous: String = keyboard_hint if controller_active else controller_hint
+    var current: String = controller_hint if controller_active else keyboard_hint
+    controls.text = current + ("   START PAUSE   X WORKSHOP   Y TOW" if controller_active else "   ESC PAUSE   M SOUND   T TOW   R RETRY (-1 LIFE)")
+    if is_instance_valid(overlay_copy):
+        overlay_copy.text = overlay_copy.text.replace(previous, current)
+        resume_button.text = resume_button.text.replace("/ ENTER", "/ A") if controller_active else resume_button.text.replace("/ A", "/ ENTER")
+    if is_instance_valid(upgrades):
+        upgrades.text = "UPGRADE DOCK / X OPENS WORKSHOP" if controller_active else "UPGRADE DOCK / 1 Engine 400 CR | 2 Stabilizers 350 CR\n3 Tank 300 CR | 4 Repair 75 CR"
+
 func _unhandled_key_input(event: InputEvent) -> void:
     if not event.pressed or event.echo:
+        return
+    if menu_dialogs.visible:
+        if event.physical_keycode == KEY_ESCAPE:
+            menu_dialogs.close()
         return
     if event.physical_keycode == KEY_M:
         var silent: bool = audio.toggle_mute()
@@ -971,30 +1121,70 @@ func _unhandled_key_input(event: InputEvent) -> void:
     if event.physical_keycode == KEY_R:
         _lose_life("RETRY REQUESTED")
     elif taxi.landed_on == 2 and not game_over and event.physical_keycode in [KEY_1, KEY_2, KEY_3, KEY_4]:
-        var key: int = event.physical_keycode
-        if key == KEY_1 and credits >= 400 and engine_level < 4:
-            credits -= 400
-            engine_level += 1
-            taxi.engine_level = engine_level
-            _announce("Engine upgraded to Mk %d." % engine_level)
-        elif key == KEY_2 and credits >= 350 and stabilizer_level < 4:
-            credits -= 350
-            stabilizer_level += 1
-            taxi.stabilizer_level = stabilizer_level
-            _announce("Stabilizers upgraded to Mk %d." % stabilizer_level)
-        elif key == KEY_3 and credits >= 300 and tank_level < 4:
-            credits -= 300
-            tank_level += 1
-            taxi.fuel_capacity = 140.0 + tank_level * 40.0
-            taxi.refuel(40.0)
-            _announce("Fuel capacity upgraded to Mk %d." % tank_level)
-        elif key == KEY_4 and credits >= 75 and taxi.hull < 100.0:
-            credits -= 75
-            taxi.repair(40.0)
-            _announce("Hull repaired by 40 points.")
-        else:
-            _announce("Upgrade unavailable: check credits, level cap, or hull.")
-        _save_game()
+        _purchase_upgrade(int(event.physical_keycode) - KEY_1 + 1)
+
+func _purchase_upgrade(slot: int) -> void:
+    if taxi.landed_on != 2 or game_over or slot < 1 or slot > 4:
+        return
+    var key: int = KEY_1 + slot - 1
+    if key == KEY_1 and credits >= 400 and engine_level < 4:
+        credits -= 400
+        engine_level += 1
+        taxi.engine_level = engine_level
+        _announce("Engine upgraded to Mk %d." % engine_level)
+    elif key == KEY_2 and credits >= 350 and stabilizer_level < 4:
+        credits -= 350
+        stabilizer_level += 1
+        taxi.stabilizer_level = stabilizer_level
+        _announce("Stabilizers upgraded to Mk %d." % stabilizer_level)
+    elif key == KEY_3 and credits >= 300 and tank_level < 4:
+        credits -= 300
+        tank_level += 1
+        taxi.fuel_capacity = 140.0 + tank_level * 40.0
+        taxi.refuel(40.0)
+        _announce("Fuel capacity upgraded to Mk %d." % tank_level)
+    elif key == KEY_4 and credits >= 75 and taxi.hull < 100.0:
+        credits -= 75
+        taxi.repair(40.0)
+        _announce("Hull repaired by 40 points.")
+    else:
+        _announce("Upgrade unavailable: check credits, level cap, or hull.")
+    _save_game()
+
+func apply_settings() -> void:
+    audio.apply_volumes(preferences.values)
+    _update_control_hints()
+    title_ticker.visible = screen_state == "menu" and bool(preferences.values["ticker"]) and not menu_dialogs.visible
+    var mode: int = get_window().mode
+    if preferences.values["fullscreen"] and mode != Window.MODE_FULLSCREEN:
+        get_window().mode = Window.MODE_FULLSCREEN
+    elif not preferences.values["fullscreen"] and mode in [Window.MODE_FULLSCREEN, Window.MODE_EXCLUSIVE_FULLSCREEN]:
+        get_window().mode = Window.MODE_WINDOWED
+    if not preferences.values["camera_shake"] and is_instance_valid(camera):
+        camera.offset = Vector2.ZERO
+
+func _record_high_score() -> void:
+    if score_recorded or not pending_high_score.is_empty() or not run_active or developer_mode:
+        return
+    if high_scores.qualifies(credits, level + 1, deliveries):
+        pending_high_score = {"credits": credits, "level": level + 1, "fares": deliveries, "complete": campaign_complete}
+    else:
+        score_recorded = true
+
+func submit_high_score(pilot: String) -> bool:
+    var name: String = pilot.strip_edges().left(16)
+    if pending_high_score.is_empty() or name.is_empty():
+        return false
+    var score: Dictionary = pending_high_score
+    high_scores.record(name, int(score["credits"]), int(score["level"]), int(score["fares"]), bool(score["complete"]))
+    preferences.set_value("pilot", name)
+    pending_high_score = {}
+    score_recorded = true
+    return true
+
+func skip_high_score() -> void:
+    pending_high_score = {}
+    score_recorded = true
 
 func _save_game() -> void:
     if developer_mode:
