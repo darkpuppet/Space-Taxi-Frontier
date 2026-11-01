@@ -1,0 +1,36 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/quip_library.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+phrases = PackedStringArray(
+"Your parking technique has been classified as an extinction event.",
+"The brakes were standard equipment. You could have used them.",
+"That landing scored ten out of ten on the seismic scale.",
+"Your passengers requested a destination, not a detonation.",
+"Dispatch has changed your call sign to Incoming Debris.",
+"You fly like the steering wheel is a rumor.",
+"The asteroid would like its right of way back.",
+"Congratulations. You've invented express disassembly.",
+"That wasn't a shortcut. That was a solid object.",
+"Your flight instructor has entered witness protection.",
+"The insurance company just moved to another galaxy.",
+"You put the crash in crash course.",
+"Please stop using the hull as a proximity sensor.",
+"Your taxi is now available in the gift shop as a jigsaw puzzle.",
+"Even the autopilot is pretending it doesn't know you.",
+"Dispatch asked for a fare breakdown. You misunderstood.",
+"The good news: you've stopped accelerating.",
+"Your next upgrade should be depth perception.",
+"That maneuver has been forwarded to the blooper department.",
+"The galaxy is enormous. You found the one thing in the way.",
+"Your five-star rating now describes the debris field.",
+"Try landing with the taxi still assembled next time.",
+"We've replaced your pilot's license with a participation sticker.",
+"Your passengers are leaving a review. From the escape pods.",
+"You have a real talent for making spare parts.",
+"Somewhere, a traffic cone is being promoted over you.",
+"That was less precision flying and more aggressive guessing.",
+"The repair crew has named a vacation home after you."
+)

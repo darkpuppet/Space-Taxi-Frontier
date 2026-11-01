@@ -79,6 +79,8 @@ func _run() -> void:
         game.tank_level = mini(2, int(level / 8))
         game.gate_rng.seed = 1701 + level * 97
         game._start_level()
+        game.abductions.rng.seed = 7821 + level * 97
+        game.abductions.countdown = game.abductions.rng.randf_range(18.0, 28.0)
         game.taxi.set_physics_process(false)
         game.sector.set_physics_process(false)
         var ship: CharacterBody2D = game.taxi
@@ -116,7 +118,7 @@ func _run() -> void:
                     game._unhandled_key_input(key(KEY_4))
             # After a fuel stop, finish the current pickup/dropoff before using
             # the normal reserve threshold again; otherwise long routes loop.
-            if ship.fuel < 45 and ship.landed_on != 2 and not game.gate_active and (mission_progress != fuel_stop_progress or ship.fuel < 15):
+            if ship.fuel < 45 and ship.landed_on != 2 and (mission_progress != fuel_stop_progress or ship.fuel < 15):
                 refueling = true
             var selected: Dictionary = {}
             if not game.passenger_onboard and not game.gate_active:
@@ -128,7 +130,7 @@ func _run() -> void:
                     chosen_fare = int(selected.get("id", -1))
             else:
                 chosen_fare = -1
-            var next_id: int = 6 if game.gate_active else (2 if refueling else (game.destination_pad if game.passenger_onboard else int(selected.get("source", 0))))
+            var next_id: int = 2 if refueling else (6 if game.gate_active else (game.destination_pad if game.passenger_onboard else int(selected.get("source", 0))))
             if next_id <= 0 or (next_id != 6 and ship.landed_on == next_id and not game.passenger_onboard and not refueling):
                 release_controls()
             else:

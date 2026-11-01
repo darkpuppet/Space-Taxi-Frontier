@@ -66,6 +66,15 @@ func _run() -> void:
     check(game.level == old_level + 1 and not game.mission_done, "Flying through the opened star gate advances the level")
     game.credits = 1000
     game.taxi.landed_on = 2
+    if DisplayServer.get_name() != "headless":
+        var dock: Dictionary = game.pads[1]
+        game.taxi.position = Vector2(dock["x"], float(dock["y"]) - 21)
+        game.camera.position_smoothing_enabled = false
+        game._process(0)
+        game.queue_redraw()
+        await process_frame
+        await RenderingServer.frame_post_draw
+        root.get_texture().get_image().save_png("res://tests/upgrade-dock.png")
     game._unhandled_key_input(key(KEY_1))
     check(game.engine_level == 1 and game.credits == 600, "Service upgrade charges credits and updates the taxi")
     game.taxi.fuel = 0.0

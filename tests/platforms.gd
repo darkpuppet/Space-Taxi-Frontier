@@ -16,6 +16,7 @@ func _run() -> void:
     var previous: Array = []
     for level in range(20):
         var pads: Array = CAMPAIGN.pads_for(level)
+        check(pads[1]["services"].has("upgrades"), "Every sector has a dedicated upgrade dock at PAD 02")
         var widths: Dictionary = {}
         for index in range(5):
             widths[pads[index]["width"]] = true

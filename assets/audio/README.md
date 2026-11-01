@@ -41,6 +41,27 @@ The generation tools now include gate clips by default. Use `./tools/audio/gener
 
 ## Onboard destination requests
 
-Fifteen `customer-{male,female,robot}-pad-0{1..5}-v1.wav` clips say "Platform [number], please." Boarding selects the actual destination and a voice matching the character: orange-suit human uses male, blue-suit human uses female, and green alien uses the metallic robot treatment. This does not change the level's CB dispatcher voice. Requests last approximately 2.2 seconds and play once per boarded fare, ahead of pickup dispatch; other pickup calls resume afterward. Pause, mute, level resets, and stargate priority all apply.
+Sixty active `customer-{human,alien}-{1..6}-pad-0{1..5}-v2.wav` clips say "Platform [number], please." Both human outfits draw from six natural neural voices: Guy and Jenny (US), Ryan and Sonia (UK), William and Natasha (Australia). Green aliens draw from six separately processed voices with different pitch, warble, ring modulation, and short metallic echoes. Human recordings retain their natural pitch and timing, without radio distortion or added static. All clips are mono 24 kHz 16-bit PCM, with matched loudness and short fades.
 
-These in-cab clips use a broader 90-6000 Hz voice band with very light noise and no CB opening/closing burst. Sources use the same local speech generation at rate 2. The alien variant retains the metallic modulation. Generate only these clips with `./tools/audio/generate-dispatch.ps1 -DestinationOnly` and `py tools/audio/filter-dispatch.py --destination-only`.
+Each species uses its own shuffled voice pool: every voice plays before a refill, and consecutive customers of that species never repeat a voice. Selection uses a separate random generator from dispatch and wording. The chosen voice remains in the queued request through interruptions. Destination requests still play once per boarded fare, ahead of pickup dispatch, with pause, mute, resets, and stargate priority preserved. Dispatcher voices are unchanged. Earlier v1 customer assets remain as references.
+
+Regenerate with Node.js from the project root:
+
+```powershell
+npm install --prefix .development/customer-tts msedge-tts@2.1.1 mpg123-decoder@1.0.3
+node tools/audio/generate-customers.cjs
+```
+
+Generation uses Microsoft's online Edge speech service through [MsEdgeTTS](https://github.com/Migushthe2nd/MsEdgeTTS). Only the five platform request lines are sent. Original neural sources are cached in ignored `.development/customer-voices/`; cached clips can be reprocessed offline. The shipped game uses bundled WAVs and needs no network, speech engine, or Node dependencies. The older PowerShell destination generator only rebuilds the inactive v1 set.
+
+## Robot courier voice
+
+Robot passengers have their own five `customer-robot-pad-0{1..5}-v2.wav` destination clips, separate from both randomized species pools. The voice combines a slightly lowered Guy source with a steady 92/184 Hz harmonic carrier, 9/17 ms metallic comb resonances, gentle saturation, and quantization. A dry speech component keeps the platform number intelligible. It has no alien warble. Matching normalization and fades keep it consistent with the other onboard voices.
+
+The customer generator includes the robot by default. Regenerate just these five clips with `node tools/audio/generate-customers.cjs --robot-only`; existing cached sources allow this to run offline. Robot couriers always select this bank, while other passengers retain their shuffled human or alien voices.
+
+## Hull impacts and energy beams
+
+Solid contacts emit a cached, synthesized clunk independently of hull damage. Surface-normal impact speed controls volume and pitch: light taps are quiet and higher, hard strikes are louder and deeper. This covers obstacles, platform edges and undersides, landings, ground, and world boundaries, including contacts during impact damage protection. A four-player pool and a 60 ms sound cooldown limit collision chatter. Damage announcements no longer play the old generic impact tones.
+
+Lit energy beams are passable damage volumes, draining 24 hull per second of contact independently of solid-impact protection. Swept overlap includes the taxi hull and catches fast crossings. Dark beams neither damage nor hum. A seamless synthesized electrical loop grows louder within 420 world pixels of a lit beam segment. Pause, mute, capture, menus, and shutdown silence it. All effects are generated locally and require no new audio dependencies.

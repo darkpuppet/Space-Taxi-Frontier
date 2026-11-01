@@ -54,30 +54,53 @@ func _run() -> void:
     check(radio.gate_announced and not radio.player.playing and radio.pending.is_empty(), "Muted gate opening does not play or queue speech")
     radio.announce_gate(false)
     check(radio.pending.is_empty(), "Unmuting does not replay a missed stargate announcement")
-    for variant in range(3):
+    for variant in range(6):
         radio.begin_level(700 + variant)
         var dispatcher_voice: int = radio.voice_index
-        var customer_voice: int = [0, 2, 1][variant]
+        var alien: bool = variant in [1, 3, 4, 5]
         for pad in range(1, 6):
             var id: int = 2000 + variant * 10 + pad
             radio.announce_destination(id, pad, variant)
+            var customer_voice: int = int(radio.pending[0]["voice"])
+            check((customer_voice == radio.ROBOT_CUSTOMER_VOICE) == (variant == 5), "Only robot couriers use the dedicated synthetic robot voice")
+            check((customer_voice >= 6) == alien, "Selected customer voice matches the passenger species")
             radio._process(0.2)
             check(radio.player.stream == radio.DESTINATION_CLIPS[customer_voice][pad - 1], "Customer voice and spoken platform match the passenger and fare")
-            check(radio.player.stream.get_length() > 1 and radio.player.stream.get_length() < 3, "Customer destination requests stay short")
+            check(radio.player.stream.get_length() > 1 and radio.player.stream.get_length() < 4, "Customer destination requests stay short")
             radio.sync_fares([])
             check(radio.player.playing and radio.voice_index == dispatcher_voice, "Fare refresh preserves onboard speech and the level dispatcher")
             radio.announce_destination(id, pad, variant)
             check(radio.pending.is_empty(), "A boarding customer requests their destination only once")
             radio.silence()
+    check(radio.DESTINATION_CLIPS.size() == 13, "Six human, six alien, and one dedicated robot voice are bundled")
+    for bank in radio.DESTINATION_CLIPS:
+        check(bank.size() == 5, "Every customer voice covers all five destinations")
+        for clip in bank:
+            check(clip.get_length() > 0.5 and clip.get_length() < 4, "Every customer recording is brief and nonempty")
+    radio.customer_rng.seed = 72917
+    radio.customer_bags.clear()
+    radio.last_customer_voice.clear()
+    for alien in [false, true]:
+        var previous: int = -1
+        for cycle in range(3):
+            var heard: Dictionary = {}
+            for sample in range(6):
+                var chosen: int = radio._choose_customer_voice(alien)
+                check((chosen >= 6) == alien, "Voice shuffle stays within the passenger species")
+                check(chosen != previous, "Customer voices avoid immediate repeats, including across shuffles")
+                heard[chosen] = true
+                previous = chosen
+            check(heard.size() == 6, "Each customer shuffle uses all six voices")
     radio.begin_level(800)
     radio.sync_fares([{"id": 100, "source": 3}, {"id": 101, "source": 4}])
     radio._process(0.5)
     var interrupted_phrase: int = radio.current_phrase
     radio.announce_destination(101, 5, 2)
+    var boarded_voice: int = int(radio.pending[0]["voice"])
     check(radio.pending.size() == 2 and radio.pending[0].get("kind", "") == "destination", "Onboard customer takes priority while retaining another pickup call")
     radio._process(0.2)
     radio.sync_fares([{"id": 100, "source": 3}])
-    check(radio.player.stream == radio.DESTINATION_CLIPS[1][4], "Actual destination speech survives removal of the boarded fare from waiting")
+    check(radio.player.stream == radio.DESTINATION_CLIPS[boarded_voice][4], "Actual destination speech survives removal of the boarded fare from waiting")
     radio.player.stop()
     radio._finished()
     radio._process(0.5)
@@ -173,6 +196,8 @@ func _run() -> void:
     level_voice = radio.voice_index
     radio._process(0.5)
     check(radio.player.playing, "Pickup call is active before the gate priority test")
+    game.credits = int(game.sector_data["required_balance"])
+    game.fares_in_level = 3
     game.mission_done = true
     game._open_star_gate()
     check(game.gate_active and radio.gate_announced and not radio.player.playing, "Opening the real stargate interrupts stale pickup speech")

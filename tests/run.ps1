@@ -9,6 +9,8 @@ $checks = @(
     @{ Name = 'hazard-animation'; Args = '--path . --rendering-driver opengl3 --audio-driver Dummy --position -32000,-32000 --script tests/hazard-animation.gd --quit-after 3000' },
     @{ Name = 'tombstone-dissolve'; Args = '--path . --rendering-driver opengl3 --audio-driver Dummy --position -32000,-32000 --script tests/tombstone-dissolve.gd --quit-after 3000' },
     @{ Name = 'dispatch-radio'; Args = '--headless --path . --script tests/dispatch-radio.gd --quit-after 3000' },
+    @{ Name = 'abductions'; Args = '--headless --path . --script tests/abductions.gd --quit-after 3000' },
+    @{ Name = 'economy'; Args = '--headless --path . --script tests/economy.gd --quit-after 3000' },
     @{ Name = 'developer-level-01'; Args = '--headless --path . --script tests/developer-launch.gd --quit-after 3000 -- --dev-level=1' },
     @{ Name = 'developer-level-09'; Args = '--headless --path . --script tests/developer-launch.gd --quit-after 3000 -- --dev-level=9' },
     @{ Name = 'developer-level-20'; Args = '--headless --path . --script tests/developer-launch.gd --quit-after 3000 -- --dev-level=20' },

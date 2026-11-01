@@ -8,6 +8,10 @@ var taxi: CharacterBody2D
 var screams: Dictionary = {}
 var radio: Node
 var music: AudioStreamPlayer
+var beam_player: AudioStreamPlayer
+var impact_players: Array[AudioStreamPlayer] = []
+var clunk: AudioStreamWAV
+var impact_cooldown: float = 0.0
 
 func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
@@ -29,8 +33,22 @@ func _ready() -> void:
     add_child(radio)
     _passenger_scream(false)
     _passenger_scream(true)
+    clunk = _clunk_sound()
+    for index in range(4):
+        var player := AudioStreamPlayer.new()
+        player.process_mode = Node.PROCESS_MODE_PAUSABLE
+        player.stream = clunk
+        add_child(player)
+        impact_players.append(player)
+    beam_player = AudioStreamPlayer.new()
+    beam_player.process_mode = Node.PROCESS_MODE_PAUSABLE
+    beam_player.stream = _beam_loop()
+    beam_player.volume_db = -80.0
+    add_child(beam_player)
 
 func _process(_dt: float) -> void:
+    impact_cooldown = maxf(0, impact_cooldown - _dt)
+    _update_beam_audio(_dt)
     var speaking: bool = is_instance_valid(radio) and radio.player.playing and not get_tree().paused
     music.volume_db = move_toward(music.volume_db, -35.0 if speaking else -27.0, _dt * 35.0)
     if not engine_playback:
@@ -77,6 +95,83 @@ func cue(kind: String) -> void:
     add_child(player)
     player.finished.connect(player.queue_free)
     player.play()
+
+## Speed normal to the surface controls both loudness and the clunk's weight.
+func impact(speed: float) -> void:
+    if muted or speed < 1.0 or impact_cooldown > 0 or get_tree().paused:
+        return
+    var strength: float = clampf(speed / 340.0, 0.0, 1.0)
+    var player: AudioStreamPlayer = impact_players[0]
+    for candidate in impact_players:
+        if not candidate.playing:
+            player = candidate
+            break
+    player.volume_db = lerpf(-32.0, -7.0, sqrt(strength))
+    player.pitch_scale = lerpf(1.30, 0.78, strength)
+    player.play()
+    # Suppress solver chatter without tying sound to damage invulnerability.
+    impact_cooldown = 0.06
+
+func _update_beam_audio(dt: float) -> void:
+    if not is_instance_valid(beam_player) or beam_player.stream == null:
+        return
+    var strength: float = 0.0
+    if is_instance_valid(taxi) and not taxi.input_locked and not taxi.capture_active and taxi.visible and not get_tree().paused and not muted:
+        if is_instance_valid(taxi.environment):
+            strength = taxi.environment.beam_proximity(taxi.global_position)
+    if strength <= 0.001:
+        beam_player.stop()
+        beam_player.volume_db = -80.0
+        return
+    var target_db: float = lerpf(-38.0, -13.0, strength)
+    if not beam_player.playing:
+        beam_player.volume_db = target_db
+        beam_player.play()
+    else:
+        beam_player.volume_db = move_toward(beam_player.volume_db, target_db, dt * 65.0)
+
+## A short noise strike excites several damped, inharmonic hull resonances.
+func _clunk_sound() -> AudioStreamWAV:
+    var data := PackedByteArray()
+    data.resize(8820 * 2)
+    var rng := RandomNumberGenerator.new()
+    rng.seed = 73917
+    var low_noise: float = 0.0
+    for i in range(8820):
+        var t: float = float(i) / 22050.0
+        low_noise = lerpf(low_noise, rng.randf_range(-1, 1), 0.35)
+        var strike: float = low_noise * exp(-t * 85) * 0.8
+        var body: float = sin(TAU * 112 * t) * exp(-t * 15) * 0.48
+        body += sin(TAU * 267 * t) * exp(-t * 23) * 0.23
+        body += sin(TAU * 593 * t) * exp(-t * 34) * 0.13
+        var sample: float = tanh((strike + body) * 1.6) * minf(t * 2200, 1) * maxf(0, 1 - t / 0.4)
+        data.encode_s16(i * 2, int(sample * 29000))
+    var stream := AudioStreamWAV.new()
+    stream.format = AudioStreamWAV.FORMAT_16_BITS
+    stream.mix_rate = 22050
+    stream.data = data
+    return stream
+
+## A seamless electrical hum with a high sizzling overtone. Proximity controls
+## gain; inactive beams and menus never leave an ambient sound playing.
+func _beam_loop() -> AudioStreamWAV:
+    var data := PackedByteArray()
+    data.resize(22050 * 2)
+    for i in range(22050):
+        var t: float = float(i) / 22050.0
+        var pulse: float = 0.78 + 0.22 * sin(TAU * 8 * t)
+        var sample: float = sin(TAU * 110 * t) * 0.24 + sin(TAU * 220 * t) * 0.16
+        sample += sin(TAU * 880 * t + sin(TAU * 60 * t) * 1.6) * 0.09
+        sample += sin(TAU * 1760 * t) * 0.025
+        data.encode_s16(i * 2, int(sample * pulse * 29000))
+    var stream := AudioStreamWAV.new()
+    stream.format = AudioStreamWAV.FORMAT_16_BITS
+    stream.mix_rate = 22050
+    stream.data = data
+    stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+    stream.loop_begin = 0
+    stream.loop_end = 22050
+    return stream
 
 ## Brief vowel-shaped cartoon yelps, cached before gameplay to avoid impact hitches.
 func _passenger_scream(alien: bool) -> AudioStreamWAV:

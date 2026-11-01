@@ -8,6 +8,7 @@ var level: int = 0
 var serial: int = 0
 var missed: int = 0
 var killed: int = 0
+var abducted: int = 0
 var spawn_clock: float = 0.0
 var max_waiting: int = 1
 
@@ -19,6 +20,7 @@ func configure(index: int, terminals: Array) -> void:
     serial = 0
     missed = 0
     killed = 0
+    abducted = 0
     spawn_clock = 0.0
     max_waiting = 2 if level >= 2 else 1
 
@@ -73,11 +75,13 @@ func refill(excluded_pad: int, position: Vector2) -> void:
             destination = destinations[(serial + level + 1) % destinations.size()]
         serial += 1
         var patience: float = maxf(38.0, 75.0 - level * 1.5)
-        waiting.append({"id": serial, "source": origin, "destination": destination, "patience": patience, "initial_patience": patience})
+        waiting.append({"id": serial, "source": origin, "destination": destination, "patience": patience, "initial_patience": patience, "variant": preload("res://scripts/passenger_types.gd").for_fare(level, serial)})
 
 func tick(dt: float, excluded_pad: int, position: Vector2) -> Array[int]:
     var departed: Array[int] = []
     for index in range(waiting.size() - 1, -1, -1):
+        if waiting[index].get("abducting", false):
+            continue
         waiting[index]["patience"] = maxf(0, float(waiting[index]["patience"]) - dt)
         if float(waiting[index]["patience"]) <= 0:
             departed.append(int(waiting[index]["source"]))
@@ -101,11 +105,20 @@ func kill(fare_id: int) -> bool:
             return true
     return false
 
+func abduct(fare_id: int) -> bool:
+    for index in range(waiting.size()):
+        if int(waiting[index]["id"]) == fare_id:
+            waiting.remove_at(index)
+            abducted += 1
+            spawn_clock = 0.0
+            return true
+    return false
+
 func board(pad_id: int) -> bool:
     if not active.is_empty():
         return false
     for index in range(waiting.size()):
-        if int(waiting[index]["source"]) == pad_id:
+        if int(waiting[index]["source"]) == pad_id and not waiting[index].get("abducting", false):
             active = waiting[index]
             waiting.remove_at(index)
             return true
@@ -118,6 +131,8 @@ func suggested(position: Vector2) -> Dictionary:
     var best: Dictionary = {}
     var best_score: float = INF
     for fare in waiting:
+        if fare.get("abducting", false):
+            continue
         var pickup: Dictionary = pads[int(fare["source"]) - 1]
         var distance: float = absf(float(pickup["x"]) - position.x)
         var vertical: float = absf(float(pickup["y"]) - 21 - position.y)

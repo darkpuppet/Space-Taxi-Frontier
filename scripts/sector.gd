@@ -120,10 +120,42 @@ func _solids() -> Array[Dictionary]:
             result.append({"position": body["position"], "radius": radius, "name": str(body.get("kind", "alien")).to_upper() + " COLLISION"})
     for gate in gates:
         result.append({"position": gate["position"], "half_size": Vector2(9, 48), "name": "MOVING GATE"})
+    return result
+
+## Beams are energy volumes, never solid bodies. Sweep the taxi hull to catch
+## fast crossings and measure only the portion of this step spent in the light.
+func beam_exposure(start: Vector2, finish: Vector2) -> float:
+    var exposure: float = 0.0
+    for beam in beams:
+        if not bool(beam["active"]):
+            continue
+        var center: Vector2 = beam["position"]
+        var half := Vector2(96 + 35, 6 + 19)
+        var motion: Vector2 = finish - start
+        var enter: float = 0.0
+        var leave: float = 1.0
+        for axis in range(2):
+            if absf(motion[axis]) < 0.000001:
+                if absf(start[axis] - center[axis]) > half[axis]:
+                    leave = -1.0
+                    break
+            else:
+                var first: float = (center[axis] - half[axis] - start[axis]) / motion[axis]
+                var last: float = (center[axis] + half[axis] - start[axis]) / motion[axis]
+                enter = maxf(enter, minf(first, last))
+                leave = minf(leave, maxf(first, last))
+        exposure = maxf(exposure, clampf(leave - enter, 0.0, 1.0))
+    return exposure
+
+## Distance to the lit segment rather than its center makes both ends audible.
+func beam_proximity(position: Vector2) -> float:
+    var strength: float = 0.0
     for beam in beams:
         if bool(beam["active"]):
-            result.append({"position": beam["position"], "half_size": Vector2(96, 6), "name": "ELECTRIC BEAM"})
-    return result
+            var offset: Vector2 = (position - Vector2(beam["position"])).abs() - Vector2(96, 6)
+            var distance: float = Vector2(maxf(0, offset.x), maxf(0, offset.y)).length()
+            strength = maxf(strength, 1.0 - smoothstep(25, 420, distance))
+    return strength
 
 func _circle_hit(start: Vector2, finish: Vector2, center: Vector2, radius: float) -> Dictionary:
     var offset: Vector2 = start - center
