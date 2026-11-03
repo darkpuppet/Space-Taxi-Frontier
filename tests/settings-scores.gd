@@ -162,6 +162,7 @@ func _run() -> void:
     game.audio.shutdown()
     await create_timer(0.2).timeout
     game.free()
+    await create_timer(0.2).timeout
     for suffix in [".cfg", "_settings.cfg", "_scores.cfg"]:
         if FileAccess.file_exists(PROFILE + suffix): DirAccess.remove_absolute(PROFILE + suffix)
     print("Settings and high scores: %d checks, %d failures" % [checks, failures])

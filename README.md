@@ -15,7 +15,7 @@ Use **Godot 4.7.2 stable**, installed at `C:\software\godot\godot.exe`. Open `pr
 | Enter | Confirm the main menu or retry |
 | M | Toggle sound |
 | T | Call Bubba's tow truck to PAD 02 once per level, 300 credits |
-| R | Retry the current level, costing one life |
+| R | Ask to retry the current level; confirming costs one life |
 | 1 / 2 / 3 / 4 at PAD 02 | Engine / stabilizers / tank / hull repair |
 
 Controller flight: left stick steers, bottom face button lifts, right face button brakes.
@@ -30,7 +30,7 @@ Pickup calls announce each new waiting customer's pad over a crackly CB radio vo
 
 1. Start on PAD 01 and fly to a marked pickup pad. Passenger pickups and dropoffs use terminal platforms only. Fuel and repair platforms are reserved for service and never receive fares. Riders never spawn on the taxi's occupied or last-landed platform. They also avoid assigned dropoff pads, so each new trip needs a separate pickup.
 2. Land and stay docked while the rider walks over to your taxi. Once aboard, the passenger says their actual destination, such as "Platform three, please." Boarding takes at least one second and finishes when they reach the cabin. Taking off early makes them walk back to their waiting spot. Their destination is shown above the pad, in the cockpit, and on the map.
-3. Deliver the rider to the marked destination. Faster trips earn a bonus. The next pickup is on another platform.
+3. Deliver the rider to the marked destination. Faster trips earn a bonus. A transparent glass lift rises from inside the destination pad as the occupied taxi approaches, on the side opposite the cab. After leaving the taxi, the passenger walks across the platform, enters the lift, and remains visible through its doors as it descends into the pad. Elevators appear only for expected or ongoing drop-offs and disappear when retracted. You can depart immediately; the walk and lift freeze during pause and clear when the level restarts. The next pickup is on another platform.
 4. Complete three deliveries to open a **star gate at a random reachable location**. The last fare supplies 35 departure fuel for the flight to the exit. Gate locations vary in both horizontal position and height; follow the two-dimensional map and distance readout.
 5. Take off and **fly through the star gate** to enter the next level. There is no N-key shortcut. The final gate completes the 20-level campaign.
 
@@ -72,7 +72,11 @@ All in-world actors, platforms, service equipment, obstacles, portal hardware, a
 
 Twenty original landscape PNGs in `assets/backgrounds/` match the campaign themes, from the observation hangar and ice aurora to volcanic crust and derelict stations. They cover the complete 2400 x 1440 world with an atmospheric veil that keeps the foreground readable. Backgrounds load when a sector is first visited and are cached for revisits.
 
+Level 3's northern lights gently ripple and shimmer across the painted sky. A localized shader follows the existing teal aurora curtains while leaving the icy terrain and distant planets stationary. Animation uses the gameplay clock, freezes during pause, and remains behind platforms, hazards, and the taxi. The original background PNG stays intact; other sectors keep their existing artwork.
+
 `assets/sprites/frontier-props-v1.png` adds three platform styles, a fuel pump and hose, amber landing beacons, passenger terminals, steel trusses, a repair cabinet, and a fuel canister. Landing surfaces and mission markers remain aligned with the existing collision geometry. Original transparent PNGs are preserved; Godot selects trimmed atlas regions at runtime. Decorative service equipment does not block the docking lane.
+
+Retractable cylindrical glass elevators use `assets/sprites/frontier-elevator-v1.png`, with painted steel rims, yellow trim, cyan lamps, and separate rear-cabin and glass-door layers. Open, half-closed, and closed door sprites blend during boarding, with the passenger visible between the rear and front layers. Source pixels clip at the landing-pad surface as the cabin rises or descends. The original transparent PNG and generation prompt are preserved in `assets/sprites/elevator-v1-prompt.md`.
 
 The art was generated with the built-in imagegen tool. Exact prompts and the asset map are recorded in `assets/ARTWORK.md` and `assets/artwork-prompts.json`.
 

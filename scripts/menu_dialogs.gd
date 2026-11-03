@@ -191,13 +191,14 @@ func show_workshop() -> void:
 
 func show_retry() -> void:
     tab = "Retry"
-    _clear("RETRY THIS SECTOR?")
+    _clear("RESTART THIS LEVEL?")
     content.add_child(game._label("This uses one life and restarts the current sector.\nCredits and upgrades are retained.", 19))
     content.add_child(_button("CONFIRM RETRY / -1 LIFE", func() -> void:
         visible = false
         game._resume()
         game._lose_life("RETRY REQUESTED")))
     notice.text = "B / Back cancels without spending a life."
+    back_button.text = "CANCEL / ESC / B"
     back_button.grab_focus()
 
 func _save_score() -> void:

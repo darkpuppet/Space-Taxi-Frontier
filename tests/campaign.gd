@@ -157,6 +157,8 @@ func _run() -> void:
     # Physics regression cases independent of the campaign's force fields.
     var taxi: CharacterBody2D = game.taxi
     taxi.environment = null
+    # Test unpowered flight directly; rescue behavior is covered by towing-fuel.gd.
+    taxi.fuel_depleted.disconnect(game._request_automatic_tow)
     taxi.engine_level = 0
     taxi.landing_horizontal = 155
     taxi.landing_vertical = 225

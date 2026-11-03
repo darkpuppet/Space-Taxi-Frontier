@@ -13,6 +13,45 @@ func check(value: bool, description: String) -> void:
         push_error("FAIL: " + description)
 
 func _run() -> void:
+    var placements = preload("res://scripts/background_traffic.gd").new()
+    var world_size := Vector2(2400, 1440)
+    for level in range(20):
+        for sample in range(12):
+            placements.configure(level)
+            check(placements.stars.size() == placements.STAR_COUNT, "Every sector retains its full star field")
+            for star in placements.stars:
+                var size := Vector2.ONE * float(star["size"])
+                var footprint := Rect2(Vector2(star["position"]) - size * 0.5, size)
+                check(placements.sky_region.encloses(footprint.grow(7.0)), "Every twinkle stays fully within the reviewed open sky, including its glow")
+        check(not placements.sky_region.has_point(Vector2(0.5, 0.9) * world_size), "Stars never reach the lower painted landscape")
+    # Specific silhouettes that the previous full-height scatter could overlap.
+    for landmark in [[0, Vector2(0.50, 0.65)], [2, Vector2(0.05, 0.40)], [4, Vector2(0.29, 0.32)], [8, Vector2(0.83, 0.25)], [11, Vector2(0.10, 0.15)], [12, Vector2(0.41, 0.28)], [14, Vector2(0.18, 0.35)], [17, Vector2(0.34, 0.47)]]:
+        placements.configure(int(landmark[0]))
+        check(not placements.sky_region.has_point(Vector2(landmark[1]) * world_size), "Painted planets, spires, moons, asteroids, gardens and station walls stay outside the star field")
+    placements.rng.seed = 73119
+    var headings: Dictionary = {}
+    var view := Rect2(Vector2.ZERO, world_size)
+    for kind in [1, 2]:
+        for sample in range(80):
+            placements.passers.clear()
+            placements._spawn(kind)
+            var passer: Dictionary = placements.passers[0]
+            var velocity: Vector2 = passer["velocity"]
+            var pitch: float = absf(rad_to_deg(atan2(velocity.y, absf(velocity.x))))
+            check(pitch >= 11.99 and pitch <= 35.01, "Comets and ships take clearly diagonal paths")
+            check(velocity.length() >= (100.0 if kind == 1 else 45.0) and velocity.length() <= (145.0 if kind == 1 else 70.0), "Diagonal flight preserves the visitor's intended speed")
+            var facing: Transform2D = placements.passer_transform(passer)
+            check(facing.x.normalized().dot(velocity.normalized()) > 0.9999, "The comet head and ship bow lead the direction of travel, with the tail behind")
+            check(facing.y.y > 0.0, "Leftward and rightward ships stay upright")
+            check(not view.has_point(Vector2(passer["position"])), "Diagonal visitors enter from offscreen")
+            var crosses_view: bool = false
+            for step in range(151):
+                if view.grow(-80.0).has_point(Vector2(passer["position"]) + velocity * float(step) * 0.5):
+                    crosses_view = true
+                    break
+            check(crosses_view, "Every diagonal path crosses the visible world before expiry")
+            headings[Vector2i(signi(int(velocity.x)), signi(int(velocity.y)))] = true
+    check(headings.size() == 4, "Visitors travel upward and downward in both horizontal directions")
     var game: Node = load("res://Main.tscn").instantiate()
     game.save_file = PROFILE + ".cfg"
     root.add_child(game)

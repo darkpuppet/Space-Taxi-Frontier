@@ -88,6 +88,7 @@ func _run() -> void:
     game.audio.shutdown()
     await create_timer(0.2).timeout
     game.free()
+    await create_timer(0.2).timeout
     if FileAccess.file_exists("user://frontier_economy_test.cfg"):
         DirAccess.remove_absolute("user://frontier_economy_test.cfg")
     print("Fuel and balance progression: %d checks, %d failures" % [checks, failures])

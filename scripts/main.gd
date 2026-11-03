@@ -81,6 +81,7 @@ var resume_button: Button
 var boarding_time: float = 0.0
 const PASSENGER_WALK_SPEED: float = 72.0
 var passenger_walk: Dictionary = {}
+var passenger_arrivals = preload("res://scripts/passenger_arrivals.gd").new()
 var passenger_accidents: Array[Dictionary] = []
 var abductions: Node2D
 var accident_layer: Node2D
@@ -204,6 +205,7 @@ func _start_level(carry_taxi: bool = false) -> void:
     add_child(sector)
     dispatcher.configure(level, pads)
     passenger_walk.clear()
+    passenger_arrivals.reset()
     passenger_accidents.clear()
     accident_layer.queue_redraw()
     last_landed_pad = 1
@@ -285,6 +287,11 @@ func _process(dt: float) -> void:
         return
     pulse += dt
     aurora_background.advance(pulse)
+    if passenger_onboard and not game_over:
+        passenger_arrivals.prepare(pads[destination_pad - 1], taxi.position)
+    else:
+        passenger_arrivals.expected.clear()
+    passenger_arrivals.advance(dt)
     background_traffic.advance(dt)
     if gate_active and is_instance_valid(gate_fx):
         gate_fx.advance(dt, taxi.position)
@@ -421,6 +428,7 @@ func _draw() -> void:
         if not upgrade_dock:
             draw_rect(Rect2(left, py + 28, label_width, 20), Color("0c1924dd"))
             draw_string(ThemeDB.fallback_font, Vector2(left + 8, py + 43), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, accent)
+        passenger_arrivals.paint(self, pad)
         if not waiting_fare.is_empty() and not mission_done and not waiting_fare.get("abducting", false):
             var walk: Dictionary = passenger_walk.get(int(waiting_fare["id"]), {})
             var person := Vector2(float(walk.get("x", _fare_home_x(pad))), py - 2)
@@ -701,7 +709,6 @@ func _new_game() -> void:
     _reset_run()
     run_active = true
     screen_state = "playing"
-    aurora_background.visible = level == 2
     _start_level()
     _save_game()
     _resume()
@@ -725,6 +732,7 @@ func _resume() -> void:
     if screen_state == "life_lost":
         _start_level()
     screen_state = "playing"
+    aurora_background.visible = level == 2
     overlay.visible = false
     shade.visible = false
     title_backdrop.visible = false
@@ -1109,6 +1117,8 @@ func _on_landed(pad_id: int) -> void:
     if mission_done:
         return
     if passenger_onboard and pad_id == destination_pad:
+        var arrival_variant: int = _passenger_variant(dispatcher.active) if not dispatcher.active.is_empty() else 0
+        passenger_arrivals.drop_off(pads[pad_id - 1], taxi.position.x, arrival_variant)
         passenger_onboard = false
         dispatcher.finish()
         var fare: int = 220 + level * 85 + (fares_in_level * 65) + maxi(0, int(60.0 - trip_time)) * 2
@@ -1229,7 +1239,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
         _request_tow()
         return
     if event.physical_keycode == KEY_R:
-        _lose_life("RETRY REQUESTED")
+        _show_pause()
+        menu_dialogs.show_retry()
     elif taxi.landed_on == 2 and not game_over and event.physical_keycode in [KEY_1, KEY_2, KEY_3, KEY_4]:
         _purchase_upgrade(int(event.physical_keycode) - KEY_1 + 1)
 

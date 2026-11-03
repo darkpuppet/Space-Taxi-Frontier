@@ -15,6 +15,39 @@ func check(value: bool, description: String) -> void:
         push_error("FAIL: " + description)
 
 func _run() -> void:
+    var arrivals = preload("res://scripts/passenger_arrivals.gd").new()
+    var lift_image: Image = arrivals.ATLAS.get_image()
+    check(lift_image.detect_alpha() != Image.ALPHA_NONE, "Elevator sprite atlas preserves transparency")
+    check(lift_image.get_pixel(315, 316).a < 0.15, "Rear cabin interior leaves the passenger visible")
+    for region in [arrivals.REAR_REGION] + arrivals.DOOR_REGIONS:
+        check(Rect2(Vector2.ZERO, arrivals.ATLAS.get_size()).encloses(region), "Elevator layers use valid source regions")
+        check(lift_image.get_region(Rect2i(region)).get_used_rect().has_area(), "Each elevator layer contains painted sprite artwork")
+    var lift_pad: Dictionary = CAMPAIGN.pads_for(0)[0]
+    check(arrivals.lifts_for(int(lift_pad["id"])).is_empty(), "Idle platforms have no visible elevator")
+    arrivals.prepare(lift_pad, Vector2(float(lift_pad["x"]) - 20.0, float(lift_pad["y"]) - 100.0))
+    check(arrivals.lifts_for(int(lift_pad["id"])).size() == 1 and float(arrivals.expected["target"]) > float(lift_pad["x"]), "Expected drop-off deploys one lift opposite the approaching cab")
+    arrivals.advance(0.5)
+    check(float(arrivals.expected["rise"]) > 0.0 and float(arrivals.expected["rise"]) < 1.0, "Lift rises gradually from inside the pad")
+    check(arrivals.lifts_for(3).is_empty(), "Other platforms remain free of elevators")
+    var rise_before_landing: float = float(arrivals.expected["rise"])
+    arrivals.drop_off(lift_pad, float(lift_pad["x"]) - 20.0, 0)
+    check(arrivals.expected.is_empty() and is_equal_approx(float(arrivals.riders[0]["rise"]), rise_before_landing), "Landing continues the prepared lift without a second cabin")
+    arrivals.reset()
+    arrivals.prepare(lift_pad, Vector2(float(lift_pad["x"]) + 20.0, float(lift_pad["y"]) - 100.0))
+    check(float(arrivals.expected["target"]) < float(lift_pad["x"]), "A cab on the right deploys the lift on the left")
+    arrivals.prepare(lift_pad, Vector2(float(lift_pad["x"]), float(lift_pad["y"]) - 500.0))
+    check(arrivals.expected.is_empty(), "Lift stays hidden while the taxi is far from its destination")
+    arrivals.reset()
+    for level_index in range(20):
+        for pad in CAMPAIGN.pads_for(level_index):
+            for offset in [-15.0, 15.0]:
+                var center: float = float(pad["x"])
+                arrivals.drop_off(pad, center + offset, 0)
+                var target: float = float(arrivals.riders.back()["target"])
+                check((target - center) * offset < 0.0, "Arrivals head to the opposite side of the platform")
+                check(absf(target - center) < float(pad["width"]) * 0.5, "Elevator destination stays on the platform in every sector")
+                check(absf(target - center) + 30.0 <= float(pad["width"]) * 0.5, "Full painted cabin stays within the platform edges")
+                arrivals.riders.clear()
     var dispatch = DISPATCH.new()
     for level_index in range(20):
         var seen: Dictionary = {}
@@ -151,11 +184,41 @@ func _run() -> void:
         var destination: int = game.destination_pad
         game.taxi.landed_on = destination
         game.taxi.position = Vector2(game.pads[destination - 1]["x"], game.pads[destination - 1]["y"] - 21)
+        var delivered_variant: int = game._passenger_variant(game.dispatcher.active)
+        game._process(0.25)
+        check(game.passenger_arrivals.lifts_for(destination).size() >= 1, "An occupied taxi deploys its destination lift before drop-off")
         game._on_landed(destination)
+        check(not game.passenger_arrivals.riders.is_empty(), "Delivered passenger exits the taxi instead of disappearing")
+        check(game.passenger_arrivals.riders.back()["variant"] == delivered_variant, "Drop-off retains the passenger's original appearance")
         game._process(0.1)
         if index < 2:
             check(not game.gate_active and game.source_pad != destination, "Next rider requires a different pickup and gate remains closed")
     check(game.gate_active and game.mission_done and game.level == 0, "Last fare opens the star gate without advancing automatically")
+    var arrival: Dictionary = game.passenger_arrivals.riders.back()
+    var arrival_x: float = float(arrival["x"])
+    var paid_deliveries: int = game.deliveries
+    game._show_pause()
+    game._process(1.0)
+    check(float(arrival["x"]) == arrival_x, "Pause freezes the passenger's walk to the elevator")
+    game._resume()
+    game.taxi.landed_on = -1
+    game.taxi.position = Vector2(300, 200)
+    for step in range(600):
+        game._process(1.0 / 60.0)
+        if arrival["state"] == "closing":
+            break
+    check(arrival["state"] == "closing" and is_equal_approx(float(arrival["x"]), float(arrival["target"])), "Passenger reaches the opposite end even after the taxi departs")
+    game._process(0.61)
+    check(arrival["state"] == "descending", "Elevator closes its doors before descending")
+    game._show_pause()
+    var lift_age: float = float(arrival["age"])
+    game._process(2.0)
+    check(float(arrival["age"]) == lift_age, "Pause freezes the elevator descent")
+    game._resume()
+    game._process(1.41)
+    check(game.passenger_arrivals.riders.is_empty() and game.deliveries == paid_deliveries, "Elevator removes completed arrivals without awarding the fare twice")
+    for pad in game.pads:
+        check(game.passenger_arrivals.lifts_for(int(pad["id"])).is_empty(), "Retracted elevators leave every pad clear")
     check(is_instance_valid(game.gate_fx) and game.gate_fx.position == game.gate_position, "Particle gate is placed at the actual randomized exit")
     var mote: Vector2 = game.gate_fx.vortex_point(17)
     game._process(0.25)
@@ -172,8 +235,10 @@ func _run() -> void:
     game._process(0.1)
     check(game.level == 0, "Taxi must be airborne to enter the gate")
     game.taxi.landed_on = -1
+    game.passenger_arrivals.drop_off(game.pads[0], float(game.pads[0]["x"]), 0)
     game._process(0.1)
     check(game.level == 1 and not game.gate_active, "Flying through the gate advances and closes it in the new level")
+    check(game.passenger_arrivals.riders.is_empty(), "Changing levels clears passengers and elevator animations")
     check(game.gate_fx == null and game.gate_warp.age < game.gate_warp.DURATION, "Entry clears the old particle gate and starts the warp burst")
     game._process(0.5)
     check(game.gate_warp.age == game.gate_warp.DURATION, "Warp burst clears itself after the transition")

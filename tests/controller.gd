@@ -47,6 +47,19 @@ func _run() -> void:
     game.taxi.set_physics_process(false)
     game.sector.set_physics_process(false)
     check(game.screen_state == "playing" and not paused, "Start begins a new game from the title menu")
+    var retry_key := InputEventKey.new()
+    retry_key.physical_keycode = KEY_R
+    retry_key.pressed = true
+    game._unhandled_key_input(retry_key)
+    check(paused and game.menu_dialogs.visible and game.menu_dialogs.tab == "Retry" and game.lives == 3, "R pauses and asks before spending a life")
+    retry_key.echo = true
+    game._unhandled_key_input(retry_key)
+    check(game.lives == 3, "Holding R cannot spend lives through the confirmation")
+    retry_key.echo = false
+    retry_key.physical_keycode = KEY_ESCAPE
+    game._unhandled_key_input(retry_key)
+    check(not game.menu_dialogs.visible and paused and game.lives == 3, "Escape cancels keyboard retry without spending a life")
+    game._resume()
     check(game.controller_active and game.controls.text.contains("START"), "Controller input switches the flight prompts")
     game.taxi.landed_on = -1
     game.taxi.position = Vector2(500, 200)

@@ -41,6 +41,20 @@ static func ship(canvas: CanvasItem, type: int, rect: Rect2) -> void:
 	_ensure()
 	canvas.draw_texture_rect(frames[clampi(type, 0, 3)], rect, false)
 
+static func rider_in_lift(canvas: CanvasItem, foot: Vector2, variant: int, floor_y: float) -> void:
+	var texture: Texture2D
+	if variant >= 3:
+		prepare_later_riders()
+		texture = later_frames[clampi(variant - 3, 0, 2) * 8]
+	else:
+		_ensure()
+		texture = frames[4 + posmod(variant, 3) * 4]
+	var size: Vector2 = texture.get_size() * (42.0 / texture.get_height())
+	var origin: Vector2 = foot - Vector2(size.x * 0.5, size.y)
+	var visible_height: float = clampf(floor_y - origin.y, 0.0, size.y)
+	if visible_height > 0.0:
+		canvas.draw_texture_rect_region(texture, Rect2(origin, Vector2(size.x, visible_height)), Rect2(Vector2.ZERO, Vector2(texture.get_width(), texture.get_height() * visible_height / size.y)))
+
 static func rider(canvas: CanvasItem, foot: Vector2, variant: int, pose: int) -> void:
 	if variant >= 3:
 		_new_rider(canvas, foot, variant, clampi(pose, 0, 3))
