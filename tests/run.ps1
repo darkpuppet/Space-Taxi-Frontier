@@ -8,10 +8,12 @@ $checks = @(
     @{ Name = 'window-scaling'; Args = '--path . --rendering-driver opengl3 --audio-driver Dummy --position -32000,-32000 --script tests/window-scaling.gd --quit-after 3000' },
     @{ Name = 'impatient-sprites'; Args = '--path . --rendering-driver opengl3 --audio-driver Dummy --position -32000,-32000 --script tests/impatient-sprites.gd --quit-after 3000' },
     @{ Name = 'hazard-animation'; Args = '--path . --rendering-driver opengl3 --audio-driver Dummy --position -32000,-32000 --script tests/hazard-animation.gd --quit-after 3000' },
+    @{ Name = 'background-traffic'; Args = '--path . --rendering-driver opengl3 --audio-driver Dummy --position -32000,-32000 --script tests/background-traffic.gd --quit-after 3000' },
     @{ Name = 'tombstone-dissolve'; Args = '--path . --rendering-driver opengl3 --audio-driver Dummy --position -32000,-32000 --script tests/tombstone-dissolve.gd --quit-after 3000' },
     @{ Name = 'dispatch-radio'; Args = '--headless --path . --script tests/dispatch-radio.gd --quit-after 3000' },
     @{ Name = 'abductions'; Args = '--headless --path . --script tests/abductions.gd --quit-after 3000' },
     @{ Name = 'economy'; Args = '--headless --path . --script tests/economy.gd --quit-after 3000' },
+    @{ Name = 'towing-fuel'; Args = '--headless --path . --script tests/towing-fuel.gd --quit-after 3000' },
     @{ Name = 'settings-scores'; Args = '--headless --path . --script tests/settings-scores.gd --quit-after 3000' },
     @{ Name = 'controller'; Args = '--headless --path . --script tests/controller.gd --quit-after 3000' },
     @{ Name = 'developer-level-01'; Args = '--headless --path . --script tests/developer-launch.gd --quit-after 3000 -- --dev-level=1' },
@@ -42,4 +44,3 @@ foreach ($check in $checks) {
     Write-Output ('PASS: ' + $check.Name)
 }
 Write-Output 'All validation passed: missions, patience, menus, collisions, sprites, tall worlds, suction, 60 fares, and 20 random gates.'
-

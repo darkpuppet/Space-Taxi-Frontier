@@ -8,6 +8,7 @@ signal damaged(amount: float)
 signal solid_impact(speed: float)
 signal black_hole_entered(center: Vector2)
 signal black_hole_lost
+signal fuel_depleted
 
 @export var gravity: float = 300.0
 @export var lift: float = 520.0
@@ -17,6 +18,7 @@ signal black_hole_lost
 var fuel: float = 140.0
 var hull: float = 100.0
 var fuel_capacity: float = 140.0
+var fuel_service_active: bool = false
 var engine_level: int = 0
 var stabilizer_level: int = 0
 var landed_on: int = -1
@@ -70,8 +72,14 @@ func _physics_process(dt: float) -> void:
         engine_on = false
         queue_redraw()
         return
-    # Life support and the idling power plant run even while docked or coasting.
-    fuel = maxf(0.0, fuel - idle_fuel_drain * dt)
+    # The pump supplies life support while filling; otherwise idling uses fuel.
+    if not (landed_on == 2 and fuel_service_active):
+        fuel = maxf(0.0, fuel - idle_fuel_drain * dt)
+    if fuel <= 0.0:
+        fuel_depleted.emit()
+        if input_locked:
+            queue_redraw()
+            return
     var axis: float = Input.get_axis("move_left", "move_right")
     if absf(axis) > 0.05:
         facing = signf(axis)
@@ -124,6 +132,11 @@ func _physics_process(dt: float) -> void:
         velocity.y = move_toward(velocity.y, 38.0, brake_strength * dt)
         if fuel > 0.0:
             fuel = maxf(0.0, fuel - 0.9 * dt)
+    if fuel <= 0.0:
+        fuel_depleted.emit()
+        if input_locked:
+            queue_redraw()
+            return
     velocity.x = clampf(velocity.x, -top_speed * control * 1.2, top_speed * control * 1.2)
     velocity.y = clampf(velocity.y, -280.0 * control, 340.0)
     global_position += velocity * dt

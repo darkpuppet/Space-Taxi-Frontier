@@ -41,3 +41,17 @@ Solid asteroid sprites rotate slowly in alternating directions. An amber ring an
 ## Tombstone clearing
 
 When a memorial is ready to clear, its original sprite dissolves into the platform over 0.9 seconds. Small textured sections fade at staggered times while the stone sinks through a clipped ground boundary. A few gray dust sprites settle at the surface. The existing minimum display time and replacement-fare trigger are preserved. Pause freezes the dissolve; level resets clear old effects.
+
+## Tow truck
+
+`frontier-tow-truck-v2.png` is the only tow-truck sprite sheet, generated with built-in `image_gen` using the taxi atlas and upgrade platform as style references. Its shaded metal, cyan glass, dark outlines, and bright highlights match the other gameplay sprites while retaining chipped paint, rusty salvage panels, and Bubba in the cab. The original generated 1619 x 971 PNG is preserved intact. The v1 artwork has been removed; use v2 for all future tow-truck changes.
+
+There are four frames per row. The top row animates hover jets, lights, the beacon, and exhaust; the bottom row adds powered-flight thrusters. `scripts/tow_truck.gd` selects the animation row by recovery stage, advances frames at 12 fps, and scales cells to 160 world units wide. The cable attachment follows the new crane tip. The game loads only the PNG; no SVG tow-truck asset is required. The full generation prompt and references are in [tow-truck-v2-prompt.md](tow-truck-v2-prompt.md).
+
+## Animated background traffic
+
+`frontier-background-traffic-v2.png` replaces the removed SVG scenery atlas. Its sixteen transparent bitmap frames animate twinkling stars, shimmering comets, cargo-ship thrusters and navigation lights, and tumbling debris. The original generated PNG is preserved intact; frame regions follow its four-column, four-row layout. Background sprites remain decorative, respect pause, and never affect collisions or radar. The built-in imagegen prompt is recorded in [background-traffic-v2-prompt.md](background-traffic-v2-prompt.md).
+
+## Comet variants
+
+`frontier-comets-v1.png` adds three four-frame animated comet types: amber ember with a molten rocky core, green crystal with a faceted nucleus, and violet with a forked plasma tail. The original blue ice comet remains in the background traffic atlas. Comet visits randomly select one of the four types without consecutive repeats. Existing spawn timing, random flight directions, pause behavior, and decorative-only gameplay remain unchanged. The original transparent PNG was generated with built-in imagegen; the exact prompt is in [comets-v1-prompt.md](comets-v1-prompt.md).

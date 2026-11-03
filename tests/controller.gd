@@ -80,11 +80,16 @@ func _run() -> void:
     game.credits = 1000
     game.taxi.fuel = 10
     await tap(JOY_BUTTON_Y)
-    check(game.taxi.landed_on == 2 and game.taxi.fuel == 55 and game.credits == 900, "Y requests the emergency tow")
+    check(game.tow_truck.state == "approach" and game.taxi.input_locked and game.credits == 700, "Y requests the animated 300-credit emergency tow")
+    for step in range(2400):
+        game.tow_truck.advance(1.0 / 60)
+        if game.tow_truck.state == "depart":
+            break
+    check(game.taxi.landed_on == 2 and game.taxi.fuel == 55, "Tow delivers the taxi before the workshop can open")
     await tap(JOY_BUTTON_X)
     check(paused and game.menu_dialogs.tab == "Workshop", "X at PAD 02 opens the controller workshop")
     await tap(JOY_BUTTON_A)
-    check(game.engine_level == 1 and game.credits == 500, "A purchases the focused workshop upgrade exactly once")
+    check(game.engine_level == 1 and game.credits == 300, "A purchases the focused workshop upgrade exactly once")
     await tap(JOY_BUTTON_B)
     game.retry_button.grab_focus()
     await tap(JOY_BUTTON_A)

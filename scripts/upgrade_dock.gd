@@ -5,7 +5,7 @@ const CYAN := Color("73f4ee")
 const VIOLET := Color("c896ff")
 static var texture: AtlasTexture
 
-static func draw(canvas: CanvasItem, pad: Dictionary, clock: float) -> void:
+static func draw(canvas: CanvasItem, pad: Dictionary, clock: float, fuel_price: int = 2) -> void:
     if texture == null:
         texture = preload("res://scripts/atlas_regions.gd").frames_for(ART)[0]
     var width: float = float(pad["width"])
@@ -31,3 +31,11 @@ static func draw(canvas: CanvasItem, pad: Dictionary, clock: float) -> void:
     var subtitle: String = "FUEL + REPAIR"
     var subtitle_width: float = font.get_string_size(subtitle, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x
     canvas.draw_string(font, Vector2(center.x - subtitle_width * 0.5, center.y + 79), subtitle, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, VIOLET)
+    var price_sign := Rect2(center + Vector2(-62, 96), Vector2(124, 48))
+    canvas.draw_line(Vector2(center.x - 43, center.y + 88), Vector2(center.x - 43, price_sign.end.y), Color("847955"), 4)
+    canvas.draw_line(Vector2(center.x + 43, center.y + 88), Vector2(center.x + 43, price_sign.end.y), Color("847955"), 4)
+    canvas.draw_rect(price_sign, Color("172b2b"))
+    canvas.draw_rect(price_sign, Color("e4ba71"), false, 2)
+    canvas.draw_string(font, price_sign.position + Vector2(13, 16), "FRONTIER GAS", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("e4ba71"))
+    var price_text: String = "%02d CR / UNIT" % fuel_price
+    canvas.draw_string(font, price_sign.position + Vector2(10, 37), price_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, CYAN)

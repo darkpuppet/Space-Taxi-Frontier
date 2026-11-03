@@ -17,6 +17,8 @@ var beam_player: AudioStreamPlayer
 var impact_players: Array[AudioStreamPlayer] = []
 var clunk: AudioStreamWAV
 var impact_cooldown: float = 0.0
+var tow_truck: Node2D
+var tow_player: AudioStreamPlayer
 
 func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
@@ -59,6 +61,11 @@ func _ready() -> void:
     beam_player.volume_db = -80.0
     add_child(beam_player)
     beam_player.bus = "FrontierEffects"
+    tow_player = AudioStreamPlayer.new()
+    tow_player.stream = _tow_clunker_loop()
+    tow_player.volume_db = -20.0
+    add_child(tow_player)
+    tow_player.bus = "FrontierEffects"
 
 func apply_volumes(values: Dictionary) -> void:
     for pair in [["Master", "master"], ["FrontierMusic", "music"], ["FrontierEffects", "effects"], ["FrontierVoices", "voices"]]:
@@ -67,6 +74,7 @@ func apply_volumes(values: Dictionary) -> void:
 func _process(_dt: float) -> void:
     impact_cooldown = maxf(0, impact_cooldown - _dt)
     _update_beam_audio(_dt)
+    _update_tow_audio(_dt)
     var speaking: bool = is_instance_valid(radio) and radio.player.playing and not get_tree().paused
     music.volume_db = move_toward(music.volume_db, -35.0 if speaking else -27.0, _dt * 35.0)
     if not engine_playback:
@@ -130,6 +138,67 @@ func impact(speed: float) -> void:
     player.play()
     # Suppress solver chatter without tying sound to damage invulnerability.
     impact_cooldown = 0.06
+
+func _update_tow_audio(dt: float) -> void:
+    if tow_player.stream == null:
+        return
+    if not is_instance_valid(tow_truck) or tow_truck.state == "idle":
+        tow_player.stop()
+        return
+    tow_player.stream_paused = get_tree().paused or muted
+    if not tow_player.playing and not tow_player.stream_paused:
+        tow_player.play()
+    if tow_player.stream_paused:
+        return
+    var working: bool = tow_truck.state in ["approach", "lift", "return", "depart"]
+    # A tired governor hunts under load instead of holding a clean spaceship hum.
+    var wobble: float = sin(tow_truck.clock * 13.0) * 0.025 + sin(tow_truck.clock * 5.0) * 0.018
+    tow_player.pitch_scale = move_toward(tow_player.pitch_scale, (1.10 if working else 0.78) + wobble, dt * 0.8)
+    tow_player.volume_db = move_toward(tow_player.volume_db, -14.0 if working else -19.0, dt * 15)
+
+## Uneven cylinder firings, loose metal resonances, and sputtering exhaust.
+func _tow_clunker_loop() -> AudioStreamWAV:
+    const RATE: int = 22050
+    const COUNT: int = RATE * 2
+    var data := PackedByteArray()
+    data.resize(COUNT * 2)
+    var rng := RandomNumberGenerator.new()
+    rng.seed = 47731
+    var low_noise: float = 0.0
+    var firings: Array[float] = [0.0, 0.13, 0.29, 0.43, 0.61, 0.73, 0.91, 1.06, 1.22, 1.39, 1.56, 1.69, 1.88]
+    var cylinder_strengths: Array[float] = [1.0, 0.72, 0.92, 0.64, 1.0, 0.18, 0.86, 0.68, 1.0, 0.78, 0.22, 0.95, 0.7]
+    for i in range(COUNT):
+        var t: float = float(i) / RATE
+        low_noise = lerpf(low_noise, rng.randf_range(-1, 1), 0.16)
+        var sample: float = sin(TAU * 42 * t + sin(TAU * 6 * t) * 0.8) * 0.20
+        sample += sin(TAU * 84 * t + sin(TAU * 3 * t) * 0.5) * 0.07
+        for cylinder in range(firings.size()):
+            var firing: float = firings[cylinder]
+            var elapsed: float = fposmod(t - firing, 2.0)
+            var strength: float = cylinder_strengths[cylinder]
+            # Falling-pitch combustion thud and a delayed loose piston knock.
+            var thud: float = sin(TAU * (52 * elapsed + 1.1 * (1 - exp(-elapsed * 65))))
+            sample += (thud * 0.63 + low_noise * 0.7) * exp(-elapsed * 38) * strength
+            var knock_age: float = maxf(0.0, elapsed - 0.022)
+            sample += (sin(TAU * 317 * knock_age) * 0.22 + sin(TAU * 743 * knock_age) * 0.13) * exp(-knock_age * 48) * minf(knock_age * 4000, 1)
+            # Breathy exhaust follows each firing rather than becoming constant hiss.
+            sample += low_noise * 0.26 * exp(-elapsed * 14) * strength
+        # The weak cylinders cough into the exhaust a beat after the misfire.
+        for cough in [0.80, 1.63]:
+            var cough_age: float = fposmod(t - cough, 2.0)
+            sample += (low_noise * 1.3 + sin(TAU * 91 * cough_age) * 0.35) * exp(-cough_age * 70) * minf(cough_age * 3000, 1)
+        var rattle: float = pow(maxf(0, sin(TAU * 23 * t + sin(TAU * 5 * t))), 8)
+        sample += (sin(TAU * 1291 * t) * 0.16 + sin(TAU * 1867 * t) * 0.08 + low_noise * 0.22) * rattle
+        var edge: float = minf(1, minf(t, 2.0 - t) * 150)
+        data.encode_s16(i * 2, int(tanh(sample * 1.7) * edge * 26000))
+    var stream := AudioStreamWAV.new()
+    stream.format = AudioStreamWAV.FORMAT_16_BITS
+    stream.mix_rate = RATE
+    stream.data = data
+    stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+    stream.loop_begin = 0
+    stream.loop_end = COUNT
+    return stream
 
 func _update_beam_audio(dt: float) -> void:
     if not is_instance_valid(beam_player) or beam_player.stream == null:

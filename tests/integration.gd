@@ -79,9 +79,13 @@ func _run() -> void:
     check(game.engine_level == 1 and game.credits == 600, "Service upgrade charges credits and updates the taxi")
     game.taxi.fuel = 0.0
     game._unhandled_key_input(key(KEY_T))
-    check(game.taxi.landed_on == 2 and game.taxi.fuel == 45.0 and game.credits == 500, "Emergency tow recovers an empty tank")
+    for step in range(2400):
+        game.tow_truck.advance(1.0 / 60)
+        if game.tow_truck.state == "depart":
+            break
+    check(game.taxi.landed_on == 2 and game.taxi.fuel == 45.0 and game.credits == 300, "Animated emergency tow recovers an empty tank for 300 credits")
     game._unhandled_key_input(key(KEY_T))
-    check(game.credits == 500, "Emergency tow is limited to one per shift")
+    check(game.credits == 300, "Manual emergency tow is limited to one per shift")
     var ship: CharacterBody2D = game.taxi
     var pad: Dictionary = game.pads[0]
     ship.landed_on = -1
@@ -92,6 +96,7 @@ func _run() -> void:
     ship.landed_on = -1
     ship.position = Vector2(pad["x"], pad["y"] - 23.0)
     ship.velocity = Vector2(300, 300)
+    ship.invulnerable_timer = 0.0
     ship._physics_process(1.0 / 60.0)
     check(ship.hull < 100.0 and ship.hull > 0.0 and ship.velocity.y < 0, "Hard landing bounces with partial hull damage")
     var position_before: Vector2 = ship.position
@@ -103,7 +108,7 @@ func _run() -> void:
     game.credits = 0
     game.engine_level = 0
     game._load_game()
-    check(game.credits == 500 and game.engine_level == 1, "Career credits and upgrades survive save/load")
+    check(game.credits == 300 and game.engine_level == 1, "Career credits and upgrades survive save/load")
     check(game.audio._tones([440.0, 660.0], 0.1).data.size() == 8820, "Sound synthesis produces valid 16-bit PCM")
     for cue in ["pickup", "fare", "complete", "impact", "service", "land", "low"]:
         game.audio.cue(cue)

@@ -62,7 +62,9 @@ var game_over: bool = false
 var message_timer: float = 0.0
 var pads: Array = []
 var stars: Array[Vector2] = []
+var background_traffic = preload("res://scripts/background_traffic.gd").new()
 var pulse: float = 0.0
+var aurora_background: Sprite2D
 var audio: Node
 var navigation: Label
 var status: Label
@@ -86,6 +88,16 @@ const PASSENGER_STRIKE_FINE: int = 250
 var trip_time: float = 0.0
 var low_fuel_warned: bool = false
 var tow_available: bool = true
+var tow_truck: Node2D
+const TOW_COST: int = 300
+const FUEL_PUMP_RATE: float = 15.0
+const FUEL_PRICE_INTERVAL: float = 30.0
+var fuel_price: int = 2
+var fuel_price_clock: float = 0.0
+var fuel_meter: float = 0.0
+var fuel_save_clock: float = 0.0
+var fuel_purchase_pending: bool = false
+var fuel_session_complete: bool = false
 var radar: Control
 var lives: int = 3
 var death_quips = preload("res://scripts/death_quips.gd").new()
@@ -153,6 +165,16 @@ func _make_pads() -> Array:
     return CAMPAIGN.pads_for(level)
 
 func _start_level(carry_taxi: bool = false) -> void:
+    if is_instance_valid(tow_truck):
+        tow_truck.reset()
+        tow_truck.queue_free()
+    tow_truck = null
+    fuel_price = randi_range(2, 10)
+    fuel_price_clock = 0.0
+    fuel_meter = 0.0
+    fuel_save_clock = 0.0
+    fuel_purchase_pending = false
+    fuel_session_complete = false
     var carried_fuel: float = taxi.fuel if carry_taxi and is_instance_valid(taxi) else -1.0
     var carried_hull: float = taxi.hull if carry_taxi and is_instance_valid(taxi) else 100.0
     if is_instance_valid(gate_fx):
@@ -168,6 +190,11 @@ func _start_level(carry_taxi: bool = false) -> void:
     level = clampi(level, 0, CAMPAIGN.STAGES.size() - 1)
     audio.radio.begin_level(level)
     sector_data = CAMPAIGN.sector(level)
+    if not is_instance_valid(aurora_background):
+        aurora_background = preload("res://scripts/aurora_background.gd").new()
+        add_child(aurora_background)
+    aurora_background.configure(level, Vector2(WORLD.WIDTH, WORLD.HEIGHT), pulse)
+    background_traffic.configure(level)
     pads = _make_pads()
     if is_instance_valid(sector):
         sector.queue_free()
@@ -210,6 +237,12 @@ func _start_level(carry_taxi: bool = false) -> void:
     taxi.fuel = clampf(carried_fuel, 0, taxi.fuel_capacity) if carried_fuel >= 0 else taxi.fuel_capacity
     taxi.hull = carried_hull
     add_child(taxi)
+    taxi.fuel_depleted.connect(_request_automatic_tow)
+    tow_truck = preload("res://scripts/tow_truck.gd").new()
+    add_child(tow_truck)
+    audio.tow_truck = tow_truck
+    tow_truck.driver_spoke.connect(func(line: String) -> void: _announce("BUBBA / " + line))
+    tow_truck.delivered.connect(_on_tow_delivered)
     audio.taxi = taxi
     sector.taxi = taxi
     if is_instance_valid(abductions):
@@ -251,6 +284,8 @@ func _process(dt: float) -> void:
     if get_tree().paused:
         return
     pulse += dt
+    aurora_background.advance(pulse)
+    background_traffic.advance(dt)
     if gate_active and is_instance_valid(gate_fx):
         gate_fx.advance(dt, taxi.position)
     _update_passenger_accidents(dt)
@@ -266,6 +301,11 @@ func _process(dt: float) -> void:
         _explode_taxi()
         return
     if is_instance_valid(taxi):
+        _update_fuel_station(dt)
+        if taxi.fuel <= 0.0:
+            _request_automatic_tow()
+        tow_truck.advance(dt)
+        var being_towed: bool = taxi.input_locked and tow_truck.state != "idle"
         if mission_done and credits < int(sector_data["required_balance"]):
             _reopen_dispatch()
         if not mission_done and not game_over and not taxi.capture_active:
@@ -277,7 +317,7 @@ func _process(dt: float) -> void:
             _sync_dispatch()
             _update_passenger_accidents(0)
         abductions.advance(dt)
-        if gate_active and taxi.landed_on == -1 and not taxi.capture_active and taxi.position.distance_to(gate_position) < 43:
+        if gate_active and taxi.landed_on == -1 and not taxi.input_locked and not taxi.capture_active and taxi.position.distance_to(gate_position) < 43:
             _enter_star_gate()
             return
         _update_passenger_walk(dt)
@@ -293,6 +333,8 @@ func _process(dt: float) -> void:
         radar.hazards = sector.navigation_markers()
         if abductions.state != "idle":
             radar.hazards.append({"position": abductions.position_in_world})
+        if tow_truck.state != "idle":
+            radar.hazards.append({"position": tow_truck.position})
         radar.fares = dispatcher.waiting
         radar.gate_position = gate_position if gate_active else Vector2(-1, -1)
         radar.target_id = destination_pad if passenger_onboard else source_pad
@@ -311,18 +353,22 @@ func _process(dt: float) -> void:
         mission_panel.text = "%02d / %s\nDELIVERED %d / 3   |   MISSED %d   |   LOST %d   |   ABDUCTED %d\nBALANCE %d / %d CR\n%s\n%s" % [level + 1, str(sector_data["name"]), fares_in_level, dispatcher.missed, dispatcher.killed, dispatcher.abducted, credits, int(sector_data["required_balance"]), str(sector_data["hint"]), waiting_text]
         if gate_active:
             navigation.text = "STAR GATE / %04d m\nFLY THROUGH TO %s" % [int(taxi.position.distance_to(gate_position)), "FINISH" if level == 19 else "NEXT LEVEL"]
+        if being_towed:
+            navigation.text = "BUBBA'S TOW / %s\nRECOVERY TO FUEL PAD 02" % str(tow_truck.state).to_upper()
+        elif taxi.landed_on == 2:
+            navigation.text = "FUEL PAD 02 / %d CR PER UNIT\n%s" % [fuel_price, "FILL COMPLETE" if fuel_session_complete else ("REFUELING" if credits > 0 else "PUMP STOPPED / NO CREDITS")]
         if passenger_onboard and not game_over:
             trip_time += dt
-        elif not dispatcher.at_pad(taxi.landed_on).is_empty() and not mission_done and not game_over and not taxi.capture_active:
+        elif not dispatcher.at_pad(taxi.landed_on).is_empty() and not mission_done and not game_over and not taxi.capture_active and not being_towed:
             boarding_time += dt
             if boarding_time >= 1.0 and _passenger_at_door():
                 _board_passenger()
         else:
             boarding_time = 0.0
-        if taxi.fuel < 20.0 and not low_fuel_warned:
+        if taxi.fuel < 20.0 and not low_fuel_warned and not being_towed:
             low_fuel_warned = true
             audio.cue("low")
-            _announce("LOW FUEL / Dock at PAD 02. Press T for one emergency tow per shift.")
+            _announce("LOW FUEL / Dock at PAD 02. T calls Bubba; empty tanks trigger rescue automatically.")
     if message_timer > 0.0:
         message_timer -= dt
     banner.modulate.a = minf(1.0, maxf(message_timer, 0.0))
@@ -331,7 +377,12 @@ func _process(dt: float) -> void:
 func _draw() -> void:
     if screen_state == "menu":
         return
-    preload("res://scripts/scenery.gd").paint(self, sector_data, pulse, WORLD.HEIGHT)
+    if aurora_background.visible:
+        # The animated bitmap sits behind the world's draw calls.
+        draw_rect(Rect2(Vector2.ZERO, Vector2(WORLD.WIDTH, WORLD.HEIGHT)), Color(0.015, 0.035, 0.06, 0.14))
+    else:
+        preload("res://scripts/scenery.gd").paint(self, sector_data, pulse, WORLD.HEIGHT)
+    background_traffic.paint(self)
     for tile in range(10):
         ART.hazard(self, ART.Hazard.FLOOR, Rect2(tile * 240, FLOOR, 240, 40))
     for pad in pads:
@@ -355,7 +406,7 @@ func _draw() -> void:
             art.supports(self, px + side * pw * 0.3, py + 27, FLOOR)
         var platform_style: int = 2 if level in [4, 7, 12, 14, 16] else (1 if level in [1, 3, 5, 11, 13, 17] else 0)
         if upgrade_dock:
-            preload("res://scripts/upgrade_dock.gd").draw(self, pad, pulse)
+            preload("res://scripts/upgrade_dock.gd").draw(self, pad, pulse, fuel_price)
         else:
             art.sprite(self, platform_style, Rect2(left, py, pw, 27))
             draw_line(Vector2(left + 4, py + 1), Vector2(left + pw - 4, py + 1), accent, 2)
@@ -610,6 +661,7 @@ func _open_overlay(title: String, copy: String, action: String) -> void:
         menu_dialogs.show_score_entry()
 
 func _show_main_menu() -> void:
+    aurora_background.visible = false
     audio.radio.reset()
     screen_state = "menu"
     # The opaque title bitmap covers the world; don't prepare hidden world art.
@@ -649,6 +701,7 @@ func _new_game() -> void:
     _reset_run()
     run_active = true
     screen_state = "playing"
+    aurora_background.visible = level == 2
     _start_level()
     _save_game()
     _resume()
@@ -687,6 +740,7 @@ func _explode_taxi() -> void:
     if explosion_active or screen_state != "playing":
         return
     abductions.reset()
+    tow_truck.reset()
     audio.radio.silence()
     explosion_active = true
     game_over = true
@@ -707,6 +761,7 @@ func _explode_taxi() -> void:
 func _lose_life(reason: String = "TAXI DESTROYED") -> void:
     if screen_state != "playing" or explosion_active:
         return
+    tow_truck.reset()
     if death_quip.is_empty() and reason != "RETRY REQUESTED":
         death_quip = death_quips.choose()
     var loss_copy: String = reason
@@ -977,15 +1032,80 @@ func _announce(text: String) -> void:
     banner.text = text
     message_timer = 6.0
 
+func _request_automatic_tow() -> void:
+    if taxi.landed_on == 2 and credits > 0:
+        fuel_session_complete = false
+        return
+    _request_tow(true)
+
+func _request_tow(automatic: bool = false) -> void:
+    if screen_state != "playing" or get_tree().paused or game_over or explosion_active or taxi.hull <= 0 or taxi.capture_active or taxi.input_locked:
+        return
+    if not automatic and not tow_available:
+        _announce("BUBBA / Used your call-out already. I'll still come if you run dry!")
+        return
+    # An empty tank must remain recoverable even after the shift's manual call-out.
+    if tow_truck.state != "idle":
+        tow_truck.reset()
+    tow_available = false
+    credits -= TOW_COST
+    boarding_time = 0.0
+    tow_truck.start(taxi, Vector2(float(pads[1]["x"]), float(pads[1]["y"]) - 21.0))
+    _save_game()
+
+func _on_tow_delivered() -> void:
+    last_landed_pad = 2
+    low_fuel_warned = false
+    fuel_session_complete = taxi.fuel >= taxi.fuel_capacity
+    taxi.fuel_service_active = credits > 0 or fuel_session_complete
+    audio.cue("service")
+    _refresh_ui()
+
+func _update_fuel_station(dt: float) -> void:
+    if screen_state != "playing" or game_over or get_tree().paused:
+        return
+    fuel_price_clock += dt
+    if fuel_price_clock >= FUEL_PRICE_INTERVAL:
+        fuel_price_clock = fmod(fuel_price_clock, FUEL_PRICE_INTERVAL)
+        fuel_price = 2 + (fuel_price - 2 + randi_range(1, 8)) % 9
+        fuel_meter = 0.0
+    if taxi.landed_on != 2:
+        fuel_session_complete = false
+    elif taxi.fuel >= taxi.fuel_capacity:
+        fuel_session_complete = true
+    var pumping: bool = taxi.landed_on == 2 and not fuel_session_complete and not taxi.input_locked and taxi.hull > 0 and taxi.fuel < taxi.fuel_capacity and credits > 0
+    # Shore power keeps a completed tank full without repeated paid top-offs.
+    taxi.fuel_service_active = pumping or (taxi.landed_on == 2 and fuel_session_complete and not taxi.input_locked and taxi.hull > 0)
+    if pumping:
+        # Meter by credits, so even the last credit buys its fraction of a unit.
+        fuel_meter += dt * FUEL_PUMP_RATE * fuel_price
+        var charge: int = mini(credits, mini(floori(fuel_meter + 0.000001), ceili((taxi.fuel_capacity - taxi.fuel) * fuel_price)))
+        if charge > 0:
+            credits -= charge
+            taxi.refuel(float(charge) / fuel_price)
+            fuel_meter -= charge
+            fuel_purchase_pending = true
+            if taxi.fuel >= taxi.fuel_capacity:
+                fuel_session_complete = true
+    else:
+        fuel_meter = 0.0
+    fuel_save_clock += dt
+    if fuel_purchase_pending and (fuel_save_clock >= 1.0 or not pumping or credits <= 0 or taxi.fuel >= taxi.fuel_capacity):
+        _save_game()
+        fuel_purchase_pending = false
+        fuel_save_clock = 0.0
+
 func _on_landed(pad_id: int) -> void:
     if game_over:
         return
     last_landed_pad = pad_id
     audio.cue("land")
     if pad_id == 2:
-        taxi.refuel(40.0)
         audio.cue("service")
-        _announce("UPGRADE DOCK / +40 fuel. 1 Engine | 2 Stabilizers | 3 Tank | 4 Repair.")
+        fuel_meter = 0.0
+        fuel_session_complete = taxi.fuel >= taxi.fuel_capacity
+        taxi.fuel_service_active = credits > 0 or fuel_session_complete
+        _announce("FUEL / %d CR per unit. Park to fill; take off to stop. 1-4 for upgrades." % fuel_price)
     if mission_done:
         return
     if passenger_onboard and pad_id == destination_pad:
@@ -1105,18 +1225,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
         return
     if taxi.capture_active or explosion_active:
         return
-    if event.physical_keycode == KEY_T and not game_over and tow_available:
-        tow_available = false
-        credits -= mini(100, maxi(0, credits))
-        taxi.position = Vector2(float(pads[1]["x"]), float(pads[1]["y"]) - 21.0)
-        taxi.velocity = Vector2.ZERO
-        taxi.landed_on = 2
-        last_landed_pad = 2
-        taxi.engine_on = false
-        taxi.refuel(45.0)
-        audio.cue("service")
-        _announce("Emergency tow to PAD 02. Up to 100 CR charged. Tow used for this shift.")
-        _save_game()
+    if event.physical_keycode == KEY_T:
+        _request_tow()
         return
     if event.physical_keycode == KEY_R:
         _lose_life("RETRY REQUESTED")
@@ -1142,6 +1252,7 @@ func _purchase_upgrade(slot: int) -> void:
         tank_level += 1
         taxi.fuel_capacity = 140.0 + tank_level * 40.0
         taxi.refuel(40.0)
+        fuel_session_complete = taxi.fuel >= taxi.fuel_capacity
         _announce("Fuel capacity upgraded to Mk %d." % tank_level)
     elif key == KEY_4 and credits >= 75 and taxi.hull < 100.0:
         credits -= 75

@@ -77,6 +77,8 @@ func _run() -> void:
         game.engine_level = 0
         game.stabilizer_level = 0
         game.tank_level = mini(2, int(level / 8))
+        if trace > 0:
+            game.credits = int(preload("res://scripts/campaign.gd").sector(level - 1)["required_balance"])
         game.gate_rng.seed = 1701 + level * 97
         game._start_level()
         game.abductions.rng.seed = 7821 + level * 97
@@ -109,8 +111,18 @@ func _run() -> void:
                 fuel_stop_progress = -1
             if game.screen_state == "game_over":
                 break
+            if ship.input_locked:
+                release_controls()
+                game._process(dt)
+                target_id = -1
+                continue
             var mission_progress: int = game.fares_in_level * 2 + (1 if game.passenger_onboard else 0)
             if refueling and ship.landed_on == 2:
+                if ship.fuel < ship.fuel_capacity - 1 and game.credits > 0:
+                    release_controls()
+                    ship._physics_process(dt)
+                    game._process(dt)
+                    continue
                 refueling = false
                 fuel_stop_progress = mission_progress
                 target_id = -1
