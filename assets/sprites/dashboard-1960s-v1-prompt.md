@@ -1,0 +1,7 @@
+# 1960s automotive dashboard
+
+Edited with the built-in imagegen tool from `dashboard-v1.png`. Saved as a separate 1536 x 1024 atlas. Runtime regions retain the original object positions; white numerals and scrolling drums are drawn in-game.
+
+## Final prompt
+
+Edit this game sprite atlas into a 1960s American automotive dashboard. Preserve EXACT canvas 1536x1024, object positions, object sizes, silhouettes, six-cell arrangement, gauge centers, tick sweep, needle geometry. Change materials and styling: all tarnished brass becomes bright polished SILVER CHROME, black vinyl padded dash top with fine pebbled grain, center fascia becomes satin brushed aluminum with subtle horizontal grain and narrow chrome borders, clean simple Detroit dashboard styling circa 1964. Gauge faces matte BLACK with crisp WHITE thin tick marks, subtle red warning zone at empty fuel on left and high damage on right, no rainbow arcs or green neon. Gauge bezels silver chrome. Counter housing silver chrome, recessed solid BLACK empty window, NO digits because animated white numbers are supplied in-game. Needle vivid orange-red with silver chrome pivot cap. Bottom right trim: black horizontal ribbed vinyl with chrome edging. No steampunk, brass, gold, rust, scratches, wood or ornate screws; replace screws with neat small chrome screws. No lettering, no numbers. Genuine transparent background outside the objects; preserve opaque dark gauge faces and counter interiors. Production sprite atlas, orthographic straight-on.

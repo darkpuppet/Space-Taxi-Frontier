@@ -45,6 +45,16 @@ var telemetry: Label
 var controls: Label
 var banner: Label
 var upgrades: Label
+var dashboard: PanelContainer
+var help_button: Button
+var fuel_readout: Label
+var health_readout: Label
+var fare_readout: Label
+var fare_state: Label
+var shift_readout: Label
+var odometer: Label
+var distance_meters: float = 0.0
+const DASHBOARD_HEIGHT: float = 150.0
 var fuel_bar: ProgressBar
 var hull_bar: ProgressBar
 var credits: int = 0
@@ -88,6 +98,7 @@ var accident_layer: Node2D
 const PASSENGER_STRIKE_FINE: int = 250
 var trip_time: float = 0.0
 var low_fuel_warned: bool = false
+const LOW_FUEL_THRESHOLD: float = preload("res://scripts/analog_gauge.gd").LOW_FUEL_THRESHOLD
 var tow_available: bool = true
 var tow_truck: Node2D
 const TOW_COST: int = 300
@@ -258,6 +269,7 @@ func _start_level(carry_taxi: bool = false) -> void:
     abductions.raid_started.connect(func(pad: int) -> void: _announce("UFO APPROACHING PAD %02d / Collect the passenger before its tractor beam locks on!" % pad))
     taxi.landed.connect(_on_landed)
     taxi.flight_motion.connect(_on_taxi_flight_motion)
+    taxi.distance_travelled.connect(func(world_pixels: float) -> void: distance_meters += WORLD.meters(world_pixels))
     taxi.damaged.connect(_on_damaged)
     taxi.solid_impact.connect(audio.impact)
     taxi.black_hole_entered.connect(_on_black_hole_entered)
@@ -270,9 +282,9 @@ func _start_level(carry_taxi: bool = false) -> void:
         camera.limit_left = 0
         camera.limit_right = int(WIDTH)
         camera.limit_top = 0
-        camera.limit_bottom = int(WORLD.HEIGHT)
+        camera.limit_bottom = int(WORLD.HEIGHT + DASHBOARD_HEIGHT + 32)
         add_child(camera)
-    camera.global_position = taxi.position
+    camera.global_position = taxi.position + Vector2(0, DASHBOARD_HEIGHT * 0.5)
     camera.reset_smoothing()
     dispatcher.refill(1, taxi.position)
     _sync_dispatch()
@@ -328,11 +340,15 @@ func _process(dt: float) -> void:
             _enter_star_gate()
             return
         _update_passenger_walk(dt)
-        camera.global_position = taxi.global_position
+        camera.global_position = taxi.global_position + Vector2(0, DASHBOARD_HEIGHT * 0.5)
         fuel_bar.max_value = taxi.fuel_capacity
         fuel_bar.value = taxi.fuel
         hull_bar.value = taxi.hull
-        telemetry.text = "%06d CR   /   LIVES %d   /   SECTOR %02d / 20" % [credits, lives, level + 1]
+        fuel_readout.text = "FUEL  %03d / %03d" % [ceili(taxi.fuel), int(taxi.fuel_capacity)]
+        health_readout.text = "HEALTH  %d%%" % ceili(taxi.hull)
+        telemetry.text = "%06d CR" % credits
+        odometer.text = "%08.3f km" % (floorf(distance_meters) / 1000.0)
+        shift_readout.text = "SECTOR %02d / LIVES %d" % [level + 1, lives]
         status.text = "FUEL %03d   /   HULL %03d" % [ceili(taxi.fuel), ceili(taxi.hull)]
         upgrades.visible = taxi.landed_on == 2 and not game_over
         radar.taxi_position = taxi.position
@@ -353,13 +369,13 @@ func _process(dt: float) -> void:
             direction = "DESCEND" if taxi.landed_on == -1 else "DOCKED"
         var target_position := Vector2(float(target["x"]), float(target["y"]) - 21)
         var vertical: String = "ASCEND" if target_position.y < taxi.position.y - 45 else "DESCEND"
-        navigation.text = "PAD %02d / %s / %04d m\n%s / ALT %04d / SPEED %03d : %03d" % [int(target["id"]), direction, int(taxi.position.distance_to(target_position)), vertical, int(FLOOR - taxi.position.y), int(absf(taxi.velocity.x)), int(absf(taxi.velocity.y))]
+        navigation.text = "PAD %02d / %s / %03d m\n%s / ALT %03d m\nSPEED %02d : %02d m/s" % [int(target["id"]), direction, int(WORLD.meters(taxi.position.distance_to(target_position))), vertical, int(WORLD.meters(FLOOR - taxi.position.y)), int(WORLD.meters(absf(taxi.velocity.x))), int(WORLD.meters(absf(taxi.velocity.y)))]
         var waiting_text: String = ""
         for fare in dispatcher.waiting:
             waiting_text += "PAD %02d > %02d  %s   " % [int(fare["source"]), int(fare["destination"]), "ABDUCTING" if fare.get("abducting", false) else "%ds" % ceili(float(fare["patience"]))]
         mission_panel.text = "%02d / %s\nDELIVERED %d / 3   |   MISSED %d   |   LOST %d   |   ABDUCTED %d\nBALANCE %d / %d CR\n%s\n%s" % [level + 1, str(sector_data["name"]), fares_in_level, dispatcher.missed, dispatcher.killed, dispatcher.abducted, credits, int(sector_data["required_balance"]), str(sector_data["hint"]), waiting_text]
         if gate_active:
-            navigation.text = "STAR GATE / %04d m\nFLY THROUGH TO %s" % [int(taxi.position.distance_to(gate_position)), "FINISH" if level == 19 else "NEXT LEVEL"]
+            navigation.text = "STAR GATE / %03d m\nFLY THROUGH TO %s" % [int(WORLD.meters(taxi.position.distance_to(gate_position))), "FINISH" if level == 19 else "NEXT LEVEL"]
         if being_towed:
             navigation.text = "BUBBA'S TOW / %s\nRECOVERY TO FUEL PAD 02" % str(tow_truck.state).to_upper()
         elif taxi.landed_on == 2:
@@ -372,12 +388,14 @@ func _process(dt: float) -> void:
                 _board_passenger()
         else:
             boarding_time = 0.0
-        if taxi.fuel < 20.0 and not low_fuel_warned and not being_towed:
+        if taxi.fuel < LOW_FUEL_THRESHOLD and not low_fuel_warned and not being_towed:
             low_fuel_warned = true
             audio.cue("low")
             _announce("LOW FUEL / Dock at PAD 02. T calls Bubba; empty tanks trigger rescue automatically.")
     if message_timer > 0.0:
         message_timer -= dt
+    fare_readout.text = "%04d CR" % (_current_fare() if passenger_onboard else 0)
+    fare_state.text = "TO PAD %02d" % destination_pad if passenger_onboard else "FOR HIRE"
     banner.modulate.a = minf(1.0, maxf(message_timer, 0.0))
     queue_redraw()
 
@@ -465,6 +483,38 @@ func _label(text: String, size: int, color: Color = Color("d2e6e9")) -> Label:
     label.add_theme_color_override("font_color", color)
     return label
 
+func _current_fare() -> int:
+    return 220 + level * 85 + fares_in_level * 65 + maxi(0, int(60.0 - trip_time)) * 2
+
+func _dashboard_gauge(color: Color) -> ProgressBar:
+    var gauge := preload("res://scripts/analog_gauge.gd").new()
+    gauge.health = color == Color("ffac78")
+    gauge.custom_minimum_size = Vector2(104, 104)
+    return gauge
+
+func _dashboard_module(row: HBoxContainer) -> VBoxContainer:
+    var inset := PanelContainer.new()
+    var trim := _style(Color("101416"), Color("899597"))
+    trim.set_corner_radius_all(3)
+    trim.content_margin_left = 6
+    trim.content_margin_right = 6
+    trim.content_margin_top = 6
+    trim.content_margin_bottom = 6
+    inset.add_theme_stylebox_override("panel", trim)
+    row.add_child(inset)
+    var contents := VBoxContainer.new()
+    inset.add_child(contents)
+    return contents
+
+func _show_help() -> void:
+    if screen_state != "playing":
+        return
+    _show_pause()
+    overlay_title.text = "DRIVER'S HANDBOOK"
+    overlay_title.add_theme_font_size_override("font_size", 34)
+    overlay_copy.add_theme_font_size_override("font_size", 14)
+    overlay_copy.text = controls.text + "\n\n" + mission_panel.text + "\n\nLand gently to board and deliver passengers.\nPAD 02: fuel and workshop. Emergency tow costs 300 CR.\nThe fare includes a speed bonus that decreases over time.\nFuel burns even while parked; pause to take a break."
+
 func _build_ui() -> void:
     hud = CanvasLayer.new()
     add_child(hud)
@@ -473,79 +523,116 @@ func _build_ui() -> void:
     root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     root.mouse_filter = Control.MOUSE_FILTER_IGNORE
     hud.add_child(root)
-    var box := PanelContainer.new()
-    box.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-    box.offset_left = 24
-    box.offset_right = -24
-    box.offset_top = 20
-    box.add_theme_stylebox_override("panel", _style(Color("0c1924ed")))
-    root.add_child(box)
+    dashboard = PanelContainer.new()
+    dashboard.name = "TaxiDashboard"
+    dashboard.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+    dashboard.offset_left = 0
+    dashboard.offset_right = 0
+    dashboard.offset_top = -DASHBOARD_HEIGHT
+    dashboard.offset_bottom = 0
+    var fascia := StyleBoxTexture.new()
+    fascia.texture = preload("res://scripts/dashboard_art.gd").texture(0)
+    fascia.texture_margin_left = 48
+    fascia.texture_margin_right = 48
+    fascia.texture_margin_top = 48
+    fascia.texture_margin_bottom = 48
+    fascia.content_margin_left = 18
+    fascia.content_margin_right = 18
+    fascia.content_margin_top = 8
+    fascia.content_margin_bottom = 6
+    dashboard.add_theme_stylebox_override("panel", fascia)
+    root.add_child(dashboard)
     var stack := VBoxContainer.new()
-    stack.add_theme_constant_override("separation", 9)
-    box.add_child(stack)
-    var title_row := HBoxContainer.new()
-    stack.add_child(title_row)
-    var heading := _label("SPACE TAXI  /  FRONTIER", 22, Color("ffc76b"))
-    preload("res://scripts/art_deco.gd").skin_title(heading)
-    heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    title_row.add_child(heading)
-    telemetry = _label("", 15)
-    title_row.add_child(telemetry)
+    stack.add_theme_constant_override("separation", 4)
+    dashboard.add_child(stack)
     var row := HBoxContainer.new()
-    row.add_theme_constant_override("separation", 12)
+    row.add_theme_constant_override("separation", 10)
     stack.add_child(row)
-    objective = _label("", 15, Color("73e0d3"))
-    objective.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    row.add_child(objective)
-    status = _label("", 13)
-    row.add_child(status)
-    fuel_bar = ProgressBar.new()
-    fuel_bar.custom_minimum_size = Vector2(110, 10)
-    fuel_bar.show_percentage = false
-    fuel_bar.add_theme_stylebox_override("background", _style(Color("1c303e")))
-    fuel_bar.add_theme_stylebox_override("fill", _style(Color("67d9ba"), Color("67d9ba")))
-    row.add_child(fuel_bar)
-    hull_bar = ProgressBar.new()
-    hull_bar.custom_minimum_size = Vector2(110, 10)
-    hull_bar.show_percentage = false
-    hull_bar.add_theme_stylebox_override("background", _style(Color("1c303e")))
-    hull_bar.add_theme_stylebox_override("fill", _style(Color("ffc76b"), Color("ffc76b")))
-    row.add_child(hull_bar)
-    var dispatch_backing := Panel.new()
-    dispatch_backing.position = Vector2(24, 122)
-    dispatch_backing.size = Vector2(370, 184)
-    dispatch_backing.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    dispatch_backing.add_theme_stylebox_override("panel", _style(Color("0c1924dc")))
-    root.add_child(dispatch_backing)
-    navigation = _label("", 14, Color("a6cedb"))
-    navigation.position = Vector2(42, 131)
-    root.add_child(navigation)
+    var gauges := HBoxContainer.new()
+    gauges.add_theme_constant_override("separation", 0)
+    row.add_child(gauges)
+    fuel_readout = _label("FUEL", 13, Color("73e0d3"))
+    fuel_readout.visible = false
+    gauges.add_child(fuel_readout)
+    fuel_bar = _dashboard_gauge(Color("73e0d3"))
+    gauges.add_child(fuel_bar)
+    health_readout = _label("HEALTH", 13, Color("ffac78"))
+    health_readout.visible = false
+    gauges.add_child(health_readout)
+    hull_bar = _dashboard_gauge(Color("ffac78"))
+    gauges.add_child(hull_bar)
+    var meter := _dashboard_module(row)
+    meter.custom_minimum_size.x = 128
+    meter.add_child(_label("FARE / CR", 12, Color("d4ddd9")))
+    fare_readout = preload("res://scripts/mechanical_counter.gd").new()
+    fare_readout.text = "0000 CR"
+    meter.add_child(fare_readout)
+    fare_state = _label("FOR HIRE", 12, Color("7d9aa9"))
+    meter.add_child(fare_state)
+    var account := _dashboard_module(row)
+    account.custom_minimum_size.x = 164
+    account.add_child(_label("ACCOUNT / CR", 12, Color("d4ddd9")))
+    telemetry = preload("res://scripts/mechanical_counter.gd").new()
+    telemetry.digits = 8
+    account.add_child(telemetry)
+    shift_readout = _label("", 12, Color("7d9aa9"))
+    account.add_child(shift_readout)
+    var distance_panel := _dashboard_module(row)
+    distance_panel.add_child(_label("ODOMETER / km", 12, Color("d4ddd9")))
+    odometer = preload("res://scripts/mechanical_counter.gd").new()
+    odometer.digits = 7
+    odometer.decimal_places = 3
+    odometer.text = "0000.000 km"
+    distance_panel.add_child(odometer)
+    distance_panel.add_child(_label("TOTAL DISTANCE", 11, Color("7d9aa9")))
+    var route := _dashboard_module(row)
+    route.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    objective = _label("", 13, Color("73e0d3"))
+    objective.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    route.add_child(objective)
+    navigation = _label("", 12, Color("a6cedb"))
+    navigation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    route.add_child(navigation)
+    help_button = Button.new()
+    help_button.text = "?"
+    help_button.tooltip_text = "Controls and shift information (F1)"
+    help_button.custom_minimum_size = Vector2(36, 36)
+    help_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+    help_button.add_theme_font_size_override("font_size", 26)
+    help_button.add_theme_stylebox_override("normal", _style(Color("15191b"), Color("b5c2c6")))
+    help_button.add_theme_stylebox_override("hover", _style(Color("30383b"), Color("f4f5f1")))
+    help_button.add_theme_color_override("font_color", Color("f4f5f1"))
+    help_button.pressed.connect(_show_help)
+    row.add_child(help_button)
+    var phone_space := Control.new()
+    phone_space.custom_minimum_size.x = 146
+    row.add_child(phone_space)
+    banner = _label("", 12, Color("15191b"))
+    banner.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    stack.add_child(banner)
+    # Detailed readouts live in the help view, leaving the windscreen clear.
     mission_panel = _label("", 12, Color("a3c5d0"))
-    mission_panel.position = Vector2(42, 215)
+    mission_panel.visible = false
     root.add_child(mission_panel)
+    controls = _label("", 12, Color("7d9aa9"))
+    controls.visible = false
+    root.add_child(controls)
+    status = _label("", 13)
+    status.visible = false
+    root.add_child(status)
     radar = preload("res://scripts/radar.gd").new()
-    radar.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-    radar.position = Vector2(-302, 131)
-    radar.size = Vector2(260, 155)
+    radar.name = "DashPhone"
+    radar.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+    radar.position = Vector2(-158, -208)
+    radar.size = Vector2(204, 272)
+    radar.scale = Vector2(0.7, 0.7)
+    radar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    radar.visible = false
     root.add_child(radar)
-    var bottom := PanelContainer.new()
-    bottom.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-    bottom.offset_left = 24
-    bottom.offset_right = -24
-    bottom.offset_top = -102
-    bottom.offset_bottom = -20
-    bottom.add_theme_stylebox_override("panel", _style(Color("0c1924ed")))
-    root.add_child(bottom)
-    var bottom_stack := VBoxContainer.new()
-    bottom.add_child(bottom_stack)
-    banner = _label("", 15, Color("ffc76b"))
-    bottom_stack.add_child(banner)
-    controls = _label("A / D  STEER     W / SPACE  LIFT     S  BRAKE     ESC  PAUSE     M  SOUND     T  TOW     R  RETRY (-1 LIFE)", 12, Color("7d9aa9"))
-    bottom_stack.add_child(controls)
     upgrades = _label("UPGRADE DOCK / 1 Engine 400 CR | 2 Stabilizers 350 CR
 3 Tank 300 CR | 4 Repair 75 CR", 14, Color("73e0d3"))
     upgrades.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
-    upgrades.position = Vector2(-460, -165)
+    upgrades.position = Vector2(-700, -220)
     upgrades.visible = false
     root.add_child(upgrades)
     shade = ColorRect.new()
@@ -638,6 +725,8 @@ func _build_ui() -> void:
     root.add_child(menu_dialogs)
 
 func _open_overlay(title: String, copy: String, action: String) -> void:
+    radar.visible = false
+    overlay_copy.add_theme_font_size_override("font_size", 18)
     get_tree().paused = true
     overlay.visible = true
     shade.visible = true
@@ -696,6 +785,7 @@ func _reset_run() -> void:
     level = 0
     lives = 3
     credits = 0
+    distance_meters = 0.0
     deliveries = 0
     engine_level = 0
     stabilizer_level = 0
@@ -732,6 +822,7 @@ func _resume() -> void:
     if screen_state == "life_lost":
         _start_level()
     screen_state = "playing"
+    radar.visible = true
     aurora_background.visible = level == 2
     overlay.visible = false
     shade.visible = false
@@ -756,6 +847,7 @@ func _explode_taxi() -> void:
     taxi.engine_on = false
     taxi.visible = false
     hull_bar.value = 0
+    health_readout.text = "HEALTH  0%"
     status.text = "FUEL %03d   /   HULL 000" % ceili(taxi.fuel)
     sector.set_physics_process(false)
     explosion = preload("res://scripts/explosion.gd").new()
@@ -776,7 +868,8 @@ func _lose_life(reason: String = "TAXI DESTROYED") -> void:
     if not death_quip.is_empty():
         loss_copy += "\n\n" + death_quip
     lives = maxi(0, lives - 1)
-    telemetry.text = "%06d CR   /   LIVES %d   /   SECTOR %02d / 20" % [credits, lives, level + 1]
+    telemetry.text = "%06d CR" % credits
+    shift_readout.text = "SECTOR %02d / LIVES %d" % [level + 1, lives]
     game_over = true
     taxi.input_locked = true
     taxi.engine_on = false
@@ -1121,7 +1214,7 @@ func _on_landed(pad_id: int) -> void:
         passenger_arrivals.drop_off(pads[pad_id - 1], taxi.position.x, arrival_variant)
         passenger_onboard = false
         dispatcher.finish()
-        var fare: int = 220 + level * 85 + (fares_in_level * 65) + maxi(0, int(60.0 - trip_time)) * 2
+        var fare: int = _current_fare()
         credits += fare
         deliveries += 1
         fares_in_level += 1
@@ -1213,6 +1306,10 @@ func _update_control_hints() -> void:
         upgrades.text = "UPGRADE DOCK / X OPENS WORKSHOP" if controller_active else "UPGRADE DOCK / 1 Engine 400 CR | 2 Stabilizers 350 CR\n3 Tank 300 CR | 4 Repair 75 CR"
 
 func _unhandled_key_input(event: InputEvent) -> void:
+    if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F1:
+        _show_help()
+        get_viewport().set_input_as_handled()
+        return
     if not event.pressed or event.echo:
         return
     if menu_dialogs.visible:
@@ -1314,6 +1411,8 @@ func _save_game() -> void:
     var cfg: ConfigFile = ConfigFile.new()
     cfg.set_value("career", "lives", lives)
     cfg.set_value("career", "credits", credits)
+    cfg.set_value("career", "distance_meters", distance_meters)
+    cfg.set_value("career", "distance_scale_version", 1)
     cfg.set_value("career", "deliveries", deliveries)
     cfg.set_value("career", "level", level)
     cfg.set_value("career", "campaign_complete", campaign_complete)
@@ -1330,6 +1429,9 @@ func _load_game() -> void:
         return
     lives = clampi(int(cfg.get_value("career", "lives", 3)), 0, 3)
     credits = int(cfg.get_value("career", "credits", 0))
+    distance_meters = maxf(0.0, float(cfg.get_value("career", "distance_meters", 0.0)))
+    if int(cfg.get_value("career", "distance_scale_version", 0)) == 0:
+        distance_meters = WORLD.meters(distance_meters)
     deliveries = int(cfg.get_value("career", "deliveries", 0))
     level = clampi(int(cfg.get_value("career", "level", 0)), 0, CAMPAIGN.STAGES.size() - 1)
     campaign_complete = bool(cfg.get_value("career", "campaign_complete", false))

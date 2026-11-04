@@ -56,6 +56,22 @@ func _run() -> void:
     game._new_game()
     freeze_simulation()
     var ship: Node = game.taxi
+    var idle_position: Vector2 = ship.position
+    var idle_fuel: float = ship.fuel
+    for step in range(600):
+        ship._physics_process(1.0 / 60)
+    check(ship.position == idle_position and ship.velocity == Vector2.ZERO, "Taxi remains stationary on its starting platform without input")
+    check(absf(ship.fuel - (idle_fuel - 5.0)) < 0.001, "Ten seconds parked burns five fuel units to maintain urgency")
+    var parked_fuel: float = ship.fuel
+    game._show_pause()
+    await physics_frame
+    await physics_frame
+    check(ship.fuel == parked_fuel, "Pausing stops parked fuel consumption")
+    game._resume()
+    ship.input_locked = true
+    ship._physics_process(0.05)
+    check(ship.fuel == parked_fuel, "Disabled taxi does not consume idle fuel during recovery")
+    ship.input_locked = false
     ship.position = Vector2(1100, 620)
     ship.landed_on = -1
     ship.velocity = Vector2(200, 300)

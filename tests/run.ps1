@@ -15,6 +15,7 @@ $checks = @(
     @{ Name = 'abductions'; Args = '--headless --path . --script tests/abductions.gd --quit-after 3000' },
     @{ Name = 'economy'; Args = '--headless --path . --script tests/economy.gd --quit-after 3000' },
     @{ Name = 'towing-fuel'; Args = '--headless --path . --script tests/towing-fuel.gd --quit-after 3000' },
+    @{ Name = 'dashboard'; Args = '--headless --path . --script tests/dashboard.gd --quit-after 3000' },
     @{ Name = 'settings-scores'; Args = '--headless --path . --script tests/settings-scores.gd --quit-after 3000' },
     @{ Name = 'controller'; Args = '--headless --path . --script tests/controller.gd --quit-after 3000' },
     @{ Name = 'developer-level-01'; Args = '--headless --path . --script tests/developer-launch.gd --quit-after 3000 -- --dev-level=1' },

@@ -9,12 +9,13 @@ signal solid_impact(speed: float)
 signal black_hole_entered(center: Vector2)
 signal black_hole_lost
 signal fuel_depleted
+signal distance_travelled(world_pixels: float)
 
 @export var gravity: float = 300.0
 @export var lift: float = 520.0
 @export var steering: float = 950.0
 @export var top_speed: float = 330.0
-@export var idle_fuel_drain: float = 0.10
+@export var idle_fuel_drain: float = 0.50
 var fuel: float = 140.0
 var hull: float = 100.0
 var fuel_capacity: float = 140.0
@@ -50,6 +51,13 @@ var beam_notice_timer: float = 0.0
 var beam_notice_damage: float = 0.0
 
 func _physics_process(dt: float) -> void:
+    var start: Vector2 = global_position
+    var driving: bool = not input_locked and not capture_active and hull > 0
+    _advance_physics(dt)
+    if driving and not input_locked and not capture_active and hull > 0:
+        distance_travelled.emit(start.distance_to(global_position))
+
+func _advance_physics(dt: float) -> void:
     dt = clampf(dt, 0.0, 0.05)
     visual_time += dt
     _update_damage_smoke(dt)

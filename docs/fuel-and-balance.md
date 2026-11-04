@@ -1,6 +1,6 @@
 # Fuel, balance targets, and sector transitions
 
-The taxi consumes **0.10 fuel per second** while active, even when docked or coasting. Lift thrusters consume an additional **2.7 per second**, with the existing steering and braking costs unchanged. Pausing, destruction, and black-hole capture stop idle consumption.
+The taxi consumes **0.50 fuel per second** while active, even when docked or coasting. A full stock tank lasts **4 minutes 40 seconds** at idle, keeping pressure on the player to find the next fare. Lift thrusters consume an additional **2.7 per second**, with the existing steering and braking costs unchanged. Pausing, destruction, and black-hole capture stop idle consumption.
 
 Advancement requires at least **three successful deliveries** and the sector's required **current credit balance**. Upgrades, repairs, tow charges, and passenger fines reduce that balance. Extra fares continue spawning if three deliveries are insufficient. Spending below the target after unlocking a gate closes it and resumes dispatch; gate entry also rechecks the balance.
 

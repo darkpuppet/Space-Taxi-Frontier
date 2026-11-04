@@ -6,14 +6,54 @@ var hazards: Array = []
 var fares: Array = []
 var gate_position := Vector2(-1, -1)
 var target_id: int = 1
+const MAP := Rect2(18, 79, 168, 112)
+
+func panel(rect: Rect2, fill: Color, border: Color, radius: int = 8) -> void:
+    var style := StyleBoxFlat.new()
+    style.bg_color = fill
+    style.border_color = border
+    style.set_border_width_all(1)
+    style.set_corner_radius_all(radius)
+    draw_style_box(style, rect)
+
+func text_at(position: Vector2, text: String, font_size: int, color: Color) -> void:
+    draw_string(ThemeDB.fallback_font, position, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
 
 func point(position: Vector2) -> Vector2:
-    return Vector2(position.x / WORLD.WIDTH * 260.0, 24 + position.y / WORLD.HEIGHT * 130.0)
+    var normalized := Vector2(position.x / WORLD.WIDTH, position.y / WORLD.HEIGHT).clamp(Vector2.ZERO, Vector2.ONE)
+    return MAP.position + Vector2(8, 8) + normalized * (MAP.size - Vector2(16, 16))
 
 func _draw() -> void:
-    draw_string(ThemeDB.fallback_font, Vector2(0, 10), "SECTOR MAP / 2.4 x 1.4 KM", HORIZONTAL_ALIGNMENT_CENTER, 260, 11, Color("7d9aa9"))
-    draw_rect(Rect2(0, 20, 260, 136), Color(0.025, 0.06, 0.09, 0.7))
-    draw_rect(Rect2(0, 20, 260, 136), Color("304b58"), false, 1)
+    # A short cradle connects the portrait handset to the dashboard lip.
+    panel(Rect2(77, 243, 50, 29), Color("17242d"), Color("8c7753"), 4)
+    panel(Rect2(51, 263, 102, 8), Color("263b44"), Color("8c7753"), 3)
+    panel(Rect2(4, 5, 200, 253), Color("00000070"), Color("00000000"), 18)
+    panel(Rect2(0, 0, 200, 253), Color("101a23"), Color("8c9da0"), 18)
+    panel(Rect2(8, 8, 184, 237), Color("0b242d"), Color("304b58"), 12)
+    panel(Rect2(77, 9, 46, 8), Color("080f17"), Color("080f17"), 4)
+    text_at(Vector2(19, 29), "FRONTIER", 9, Color("7d9aa9"))
+    for bar in range(4):
+        draw_rect(Rect2(153 + bar * 5, 27 - bar * 2, 3, 3 + bar * 2), Color("73e0d3"))
+    text_at(Vector2(18, 51), "DISPATCH / MAP", 13, Color("73e0d3"))
+    text_at(Vector2(18, 68), "LIVE SECTOR TRACKING", 9, Color("7d9aa9"))
+    panel(MAP, Color("0a1a24"), Color("304b58"), 4)
+    for line in range(1, 4):
+        var x: float = MAP.position.x + MAP.size.x * line / 4.0
+        var y: float = MAP.position.y + MAP.size.y * line / 4.0
+        draw_line(Vector2(x, MAP.position.y), Vector2(x, MAP.end.y), Color("17333e"))
+        draw_line(Vector2(MAP.position.x, y), Vector2(MAP.end.x, y), Color("17333e"))
+    var target := gate_position
+    if gate_position.x < 0:
+        for pad in pads:
+            if int(pad["id"]) == target_id:
+                target = Vector2(pad["x"], pad["y"])
+                break
+    if target.x >= 0:
+        draw_dashed_line(point(taxi_position), point(target), Color("487a7e"), 1, 4)
+    text_at(Vector2(18, 211), "STAR GATE" if gate_position.x >= 0 else "ROUTE / PAD %02d" % target_id, 12, Color("ffc76b"))
+    var distance: int = int(WORLD.meters(taxi_position.distance_to(target))) if target.x >= 0 else 0
+    text_at(Vector2(18, 229), "%04d m   /   %d WAITING" % [distance, fares.size()], 10, Color("a6cedb"))
+    draw_line(Vector2(78, 239), Vector2(122, 239), Color("527685"), 3, true)
     for pad in pads:
         var pos: Vector2 = point(Vector2(pad["x"], pad["y"]))
         var color: Color = Color("ffc76b") if int(pad["id"]) == target_id else Color("527685")
