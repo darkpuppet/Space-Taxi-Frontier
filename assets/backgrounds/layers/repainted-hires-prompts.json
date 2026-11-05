@@ -1,0 +1,354 @@
+{
+  "tool": "built-in image_gen",
+  "purpose": "Individual full-resolution repaints replacing the large atlas cells. Generated alpha retained without color keying or masks.",
+  "special": [
+    {
+      "level": 1,
+      "layer": "middle-v2.png",
+      "prompt": "Create ONE game parallax celestial asset on a GENUINELY TRANSPARENT full landscape5:3 canvas, 1620x972. Paint ONLY the BLUE EARTH PLANET from the reference, curved horizon spanning lower half. Complete Earth behind all structures. Upper half is EMPTY alpha0. Fine cinematic painted planetary clouds, oceans and city lights. ABSOLUTELY NO station, buildings, frame, supports, window, deck, towers, bridge, moon, stars, nebula or sky. Do not recreate full scene. Only Earth and atmosphere rim; all other pixels alphaZERO. No white background, no checkerboard. Repaint rather than cut out."
+    },
+    {
+      "level": 9,
+      "layer": "front-v2.png",
+      "prompt": "Create one game parallax foreground asset on a GENUINELY TRANSPARENT canvas (alpha ZERO in all empty space). Newly paint the near rocky foreground of the reference: dark purple blue craggy floating rocks along the bottom edge and lower corners, warm subtle rim lighting, intricate cinematic painterly detail. Match reference wide landscape 5:3 composition. Rocks occupy bottom 20% and side lower corners only; upper 75% and center must be COMPLETELY EMPTY transparent alpha=0, no white backdrop, no haze backdrop, no checkerboard, no shadows outside rocks, no stars, NO planet, no nebula. Repaint whole rocks with clean edges, do not extract from reference. Single full-canvas layer, NO panels or atlas. Intended as transparent front layer composited over other painted scenery."
+    }
+  ],
+  "tasks": [
+    {
+      "level": 1,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY gold gunmetal observation window structural frame at top and sides ONLY. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-01-v1.png"
+    },
+    {
+      "level": 1,
+      "layer": "front-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY nearest station deck and buildings across bottom. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-01-v1.png"
+    },
+    {
+      "level": 2,
+      "layer": "middle-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY yellow sun low right, no sky. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. CELSTIAL OBJECTS ONLY: ABSOLUTELY NO terrain, rocks, buildings, station, frame, deck, vegetation, mountains, bridges, clouds. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges. Only golden sun disk at x0.85,y0.64 radius0.07 canvaswidth.",
+      "style_reference": "assets/backgrounds/level-02-v1.png"
+    },
+    {
+      "level": 2,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY nearer red sandstone cliffs on lower sides. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-02-v1.png"
+    },
+    {
+      "level": 2,
+      "layer": "front-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY dark rocky desert ground along bottom. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-02-v1.png"
+    },
+    {
+      "level": 3,
+      "layer": "middle-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY huge cold blue planet upper right. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. CELSTIAL OBJECTS ONLY: ABSOLUTELY NO terrain, rocks, buildings, station, frame, deck, vegetation, mountains, bridges, clouds. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-03-v1.png"
+    },
+    {
+      "level": 3,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY blue ice spires along sides. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-03-v1.png"
+    },
+    {
+      "level": 3,
+      "layer": "front-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY nearest icy rocks and snow across bottom. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-03-v1.png"
+    },
+    {
+      "level": 4,
+      "layer": "middle-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY large orange planet upper right. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. CELSTIAL OBJECTS ONLY: ABSOLUTELY NO terrain, rocks, buildings, station, frame, deck, vegetation, mountains, bridges, clouds. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-04-v1.png"
+    },
+    {
+      "level": 4,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY orange canyon arches and towers along sides. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-04-v1.png"
+    },
+    {
+      "level": 4,
+      "layer": "front-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY nearest craggy rocks and canyon floor bottom. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-04-v1.png"
+    },
+    {
+      "level": 5,
+      "layer": "middle-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY blue moon upper right. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. CELSTIAL OBJECTS ONLY: ABSOLUTELY NO terrain, rocks, buildings, station, frame, deck, vegetation, mountains, bridges, clouds. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-05-v1.png"
+    },
+    {
+      "level": 5,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY large glowing mushroom trees on sides, hanging lights and vines. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-05-v1.png"
+    },
+    {
+      "level": 5,
+      "layer": "front-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY nearest dark foliage roots and rocks bottom corners. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-05-v1.png"
+    },
+    {
+      "level": 6,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY tall purple cyan neon towers along sides and bridges lower center. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-06-v1.png"
+    },
+    {
+      "level": 6,
+      "layer": "front-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY nearest dark waterfront buildings piers and reflective water along bottom. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-06-v1.png"
+    },
+    {
+      "level": 7,
+      "layer": "middle-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY golden sun upper left and pale blue white sun upper right. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. CELSTIAL OBJECTS ONLY: ABSOLUTELY NO terrain, rocks, buildings, station, frame, deck, vegetation, mountains, bridges, clouds. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-07-v1.png"
+    },
+    {
+      "level": 7,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY domes towers and rugged mesas along lower sides. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-07-v1.png"
+    },
+    {
+      "level": 7,
+      "layer": "front-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY dark rocky orange blue desert floor bottom. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-07-v1.png"
+    },
+    {
+      "level": 8,
+      "layer": "middle-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY larger green planets left and right sky. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. CELSTIAL OBJECTS ONLY: ABSOLUTELY NO terrain, rocks, buildings, station, frame, deck, vegetation, mountains, bridges, clouds. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-08-v1.png"
+    },
+    {
+      "level": 8,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY honeycomb domes bridges and floating islands lower sides. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-08-v1.png"
+    },
+    {
+      "level": 8,
+      "layer": "front-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY nearest gold green honeycomb architectural frame at top and side edges. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-08-v1.png"
+    },
+    {
+      "level": 9,
+      "layer": "middle-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY complete ringed purple giant upper right. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. CELSTIAL OBJECTS ONLY: ABSOLUTELY NO terrain, rocks, buildings, station, frame, deck, vegetation, mountains, bridges, clouds. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-09-v1.png"
+    },
+    {
+      "level": 9,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY middle floating rocky islands lower sides. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-09-v1.png"
+    },
+    {
+      "level": 10,
+      "layer": "middle-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY complete Earth curved horizon across lower quarter. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. CELSTIAL OBJECTS ONLY: ABSOLUTELY NO terrain, rocks, buildings, station, frame, deck, vegetation, mountains, bridges, clouds. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-10-v1.png"
+    },
+    {
+      "level": 10,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY asteroid outposts antenna towers along sides. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-10-v1.png"
+    },
+    {
+      "level": 10,
+      "layer": "front-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY nearest dark asteroid cliffs lower edges. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-10-v1.png"
+    },
+    {
+      "level": 11,
+      "layer": "middle-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY two orange suns low left. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. CELSTIAL OBJECTS ONLY: ABSOLUTELY NO terrain, rocks, buildings, station, frame, deck, vegetation, mountains, bridges, clouds. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges. Two orange suns at x0.18,y0.54 radius0.12 and x0.36,y0.64 radius0.05, do not place below mountains.",
+      "style_reference": "assets/backgrounds/level-11-v1.png"
+    },
+    {
+      "level": 11,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY midground jagged violet mesas side edges. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-11-v1.png"
+    },
+    {
+      "level": 11,
+      "layer": "front-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY nearest dark craggy spires and ground along bottom. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-11-v1.png"
+    },
+    {
+      "level": 12,
+      "layer": "middle-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY distant scattered asteroids upper sky with empty center. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. CELSTIAL OBJECTS ONLY: ABSOLUTELY NO terrain, rocks, buildings, station, frame, deck, vegetation, mountains, bridges, clouds. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-12-v1.png"
+    },
+    {
+      "level": 12,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY mining towers gantries and asteroid outposts lower sides. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-12-v1.png"
+    },
+    {
+      "level": 12,
+      "layer": "front-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY nearest large asteroid cliffs top corners and lower edge. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-12-v1.png"
+    },
+    {
+      "level": 13,
+      "layer": "middle-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY large distant rocky planetoids near outer sides only. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. CELSTIAL OBJECTS ONLY: ABSOLUTELY NO terrain, rocks, buildings, station, frame, deck, vegetation, mountains, bridges, clouds. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-13-v1.png"
+    },
+    {
+      "level": 13,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY floating islands with gold industrial towers lower sides. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-13-v1.png"
+    },
+    {
+      "level": 13,
+      "layer": "front-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY nearest dark jagged rocky islands along lower edge. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-13-v1.png"
+    },
+    {
+      "level": 14,
+      "layer": "middle-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY large red moon upper right. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. CELSTIAL OBJECTS ONLY: ABSOLUTELY NO terrain, rocks, buildings, station, frame, deck, vegetation, mountains, bridges, clouds. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-14-v1.png"
+    },
+    {
+      "level": 14,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY jagged black red basalt cliffs along sides. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-14-v1.png"
+    },
+    {
+      "level": 14,
+      "layer": "front-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY nearest glowing lava rivers and black rocks along bottom. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-14-v1.png"
+    },
+    {
+      "level": 15,
+      "layer": "middle-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY huge pale green planet upper right. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. CELSTIAL OBJECTS ONLY: ABSOLUTELY NO terrain, rocks, buildings, station, frame, deck, vegetation, mountains, bridges, clouds. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-15-v1.png"
+    },
+    {
+      "level": 15,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY temple islands and tall lush waterfall cliffs along sides, whole waterfalls. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-15-v1.png"
+    },
+    {
+      "level": 15,
+      "layer": "front-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY nearest foliage flowers and mossy rocks lower corners. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-15-v1.png"
+    },
+    {
+      "level": 16,
+      "layer": "middle-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY huge luminous blue moon low right. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. CELSTIAL OBJECTS ONLY: ABSOLUTELY NO terrain, rocks, buildings, station, frame, deck, vegetation, mountains, bridges, clouds. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-16-v1.png"
+    },
+    {
+      "level": 16,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY coastal cliffs and outpost towers along lower left. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-16-v1.png"
+    },
+    {
+      "level": 16,
+      "layer": "front-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY nearest ocean water across bottom with blue moon reflections and dark shoreline. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-16-v1.png"
+    },
+    {
+      "level": 17,
+      "layer": "middle-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY larger small purple planets near right side. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. CELSTIAL OBJECTS ONLY: ABSOLUTELY NO terrain, rocks, buildings, station, frame, deck, vegetation, mountains, bridges, clouds. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-17-v1.png"
+    },
+    {
+      "level": 17,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY midground floating jagged rocky islands lower sides. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-17-v1.png"
+    },
+    {
+      "level": 17,
+      "layer": "front-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY nearest dark floating rock spires along bottom. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-17-v1.png"
+    },
+    {
+      "level": 18,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY midground broken girders cranes and station structures along sides. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-18-v1.png"
+    },
+    {
+      "level": 18,
+      "layer": "front-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY nearest curved broken metal hull framing upper side edges and bottom deck. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-18-v1.png"
+    },
+    {
+      "level": 19,
+      "layer": "middle-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY black eclipsed sun and orange corona upper right, red crescent planet left. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. CELSTIAL OBJECTS ONLY: ABSOLUTELY NO terrain, rocks, buildings, station, frame, deck, vegetation, mountains, bridges, clouds. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-19-v1.png"
+    },
+    {
+      "level": 19,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY dark red canyon cliffs along lower sides. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-19-v1.png"
+    },
+    {
+      "level": 19,
+      "layer": "front-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY nearest black volcanic rocks glowing red ground along bottom. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-19-v1.png"
+    },
+    {
+      "level": 20,
+      "layer": "middle-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY large blue planet peeking from left edge. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. CELSTIAL OBJECTS ONLY: ABSOLUTELY NO terrain, rocks, buildings, station, frame, deck, vegetation, mountains, bridges, clouds. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-20-v1.png"
+    },
+    {
+      "level": 20,
+      "layer": "near-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY tall ivory city spires bridges and outposts along lower sides. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-20-v1.png"
+    },
+    {
+      "level": 20,
+      "layer": "front-v2.png",
+      "prompt": "Create ONE game parallax layer on genuinely transparent full landscape5:3 canvas at1620x972. Image1 is LOW RESOLUTION LAYOUT REFERENCE ONLY. Image2 is PAINTING STYLE REFERENCE ONLY. NEWLY REPAINT ONLY nearest dark rock and gold station structures along bottom. Use image1 placement and object types; image2 supplies fine cinematic painted detail and palette. Repaint full objects and hidden surfaces, do not extract/mask. Do NOT recreate the complete image2 scene. SCENERY ONLY: ABSOLUTELY NO planets, moons, suns, galaxies, stars, sky, nebula. No other depth layers or duplicated landmarks. Empty space alphaZERO; no white/gray background, pale haze, checkerboard, labels, panels or atlas. Fine rich native-resolution detail and natural clean alpha edges.",
+      "style_reference": "assets/backgrounds/level-20-v1.png"
+    }
+  ]
+}

@@ -17,6 +17,7 @@ $checks = @(
     @{ Name = 'towing-fuel'; Args = '--headless --path . --script tests/towing-fuel.gd --quit-after 3000' },
     @{ Name = 'dashboard'; Args = '--headless --path . --script tests/dashboard.gd --quit-after 3000' },
     @{ Name = 'environment-layers'; Args = '--headless --path . --script tests/environment-layers.gd --quit-after 3000' },
+    @{ Name = 'depth-extraction'; Args = '--path . --rendering-driver opengl3 --audio-driver Dummy --position -32000,-32000 --script tests/depth-extraction.gd --quit-after 3000' },
     @{ Name = 'level-scenes'; Args = '--headless --path . --script tests/level-scenes.gd --quit-after 3000' },
     @{ Name = 'window-glass'; Args = '--headless --path . --script tests/window-glass.gd --quit-after 3000' },
     @{ Name = 'settings-scores'; Args = '--headless --path . --script tests/settings-scores.gd --quit-after 3000' },

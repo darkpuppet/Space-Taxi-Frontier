@@ -97,6 +97,10 @@ func _run() -> void:
         var elapsed: float = 0
         for step in range(36000):
             var dt: float = 1.0 / 60
+            # Keep navigation independent of random market swings. Paid pumping
+            # still consumes credits; towing-fuel.gd covers the full 2-10 market.
+            game.fuel_price = 2
+            game.fuel_price_clock = 0.0
             elapsed += dt
             path_age += dt
             if game.screen_state == "life_lost":

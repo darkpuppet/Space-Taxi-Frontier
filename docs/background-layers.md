@@ -1,49 +1,23 @@
-# Background layers and parallax
+# Repainted background layers
 
-Open `Environment.tscn` to tune the shared renderer. Each inherited level scene owns its own Environment instance, so settings and sprites can be changed per sector.
+All 20 level scenes use independently repainted RGBA scenery. Original `level-NN-v1.png` paintings remain as style references and editor overview art. Runtime scenery does not cut those paintings apart, sample semantic masks, key out colors, or repair extraction edges.
 
-The requested back-to-front stack has five primary planes:
+Each scene renders six populated scenery planes with distinct camera rates. The sky uses 0.04 / 0.025 and moves slowly behind the other five planes. Each scene assigns `authored_depth_textures` in back-to-front order:
 
-| Order | Plane | Contents | Camera response |
-| --- | --- | --- | --- |
-| 1 | StaticStarscape | Static starscape with nested animated stars and passing objects | Stars fixed on screen; activity moves at 90% horizontal / 94% vertical |
-| 2 | EarthAndPlanets | Earth and moons, independently extracted from existing artwork | 97% horizontal / 98% vertical |
-| 3 | WindowGlass | Translucent blue glass over both stars and planets | 99% horizontal / 99% vertical |
-| 4 | WindowFrame | Solid outer frame, ceiling and edge columns | Matches the glass |
-| 5 | Buildings | Station floor, towers, catwalks and control rooms | 100%, matching world movement |
+| Plate | Contents | Horizontal / vertical camera scale |
+| --- | --- | --- |
+| `distant-v2.png` | Small distant celestial objects | 0.90 / 0.94 |
+| `middle-v2.png` | Main planets, moons and suns | 0.94 / 0.96 |
+| `far-v2.png` | Far landscape and buildings | 0.97 / 0.98 |
+| `near-v2.png` | Near landscape and buildings | 0.985 / 0.99 |
+| `front-v2.png` | Closest rocks, foliage and structures | 1.0 / 1.0 |
 
-The two window layers mean translucent glass followed by its solid frame. Animated stars, comets, passing ships, debris and the Ice Moon aurora remain nested in the bottommost plane, behind celestial objects. Disable `parallax_enabled` to restore world registration for all moving sprites while the static starscape remains screen-fixed.
+These files live under `assets/backgrounds/layers/level-NN/`. Every depth slot contains visible artwork. Sectors without celestial bodies use distant city skylines or derelict structures instead. The starscape uses the previously reconstructed `sky-v1.png` plates for levels 02-20 and the new `sky-v2.png` for level 01. Every plate shares the full world coordinate frame; complete silhouettes and surfaces behind overlapping objects are painted into their own layers. World overscan covers solid-plane boundaries. Screen-space sky overscan covers its slow travel without exposing gaps.
 
-Platforms, support trusses, hazards, taxi, passengers and gameplay effects remain above the scenery in the gameplay canvas. They receive no scenic parallax offsets, keeping collisions and landing positions aligned. The dashboard remains on its screen-space HUD.
+Level 01 uses the five slots for distant moon, Earth, far orbital outposts, observation frame and station deck. Its six-percent clear glass tint is attached behind the observation frame and travels with it, preserving all six independent scenery depths.
 
-## Level 1 artwork separation
+The built-in imagegen tool repainted the plates from the original paintings as visual references. `repainted-plate-prompts.json` and `repainted-hires-prompts.json` and `six-layer-completion-prompts.json` record the generation prompts. Initial distant plates were exported from transparent atlases using `tools/split-background-atlases.ps1`; larger scenery is painted as individual full-resolution images to retain detail at gameplay zoom. Alpha is supplied by generation and preserved on import. No color-key cleanup is used. Old depth-mask assets and extraction shaders are retained for historical compatibility; the campaign scenes no longer assign them.
 
-The original `assets/backgrounds/level-01-v1.png` remains intact. Level 1 assigns artwork-aligned sprite masks under `assets/backgrounds/layers/level-01/`:
+Twinkles remain registered with the slowly parallaxing sky. Passing ships, comets and debris retain their own movement. Ice Moon animates only its repainted sky behind solid scenery and freezes on pause. Retries reuse scenic nodes. Platforms, collisions, taxi, passengers and the dashboard remain independent from scenic camera offsets.
 
-- `window-mask-v1.png` identifies open space behind the glass.
-- `planets-mask-v1.png` selects Earth and the two moons.
-- `frame-mask-v1.png` selects the outer observation-window structure.
-- `buildings-mask-v1.png` selects the floor, buildings and control rooms.
-
-These masks select pixels from the existing painting into separate Sprite2D planes. Overlapping solid masks are resolved so columns belong to the frame while closed control-room glazing belongs to buildings. The glass is a uniform blue tint at 6% opacity and includes the view over the planets; it contains no baked stars. A reconstructed celestial source fills the Earth behind structures so parallax does not expose building-shaped gaps.
-
-The shared five-plane structure exists in every sector. Level 1 currently has the semantic extraction masks. Other sectors retain their existing painting through the buildings-plane fallback and static sky opening until their own masks or transparent plates are authored; the unassigned semantic planes stay hidden. No new generic replacement environments are introduced.
-
-Overscan and a soft outer fade cover small offsets and scrolling beyond the world boundary. Pause freezes animated activity. Retries reset and reuse the current level's planes; changing sectors replaces the level scene and its environment.
-
-## Authoring sprite plates
-
-Each level's Environment exposes separate `sky_layer_texture`, `animated_layer_texture`, `planet_layer_texture`, `glass_layer_texture`, `frame_layer_texture` and `buildings_layer_texture` slots. Scene assignments take precedence over discovered PNGs.
-
-Optional filenames under `assets/backgrounds/layers/level-01/` through `level-20/` are:
-
-- `sky.png`: opaque static starscape, fitted to the logical viewport.
-- `animated.png`: optional transparent starfield activity plate.
-- `planets.png`: transparent celestial sprites.
-- `glass.png`: translucent glass sprite.
-- `frame.png`: transparent solid window-frame sprite.
-- `buildings.png`: transparent nearest structures.
-
-All moving plates share the 2400 x 1440 world coordinate system. Other source resolutions scale to that rectangle. Fill areas hidden behind nearer objects so movement will not reveal holes. Assigning a transparent plate bypasses the fallback extraction shader for that plane. The planet reconstruction slot supplies an opaque color source that still uses the planet mask.
-
-Run `tests/environment-layers.gd` for ordering, parallax, lifecycle and gameplay isolation checks. `tests/window-glass.gd` additionally renders isolated planes to verify that Earth, glass, frame and buildings occupy the intended sprites. Graphical runs save previews in `.development/`.
+Run `tests/run.ps1` for complete validation. `environment-layers.gd` checks camera rates, ordering, zoom, pause and transitions. `depth-extraction.gd` now validates all 20 repainted sets: visible content in every plane, real alpha, absence of broad white backdrops, direct shader-free rendering, isolated foreground transparency, and coverage at multiple camera positions. It saves full-world and close-travel previews plus a contact sheet under `.development/depth-previews/`. `window-glass.gd` checks independent Earth, glass, frame and deck treatment. `aurora.gd` checks the localized animation lifecycle.

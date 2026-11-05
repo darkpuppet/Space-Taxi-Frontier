@@ -119,7 +119,7 @@ func passer_transform(passer: Dictionary) -> Transform2D:
     # upright, then rotate so every comet's tail trails its actual velocity.
     return Transform2D(Vector2(cos(pitch), sin(pitch)) * direction, Vector2(-sin(pitch), cos(pitch)), Vector2(passer["position"]))
 
-func paint(canvas: CanvasItem) -> void:
+func paint_stars(canvas: CanvasItem) -> void:
     # Derive cells from the original PNG dimensions; preserve generated artwork.
     var cell: Vector2 = ATLAS.get_size() / 4.0
     for star in stars:
@@ -129,6 +129,9 @@ func paint(canvas: CanvasItem) -> void:
         var star_side: float = minf(cell.x, cell.y)
         var star_region := Rect2(Vector2(frame * cell.x + (cell.x - star_side) * 0.5, (cell.y - star_side) * 0.5), Vector2.ONE * star_side)
         canvas.draw_texture_rect_region(ATLAS, Rect2(point - Vector2.ONE * size * 0.5, Vector2.ONE * size), star_region, Color(0.8, 0.9, 1, 0.65))
+
+func paint_passers(canvas: CanvasItem) -> void:
+    var cell: Vector2 = ATLAS.get_size() / 4.0
     for passer in passers:
         var kind: int = int(passer["kind"])
         var frame: int = int(float(passer["age"]) * (8 if kind != 3 else 2) + float(passer["phase"])) % 4

@@ -8,6 +8,8 @@ func _run() -> void:
     game.save_file = "user://frontier_exit_test.cfg"
     root.add_child(game)
     await process_frame
+    # Allow first-frame audio registration before testing an immediate exit.
+    await create_timer(0.2).timeout
     # Emitting the actual menu signal must quit before the fallback timer.
     print("Exit control: 0 failures")
     game.exit_button.pressed.emit()
