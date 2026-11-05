@@ -19,10 +19,10 @@ var docking_pads: Array = []
 var exit_open: bool = false
 var exit_position := Vector2.ZERO
 
-func configure(data: Dictionary) -> void:
+func configure(data: Dictionary, authored_pads: Array = []) -> void:
     exit_open = false
     config = data
-    docking_pads = preload("res://scripts/campaign.gd").pads_for(int(data["index"]))
+    docking_pads = authored_pads if not authored_pads.is_empty() else preload("res://scripts/campaign.gd").pads_for(int(data["index"]))
     elapsed = 0.0
     planets.clear()
     aliens.clear()
@@ -37,7 +37,7 @@ func configure(data: Dictionary) -> void:
         var home := Vector2(530 + i * 355, 350 + (i % 3) * 280)
         aliens.append({"home": home, "position": home, "phase": i * 1.7})
     for i in range(int(data["holes"])):
-        var terminals: Array = preload("res://scripts/campaign.gd").pads_for(int(data["index"]))
+        var terminals: Array = docking_pads
         var left: float = float(terminals[i + 1]["x"])
         var right: float = float(terminals[i + 2]["x"])
         var home := Vector2((left + right) * 0.5, 650 + i * 200)

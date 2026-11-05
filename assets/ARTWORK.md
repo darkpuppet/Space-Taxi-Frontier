@@ -4,6 +4,8 @@ Generated for Space Taxi: Frontier with the built-in `image_gen` tool. Original 
 
 Each background covers the full 2400 x 1440 world; the original images are 1619 x 971 (972 pixels high for Level 11), and Godot fits them to the world rectangle. All scenic planets, structures, terrain, and asteroids in these images are distant decorative scenery. Actual solid hazards and landing surfaces are drawn separately in the foreground.
 
+The environment renderer provides five scenic planes: stars, Earth/planets, window glass, solid window frame, and buildings. Level 1 uses extraction masks derived from its existing painting; other sectors retain their legacy painting until separated sprites are authored. See [background layers](../docs/background-layers.md) for masks, scroll rates and sprite slots.
+
 | Level | Environment | Asset |
 | --- | --- | --- |
 | 1 | Orbital academy | [level-01-v1.png](backgrounds/level-01-v1.png) |

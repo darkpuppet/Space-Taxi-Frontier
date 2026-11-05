@@ -1,0 +1,30 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://levels/level_base.tscn" id="1_level"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/level-20-v1.png" id="2_art"]
+
+[node name="Level20" instance=ExtResource("1_level")]
+sector_index = 19
+background_texture = ExtResource("2_art")
+
+[node name="Pad01" parent="Pads" index="0"]
+position = Vector2(380, 390)
+pad_width = 145.0
+
+[node name="Pad02" parent="Pads" index="1"]
+position = Vector2(650, 1290)
+pad_width = 165.0
+
+[node name="Pad03" parent="Pads" index="2"]
+position = Vector2(1340, 950)
+pad_width = 125.0
+
+[node name="Pad04" parent="Pads" index="3"]
+position = Vector2(1740, 710)
+pad_width = 105.0
+
+[node name="Pad05" parent="Pads" index="4"]
+position = Vector2(2120, 1120)
+pad_width = 135.0
+
+[editable path="Environment"]

@@ -1,0 +1,43 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="PackedScene" path="res://levels/level_base.tscn" id="1_level"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/level-01-v1.png" id="2_art"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/layers/level-01/window-mask-v1.png" id="3_glass"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/layers/level-01/planets-mask-v1.png" id="4_planets"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/layers/level-01/frame-mask-v1.png" id="5_frame"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/layers/level-01/buildings-mask-v1.png" id="6_buildings"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/layers/level-01/planets-color-v1.png" id="7_celestial"]
+
+[node name="Level01" instance=ExtResource("1_level")]
+sector_index = 0
+background_texture = ExtResource("2_art")
+
+[node name="Environment" parent="." index="1"]
+window_transparency_mask = ExtResource("3_glass")
+window_glass_opacity = 0.06
+planets_mask = ExtResource("4_planets")
+frame_mask = ExtResource("5_frame")
+buildings_mask = ExtResource("6_buildings")
+planet_reconstruction_texture = ExtResource("7_celestial")
+
+[node name="Pad01" parent="Pads" index="0"]
+position = Vector2(240, 1300)
+pad_width = 240.0
+
+[node name="Pad02" parent="Pads" index="1"]
+position = Vector2(720, 1000)
+pad_width = 260.0
+
+[node name="Pad03" parent="Pads" index="2"]
+position = Vector2(1250, 740)
+pad_width = 220.0
+
+[node name="Pad04" parent="Pads" index="3"]
+position = Vector2(1800, 400)
+pad_width = 200.0
+
+[node name="Pad05" parent="Pads" index="4"]
+position = Vector2(2180, 1150)
+pad_width = 230.0
+
+[editable path="Environment"]

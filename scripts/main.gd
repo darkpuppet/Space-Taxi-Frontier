@@ -18,6 +18,7 @@ var retry_button: Button
 var controller_active: bool = false
 var controller_device: int = -1
 var developer_mode: bool = false
+var start_level_override: int = 0
 const WORLD = preload("res://scripts/world.gd")
 const SPRITES = preload("res://scripts/sprites.gd")
 const ART = preload("res://scripts/game_art.gd")
@@ -75,6 +76,7 @@ var stars: Array[Vector2] = []
 var background_traffic = preload("res://scripts/background_traffic.gd").new()
 var pulse: float = 0.0
 var aurora_background: Sprite2D
+var environment_layers: Node2D
 var audio: Node
 var navigation: Label
 var status: Label
@@ -129,6 +131,8 @@ static func developer_level_from_args(arguments: PackedStringArray) -> int:
 
 func _ready() -> void:
     var developer_level: int = developer_level_from_args(OS.get_cmdline_user_args()) if OS.is_debug_build() else 0
+    if developer_level == 0 and OS.is_debug_build():
+        developer_level = clampi(start_level_override, 0, 20)
     developer_mode = developer_level > 0
     # Apply the design viewport even when running the scene in an embedded window.
     var window: Window = get_window()
@@ -174,7 +178,7 @@ func _ready() -> void:
         _show_main_menu()
 
 func _make_pads() -> Array:
-    return CAMPAIGN.pads_for(level)
+    return sector.pad_layout()
 
 func _start_level(carry_taxi: bool = false) -> void:
     if is_instance_valid(tow_truck):
@@ -201,19 +205,24 @@ func _start_level(carry_taxi: bool = false) -> void:
         camera.offset = Vector2.ZERO
     level = clampi(level, 0, CAMPAIGN.STAGES.size() - 1)
     audio.radio.begin_level(level)
-    sector_data = CAMPAIGN.sector(level)
-    if not is_instance_valid(aurora_background):
-        aurora_background = preload("res://scripts/aurora_background.gd").new()
-        add_child(aurora_background)
-    aurora_background.configure(level, Vector2(WORLD.WIDTH, WORLD.HEIGHT), pulse)
-    background_traffic.configure(level)
-    pads = _make_pads()
-    if is_instance_valid(sector):
+    if is_instance_valid(sector) and sector.sector_index != level:
+        sector.hide()
+        sector.set_physics_process(false)
         sector.queue_free()
-    sector = preload("res://scripts/sector.gd").new()
+        sector = null
+    if not is_instance_valid(sector):
+        sector = load(CAMPAIGN.level_scene_path(level)).instantiate()
+        add_child(sector)
     sector.process_mode = Node.PROCESS_MODE_PAUSABLE
-    sector.configure(sector_data)
-    add_child(sector)
+    sector.set_physics_process(true)
+    sector_data = sector.configuration()
+    aurora_background = sector.aurora
+    environment_layers = sector.get_node("Environment")
+    aurora_background.configure(level, Vector2(WORLD.WIDTH, WORLD.HEIGHT), pulse, sector.background_texture)
+    background_traffic.configure(level)
+    environment_layers.configure(sector_data, background_traffic, aurora_background, sector.background_texture)
+    pads = _make_pads()
+    sector.configure(sector_data, pads)
     dispatcher.configure(level, pads)
     passenger_walk.clear()
     passenger_arrivals.reset()
@@ -402,12 +411,6 @@ func _process(dt: float) -> void:
 func _draw() -> void:
     if screen_state == "menu":
         return
-    if aurora_background.visible:
-        # The animated bitmap sits behind the world's draw calls.
-        draw_rect(Rect2(Vector2.ZERO, Vector2(WORLD.WIDTH, WORLD.HEIGHT)), Color(0.015, 0.035, 0.06, 0.14))
-    else:
-        preload("res://scripts/scenery.gd").paint(self, sector_data, pulse, WORLD.HEIGHT)
-    background_traffic.paint(self)
     for tile in range(10):
         ART.hazard(self, ART.Hazard.FLOOR, Rect2(tile * 240, FLOOR, 240, 40))
     for pad in pads:
@@ -759,6 +762,7 @@ func _open_overlay(title: String, copy: String, action: String) -> void:
 
 func _show_main_menu() -> void:
     aurora_background.visible = false
+    environment_layers.visible = false
     audio.radio.reset()
     screen_state = "menu"
     # The opaque title bitmap covers the world; don't prepare hidden world art.
@@ -822,6 +826,7 @@ func _resume() -> void:
     if screen_state == "life_lost":
         _start_level()
     screen_state = "playing"
+    environment_layers.visible = true
     radar.visible = true
     aurora_background.visible = level == 2
     overlay.visible = false

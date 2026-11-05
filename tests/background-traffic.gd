@@ -108,10 +108,10 @@ func _run() -> void:
     traffic.passers.clear()
     for kind in range(1, 4):
         traffic._spawn(kind)
-        traffic.passers[-1]["position"] = Vector2(940 + kind * 130, 620 + kind * 80)
+        traffic.passers[-1]["position"] = Vector2(940 + kind * 130, 280 + kind * 70)
         traffic.passers[-1]["velocity"] = Vector2(50, 0)
     traffic.countdown = 15
-    game.taxi.position = Vector2(1200, 780)
+    game.taxi.position = Vector2(1200, 550)
     game.taxi.landed_on = -1
     var position_before: Vector2 = game.taxi.position
     var hull_before: float = game.taxi.hull
