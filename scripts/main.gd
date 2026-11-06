@@ -357,7 +357,7 @@ func _process(dt: float) -> void:
         hull_bar.value = taxi.hull
         fuel_readout.text = "FUEL  %03d / %03d" % [ceili(taxi.fuel), int(taxi.fuel_capacity)]
         health_readout.text = "HEALTH  %d%%" % ceili(taxi.hull)
-        telemetry.text = "%06d CR" % credits
+        telemetry.text = "₡%06d" % credits
         odometer.text = "%08.3f km" % (floorf(distance_meters) / 1000.0)
         shift_readout.text = "SECTOR %02d / LIVES %d" % [level + 1, lives]
         status.text = "FUEL %03d   /   HULL %03d" % [ceili(taxi.fuel), ceili(taxi.hull)]
@@ -384,13 +384,13 @@ func _process(dt: float) -> void:
         var waiting_text: String = ""
         for fare in dispatcher.waiting:
             waiting_text += "PAD %02d > %02d  %s   " % [int(fare["source"]), int(fare["destination"]), "ABDUCTING" if fare.get("abducting", false) else "%ds" % ceili(float(fare["patience"]))]
-        mission_panel.text = "%02d / %s\nDELIVERED %d / 3   |   MISSED %d   |   LOST %d   |   ABDUCTED %d\nBALANCE %d / %d CR\n%s\n%s" % [level + 1, str(sector_data["name"]), fares_in_level, dispatcher.missed, dispatcher.killed, dispatcher.abducted, credits, int(sector_data["required_balance"]), str(sector_data["hint"]), waiting_text]
+        mission_panel.text = "%02d / %s\nDELIVERED %d / 3   |   MISSED %d   |   LOST %d   |   ABDUCTED %d\nBALANCE ₡%d / ₡%d\n%s\n%s" % [level + 1, str(sector_data["name"]), fares_in_level, dispatcher.missed, dispatcher.killed, dispatcher.abducted, credits, int(sector_data["required_balance"]), str(sector_data["hint"]), waiting_text]
         if gate_active:
             navigation.text = "STAR GATE / %03d m\nFLY THROUGH TO %s" % [int(WORLD.meters(taxi.position.distance_to(gate_position))), "FINISH" if level == 19 else "NEXT LEVEL"]
         if being_towed:
             navigation.text = "BUBBA'S TOW / %s\nRECOVERY TO FUEL PAD 02" % str(tow_truck.state).to_upper()
         elif taxi.landed_on == 2:
-            navigation.text = "FUEL PAD 02 / %d CR PER UNIT\n%s" % [fuel_price, "FILL COMPLETE" if fuel_session_complete else ("REFUELING" if credits > 0 else "PUMP STOPPED / NO CREDITS")]
+            navigation.text = "FUEL PAD 02 / ₡%d PER UNIT\n%s" % [fuel_price, "FILL COMPLETE" if fuel_session_complete else ("REFUELING" if credits > 0 else "PUMP STOPPED / NO CREDITS")]
         if passenger_onboard and not game_over:
             trip_time += dt
         elif not dispatcher.at_pad(taxi.landed_on).is_empty() and not mission_done and not game_over and not taxi.capture_active and not being_towed:
@@ -405,7 +405,7 @@ func _process(dt: float) -> void:
             _announce("LOW FUEL / Dock at PAD 02. T calls Bubba; empty tanks trigger rescue automatically.")
     if message_timer > 0.0:
         message_timer -= dt
-    fare_readout.text = "%04d CR" % (_current_fare() if passenger_onboard else 0)
+    fare_readout.text = "₡%04d" % (_current_fare() if passenger_onboard else 0)
     fare_state.text = "TO PAD %02d" % destination_pad if passenger_onboard else "FOR HIRE"
     banner.modulate.a = minf(1.0, maxf(message_timer, 0.0))
     queue_redraw()
@@ -518,7 +518,7 @@ func _show_help() -> void:
     overlay_title.text = "DRIVER'S HANDBOOK"
     overlay_title.add_theme_font_size_override("font_size", 34)
     overlay_copy.add_theme_font_size_override("font_size", 14)
-    overlay_copy.text = controls.text + "\n\n" + mission_panel.text + "\n\nLand gently to board and deliver passengers.\nPAD 02: fuel and workshop. Emergency tow costs 300 CR.\nThe fare includes a speed bonus that decreases over time.\nFuel burns even while parked; pause to take a break."
+    overlay_copy.text = controls.text + "\n\n" + mission_panel.text + "\n\nLand gently to board and deliver passengers.\nPAD 02: fuel and workshop. Emergency tow costs ₡300.\nThe fare includes a speed bonus that decreases over time.\nFuel burns even while parked; pause to take a break."
 
 func _build_ui() -> void:
     hud = CanvasLayer.new()
@@ -568,16 +568,18 @@ func _build_ui() -> void:
     gauges.add_child(hull_bar)
     var meter := _dashboard_module(row)
     meter.custom_minimum_size.x = 128
-    meter.add_child(_label("FARE / CR", 12, Color("d4ddd9")))
+    meter.add_child(_label("FARE", 12, Color("d4ddd9")))
     fare_readout = preload("res://scripts/mechanical_counter.gd").new()
-    fare_readout.text = "0000 CR"
+    fare_readout.currency = true
+    fare_readout.text = "₡0000"
     meter.add_child(fare_readout)
     fare_state = _label("FOR HIRE", 12, Color("7d9aa9"))
     meter.add_child(fare_state)
     var account := _dashboard_module(row)
     account.custom_minimum_size.x = 164
-    account.add_child(_label("ACCOUNT / CR", 12, Color("d4ddd9")))
+    account.add_child(_label("ACCOUNT", 12, Color("d4ddd9")))
     telemetry = preload("res://scripts/mechanical_counter.gd").new()
+    telemetry.currency = true
     telemetry.digits = 8
     account.add_child(telemetry)
     shift_readout = _label("", 12, Color("7d9aa9"))
@@ -634,8 +636,8 @@ func _build_ui() -> void:
     radar.mouse_filter = Control.MOUSE_FILTER_IGNORE
     radar.visible = false
     root.add_child(radar)
-    upgrades = _label("UPGRADE DOCK / 1 Engine 400 CR | 2 Stabilizers 350 CR
-3 Tank 300 CR | 4 Repair 75 CR", 14, Color("73e0d3"))
+    upgrades = _label("UPGRADE DOCK / 1 Engine ₡400 | 2 Stabilizers ₡350
+3 Tank ₡300 | 4 Repair ₡75", 14, Color("73e0d3"))
     upgrades.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
     upgrades.position = Vector2(-700, -220)
     upgrades.visible = false
@@ -777,7 +779,7 @@ func _show_main_menu() -> void:
 
 func _show_pause(_briefing: bool = false) -> void:
     screen_state = "paused"
-    _open_overlay("FLIGHT PAUSED", "LEVEL %02d / %s\nLIVES %d / 3   |   FARES %d / 3\nBALANCE %d / %d CR\n\n%s\nDeliver three fares and reach the balance target.\nFuel and hull carry into the next sector." % [level + 1, str(sector_data["name"]), lives, fares_in_level, credits, int(sector_data["required_balance"]), preferences.control_hint()], "RESUME FLIGHT / ENTER")
+    _open_overlay("FLIGHT PAUSED", "LEVEL %02d / %s\nLIVES %d / 3   |   FARES %d / 3\nBALANCE ₡%d / ₡%d\n\n%s\nDeliver three fares and reach the balance target.\nFuel and hull carry into the next sector." % [level + 1, str(sector_data["name"]), lives, fares_in_level, credits, int(sector_data["required_balance"]), preferences.control_hint()], "RESUME FLIGHT / ENTER")
 
 func _primary_action() -> void:
     if menu_dialogs.visible:
@@ -876,7 +878,7 @@ func _lose_life(reason: String = "TAXI DESTROYED") -> void:
     if not death_quip.is_empty():
         loss_copy += "\n\n" + death_quip
     lives = maxi(0, lives - 1)
-    telemetry.text = "%06d CR" % credits
+    telemetry.text = "₡%06d" % credits
     shift_readout.text = "SECTOR %02d / LIVES %d" % [level + 1, lives]
     game_over = true
     taxi.input_locked = true
@@ -929,7 +931,7 @@ func _on_passenger_abducted(fare: Dictionary) -> void:
     var alien: bool = preload("res://scripts/passenger_types.gd").is_alien(_passenger_variant(fare))
     audio.cue("scream_alien" if alien else "scream_human")
     _sync_dispatch()
-    _announce("PASSENGER ABDUCTED / -%d CR. UFO escaped from PAD %02d!" % [abductions.FINE, int(fare["source"])])
+    _announce("PASSENGER ABDUCTED / -₡%d. UFO escaped from PAD %02d!" % [abductions.FINE, int(fare["source"])])
     _save_game()
     queue_redraw()
 
@@ -954,7 +956,7 @@ func _on_taxi_flight_motion(start: Vector2, finish: Vector2) -> void:
             audio.cue("squish")
             audio.cue("scream_alien" if alien else "scream_human")
             _sync_dispatch()
-            _announce("PASSENGER KILLED / -250 CR fine. Land clear of waiting riders!")
+            _announce("PASSENGER KILLED / -₡250 fine. Land clear of waiting riders!")
             _save_game()
             queue_redraw()
 
@@ -1030,7 +1032,7 @@ func _reopen_dispatch() -> void:
     audio.radio.reset()
     dispatcher.refill(taxi.landed_on if taxi.landed_on != -1 else last_landed_pad, taxi.position)
     _sync_dispatch()
-    _announce("BALANCE BELOW TARGET / Earn %d more CR to reopen the star gate." % (int(sector_data["required_balance"]) - credits))
+    _announce("BALANCE BELOW TARGET / Earn ₡%d more to reopen the star gate." % (int(sector_data["required_balance"]) - credits))
 
 func _gate_spot_clear(point: Vector2, clearance: float = 75.0) -> bool:
     if point.x < 110 or point.x > WIDTH - 110 or point.y < 165 or point.y > FLOOR - 110:
@@ -1135,7 +1137,7 @@ func _refresh_ui() -> void:
     else:
         objective.text = "WAITING FOR DISPATCH"
     if not mission_done and fares_in_level >= int(sector_data.get("fares", 3)):
-        objective.text = "KEEP EARNING / BALANCE %d / %d CR" % [credits, int(sector_data["required_balance"])]
+        objective.text = "KEEP EARNING / BALANCE ₡%d / ₡%d" % [credits, int(sector_data["required_balance"])]
 
 func _announce(text: String) -> void:
     banner.text = text
@@ -1214,7 +1216,7 @@ func _on_landed(pad_id: int) -> void:
         fuel_meter = 0.0
         fuel_session_complete = taxi.fuel >= taxi.fuel_capacity
         taxi.fuel_service_active = credits > 0 or fuel_session_complete
-        _announce("FUEL / %d CR per unit. Park to fill; take off to stop. 1-4 for upgrades." % fuel_price)
+        _announce("FUEL / ₡%d per unit. Park to fill; take off to stop. 1-4 for upgrades." % fuel_price)
     if mission_done:
         return
     if passenger_onboard and pad_id == destination_pad:
@@ -1235,7 +1237,7 @@ func _on_landed(pad_id: int) -> void:
             boarding_time = 0.0
             dispatcher.refill(pad_id, taxi.position)
             _sync_dispatch()
-            _announce("Fare paid: %d credits! Next pickup at PAD %02d." % [fare, source_pad])
+            _announce("Fare paid: ₡%d! Next pickup at PAD %02d." % [fare, source_pad])
     _refresh_ui()
 
 func _on_black_hole_entered(_center: Vector2) -> void:
@@ -1312,7 +1314,7 @@ func _update_control_hints() -> void:
         overlay_copy.text = overlay_copy.text.replace(previous, current)
         resume_button.text = resume_button.text.replace("/ ENTER", "/ A") if controller_active else resume_button.text.replace("/ A", "/ ENTER")
     if is_instance_valid(upgrades):
-        upgrades.text = "UPGRADE DOCK / X OPENS WORKSHOP" if controller_active else "UPGRADE DOCK / 1 Engine 400 CR | 2 Stabilizers 350 CR\n3 Tank 300 CR | 4 Repair 75 CR"
+        upgrades.text = "UPGRADE DOCK / X OPENS WORKSHOP" if controller_active else "UPGRADE DOCK / 1 Engine ₡400 | 2 Stabilizers ₡350\n3 Tank ₡300 | 4 Repair ₡75"
 
 func _unhandled_key_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F1:

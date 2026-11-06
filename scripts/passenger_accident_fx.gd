@@ -28,7 +28,7 @@ static func draw(canvas: CanvasItem, accident: Dictionary) -> void:
             canvas.draw_texture_rect(frames[2], Rect2(point + Vector2(-11, -30 * rise), Vector2(22, 30 * rise)), false)
     var fine_fade: float = 1.0 - smoothstep(0.6, 1.4, age)
     if fine_fade > 0:
-        canvas.draw_string(ThemeDB.fallback_font, point + Vector2(-28, -39 - age * 8), "-250 CR", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(1, 0.65, 0.45, fine_fade))
+        canvas.draw_string(ThemeDB.fallback_font, point + Vector2(-28, -39 - age * 8), "-₡250", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(1, 0.65, 0.45, fine_fade))
 
 ## Sink the original sprite through the surface while small textured pieces fade.
 ## Source regions are clipped at the ground, so the grave never draws below it.

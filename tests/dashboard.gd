@@ -47,19 +47,19 @@ func _run() -> void:
     check(not game.hull_bar.low_fuel_active(), "Health gauge never shows fuel warning")
     game.fuel_bar.value = 70
     check(game.health_readout.text == "HEALTH  65%" and game.hull_bar.value == 65, "Health gauge shows remaining hull")
-    check(game.telemetry.text == "%06d CR" % -300, "Account balance displays debt")
-    check(game.fare_readout.text == "0000 CR" and game.fare_state.text == "FOR HIRE", "Empty taxi has no active fare")
+    check(game.telemetry.text == "₡%06d" % -300, "Account balance displays debt")
+    check(game.fare_readout.text == "₡0000" and game.fare_state.text == "FOR HIRE", "Empty taxi has no active fare")
     game.taxi.landed_on = int(game.dispatcher.waiting[0]["source"])
     game._board_passenger()
     game.trip_time = 12
     game._process(0)
-    check(game.fare_readout.text == "%04d CR" % game._current_fare(), "Fare meter displays live payout with speed bonus")
+    check(game.fare_readout.text == "₡%04d" % game._current_fare(), "Fare meter displays live payout with speed bonus")
     var quoted_fare: int = game._current_fare()
     var balance: int = game.credits
     game._on_landed(game.destination_pad)
     game._process(0)
     check(game.credits == balance + quoted_fare, "Drop-off pays exactly the displayed fare")
-    check(game.fare_readout.text == "0000 CR", "Fare meter clears after drop-off")
+    check(game.fare_readout.text == "₡0000", "Fare meter clears after drop-off")
     var original_distance: float = game.distance_meters
     game.taxi.environment = null
     game.taxi.landed_on = -1
@@ -127,23 +127,23 @@ func _run() -> void:
     check(game.telemetry.current == "00000016" and game.telemetry.roll == 1.0, "Account drums settle on actual signed balance")
     var counter := preload("res://scripts/mechanical_counter.gd").new()
     counter.digits = 3
-    counter.text = "009 CR"
+    counter.text = "₡009"
     game.hud.add_child(counter)
     counter.set_process(false)
     counter._process(0)
-    counter.text = "010 CR"
+    counter.text = "₡010"
     counter._process(0)
     counter._process(counter.ROLL_SECONDS * 0.5)
     var drum: Dictionary = counter.drum_state(2)
     check(drum["from"] == "9" and drum["to"] == "0" and absf(float(drum["fraction"]) - 0.5) < 0.01, "Rollover visibly scrolls nine into zero")
     check(counter.drum_state(1)["fraction"] > 0, "Carry scrolls the tens drum at the same time")
-    counter.text = "011 CR"
+    counter.text = "₡011"
     counter._process(0.01)
     check(counter.current == "010" and counter.roll > 0.5, "New readings queue without resetting an active scroll")
     check(counter.DRUM_COLOR == Color("080a0b") and counter.NUMBER_COLOR == Color("f4f5f1"), "Counter drums are black with white numerals")
     counter._process(counter.ROLL_SECONDS)
     counter._process(counter.ROLL_SECONDS)
-    counter.text = "010 CR"
+    counter.text = "₡010"
     counter._process(0)
     counter._process(counter.ROLL_SECONDS * 0.5)
     check(counter.direction == -1 and counter.drum_state(2)["from"] == "1" and counter.drum_state(2)["to"] == "0", "Decreasing fare or balance rolls drums in reverse")
@@ -153,13 +153,13 @@ func _run() -> void:
         await RenderingServer.frame_post_draw
         root.get_texture().get_image().save_png("res://.development/dashboard-preview.png")
         game.telemetry.set_process(false)
-        game.telemetry.text = "%06d CR" % (game.credits + 1)
+        game.telemetry.text = "₡%06d" % (game.credits + 1)
         game.telemetry._process(0)
         game.telemetry._process(game.telemetry.ROLL_SECONDS * 0.5)
         await process_frame
         await RenderingServer.frame_post_draw
         root.get_texture().get_image().save_png("res://.development/dashboard-scroll-preview.png")
-        game.telemetry.text = "%06d CR" % game.credits
+        game.telemetry.text = "₡%06d" % game.credits
         game.telemetry._process(game.telemetry.ROLL_SECONDS)
         game.telemetry._process(game.telemetry.ROLL_SECONDS)
         game.telemetry.set_process(true)

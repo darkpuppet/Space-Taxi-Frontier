@@ -3,6 +3,7 @@ extends Label
 const ART = preload("res://scripts/dashboard_art.gd")
 var digits: int = 6
 var decimal_places: int = 0
+var currency: bool = false
 const ROLL_SECONDS: float = 0.45
 const DRUM_COLOR := Color("080a0b")
 const NUMBER_COLOR := Color("f4f5f1")
@@ -16,7 +17,7 @@ var housing: Texture2D
 func _ready() -> void:
     mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_theme_color_override("font_color", Color.TRANSPARENT)
-    custom_minimum_size = Vector2(digits * 18 + 20 + (6 if decimal_places > 0 else 0), 48)
+    custom_minimum_size = Vector2(digits * 18 + 20 + (6 if decimal_places > 0 else 0) + (18 if currency else 0), 48)
     housing = ART.texture(ART.Part.COUNTER)
     for index in range(digits):
         var drum := Control.new()
@@ -31,12 +32,12 @@ func _ready() -> void:
 func _layout_drums() -> void:
     for index in range(drums.size()):
         var decimal_gap: int = 6 if decimal_places > 0 and index >= digits - decimal_places else 0
-        drums[index].position = Vector2(10 + index * 18 + decimal_gap, 8)
+        drums[index].position = Vector2(10 + index * 18 + decimal_gap + (18 if currency else 0), 8)
         drums[index].size = Vector2(17, 30)
     queue_redraw()
 
 func _process(dt: float) -> void:
-    var next: String = text.trim_suffix(" CR").trim_suffix(" km").trim_suffix(" m").strip_edges().replace(".", "")
+    var next: String = text.trim_prefix("₡").trim_suffix(" CR").trim_suffix(" km").trim_suffix(" m").strip_edges().replace(".", "")
     if next.begins_with("-"):
         next = "-" + next.substr(1).pad_zeros(digits - 1)
     else:
@@ -89,3 +90,5 @@ func _draw() -> void:
         draw_texture_rect(housing, Rect2(0, 0, custom_minimum_size.x, 48), false)
     if decimal_places > 0:
         draw_circle(Vector2(10 + (digits - decimal_places) * 18 + 2, 34), 1.5, NUMBER_COLOR)
+    if currency:
+        preload("res://scripts/credit_mark.gd").draw(self, Vector2(17, 23), 18, NUMBER_COLOR)

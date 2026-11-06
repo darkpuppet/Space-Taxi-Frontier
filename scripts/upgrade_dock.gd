@@ -37,5 +37,5 @@ static func draw(canvas: CanvasItem, pad: Dictionary, clock: float, fuel_price: 
     canvas.draw_rect(price_sign, Color("172b2b"))
     canvas.draw_rect(price_sign, Color("e4ba71"), false, 2)
     canvas.draw_string(font, price_sign.position + Vector2(13, 16), "FRONTIER GAS", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("e4ba71"))
-    var price_text: String = "%02d CR / UNIT" % fuel_price
+    var price_text: String = "₡%02d / UNIT" % fuel_price
     canvas.draw_string(font, price_sign.position + Vector2(10, 37), price_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, CYAN)

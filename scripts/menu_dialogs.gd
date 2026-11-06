@@ -134,7 +134,7 @@ func show_score_entry() -> void:
     tab = "Score entry"
     _clear("YOU MADE THE TOP TEN!")
     var score: Dictionary = game.pending_high_score
-    content.add_child(game._label("%d CR  /  SECTOR %02d  /  %d FARES" % [score["credits"], score["level"], score["fares"]], 20, Color("73e0d3")))
+    content.add_child(game._label("₡%d  /  SECTOR %02d  /  %d FARES" % [score["credits"], score["level"], score["fares"]], 20, Color("73e0d3")))
     content.add_child(game._label("Enter your name for the leaderboard", 20))
     score_name = LineEdit.new()
     score_name.max_length = 16
@@ -180,8 +180,8 @@ func _delete_name() -> void:
 func show_workshop() -> void:
     tab = "Workshop"
     _clear("UPGRADE WORKSHOP")
-    content.add_child(game._label("BALANCE %d CR / HULL %d / FUEL %d" % [game.credits, ceili(game.taxi.hull), ceili(game.taxi.fuel)], 20, Color("73e0d3")))
-    for item in [["Engine / 400 CR", 1], ["Stabilizers / 350 CR", 2], ["Fuel tank / 300 CR", 3], ["Repair 40 hull / 75 CR", 4]]:
+    content.add_child(game._label("BALANCE ₡%d / HULL %d / FUEL %d" % [game.credits, ceili(game.taxi.hull), ceili(game.taxi.fuel)], 20, Color("73e0d3")))
+    for item in [["Engine / ₡400", 1], ["Stabilizers / ₡350", 2], ["Fuel tank / ₡300", 3], ["Repair 40 hull / ₡75", 4]]:
         content.add_child(_button(item[0], func() -> void:
             game._purchase_upgrade(item[1])
             show_workshop()
