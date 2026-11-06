@@ -9,6 +9,7 @@ signal damaged(amount: float)
 signal solid_impact(speed: float)
 signal black_hole_entered(center: Vector2)
 signal black_hole_lost
+signal black_hole_flash
 signal fuel_depleted
 signal distance_travelled(world_pixels: float)
 
@@ -296,7 +297,10 @@ func _begin_capture(center: Vector2, hole: Dictionary = {}) -> void:
     black_hole_entered.emit(center)
 
 func _animate_capture(dt: float) -> void:
+    var previous_time: float = capture_time
     capture_time += dt
+    if previous_time < CRUMPLE.DURATION and capture_time >= CRUMPLE.DURATION:
+        black_hole_flash.emit()
     rotation = 0.0
     visual_tilt = 0.0
     # Follow the same singularity as it drifts, including during the final spark.

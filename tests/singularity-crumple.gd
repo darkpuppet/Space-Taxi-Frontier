@@ -72,6 +72,7 @@ func _run() -> void:
     var sound: AudioStreamWAV = game.audio.crumple_player.stream
     check(ship.capture_active and cab_texture != null, "Capture snapshots the actual taxi painting for deformation")
     check(game.audio.crumple_player.playing, "Singularity entry starts the dedicated metallic crumple sound")
+    check(not game.audio.bwoop_player.playing, "Comic bwoop waits for the disappearance flash")
     check(game.audio.get_child_count() == audio_children, "Capture plays no competing synthesized suction jingle")
     game.audio._process(1.0)
     check(game.audio.music.volume_db <= -34.0 and game.audio.crumple_player.volume_db >= -6.0, "Recorded metal crinkling stays audible above the music during capture")
@@ -136,11 +137,15 @@ func _run() -> void:
     check(ship.scale.x < 0.02 and ship.modulate.a == 1.0 and ship.rotation == 0 and ship.visual_tilt == 0, "Cab stays upright and opaque until the last tiny sliver crunches to zero")
     ship._physics_process(0.05)
     check(ship.capture_active and game.lives == 3 and ship.position.is_equal_approx(ship.capture_center) and ship.scale == Vector2.ONE, "A small flash plays at the disappearance point before the life-loss overlay")
+    check(game.audio.bwoop_player.playing and game.audio.bwoop_player.bus == "FrontierEffects", "Flash starts the comic bwoop on the effects bus")
+    check(game.audio.bwoop_player.stream.get_length() <= CRUMPLE.POP_DURATION, "Bwoop fits inside the final flash")
     game.sector._physics_process(0.01)
     ship._physics_process(0.01)
     check(ship.position.is_equal_approx(hole["position"]), "Final spark follows the same moving singularity center")
     held = ship.capture_time
     game._show_pause()
+    game.audio._process(0)
+    check(game.audio.bwoop_player.stream_paused, "Pause freezes the flash bwoop")
     ship.set_physics_process(true)
     await physics_frame
     await physics_frame
@@ -151,6 +156,7 @@ func _run() -> void:
         ship._physics_process(0.05)
     check(game.lives == 2 and game.screen_state == "life_lost", "Finished crumpling consumes exactly one life")
     check(not game.audio.crumple_player.playing, "Losing the taxi stops the crushing sound")
+    check(not game.audio.bwoop_player.playing, "Life loss clears the flash bwoop")
     ship._physics_process(0.05)
     check(game.lives == 2, "A crushed cab cannot consume another life")
     game._resume()

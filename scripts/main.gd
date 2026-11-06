@@ -285,6 +285,7 @@ func _start_level(carry_taxi: bool = false) -> void:
     taxi.solid_impact.connect(audio.impact)
     taxi.black_hole_entered.connect(_on_black_hole_entered)
     taxi.black_hole_lost.connect(_on_black_hole_lost)
+    taxi.black_hole_flash.connect(func() -> void: audio.cue("bwoop"))
     if not is_instance_valid(camera):
         camera = Camera2D.new()
         camera.enabled = true

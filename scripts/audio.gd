@@ -21,6 +21,7 @@ var impact_cooldown: float = 0.0
 var tow_truck: Node2D
 var tow_player: AudioStreamPlayer
 var crumple_player: AudioStreamPlayer
+var bwoop_player: AudioStreamPlayer
 
 func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
@@ -75,6 +76,13 @@ func _ready() -> void:
     crumple_player.volume_db = -5.0
     add_child(crumple_player)
     crumple_player.bus = "FrontierEffects"
+    bwoop_player = AudioStreamPlayer.new()
+    bwoop_player.name = "SingularityBwoop"
+    bwoop_player.process_mode = Node.PROCESS_MODE_PAUSABLE
+    bwoop_player.stream = _bwoop_sound()
+    bwoop_player.volume_db = -9.0
+    add_child(bwoop_player)
+    bwoop_player.bus = "FrontierEffects"
 
 func apply_volumes(values: Dictionary) -> void:
     for pair in [["Master", "master"], ["FrontierMusic", "music"], ["FrontierEffects", "effects"], ["FrontierVoices", "voices"]]:
@@ -82,6 +90,7 @@ func apply_volumes(values: Dictionary) -> void:
 
 func _process(_dt: float) -> void:
     crumple_player.stream_paused = get_tree().paused
+    bwoop_player.stream_paused = get_tree().paused
     if not is_instance_valid(taxi) or not taxi.capture_active or not taxi.visible:
         stop_crumple()
     impact_cooldown = maxf(0, impact_cooldown - _dt)
@@ -110,6 +119,10 @@ func toggle_mute() -> bool:
     return muted
 
 func cue(kind: String) -> void:
+    if kind == "bwoop":
+        bwoop_player.play()
+        bwoop_player.stream_paused = get_tree().paused
+        return
     if kind == "crumple":
         crumple_player.play()
         crumple_player.stream_paused = get_tree().paused
@@ -141,6 +154,30 @@ func cue(kind: String) -> void:
 
 func stop_crumple() -> void:
     crumple_player.stop()
+    bwoop_player.stop()
+
+## A round, rubbery upward pitch scoop with a tiny falling comic tail.
+## Built once at startup so the flash never waits for synthesis.
+func _bwoop_sound() -> AudioStreamWAV:
+    const RATE: int = 22050
+    const DURATION: float = 0.28
+    var count: int = int(RATE * DURATION)
+    var data := PackedByteArray()
+    data.resize(count * 2)
+    var tone_phase: float = 0.0
+    for i in range(count):
+        var t: float = float(i) / RATE
+        var progress: float = t / DURATION
+        var pitch: float = 110.0 + 590.0 * smoothstep(0.0, 0.72, progress) - 170.0 * smoothstep(0.72, 1.0, progress)
+        tone_phase += TAU * pitch / RATE
+        var envelope: float = smoothstep(0.0, 0.012, t) * pow(1.0 - progress, 0.65)
+        var sample: float = (sin(tone_phase) * 0.78 + sin(tone_phase * 2.0) * 0.16 + sin(tone_phase * 3.0) * 0.06) * envelope
+        data.encode_s16(i * 2, int(sample * 27000.0))
+    var stream := AudioStreamWAV.new()
+    stream.format = AudioStreamWAV.FORMAT_16_BITS
+    stream.mix_rate = RATE
+    stream.data = data
+    return stream
 
 ## Speed normal to the surface controls both loudness and the clunk's weight.
 func impact(speed: float) -> void:
