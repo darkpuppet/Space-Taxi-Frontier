@@ -1,4 +1,5 @@
 extends SceneTree
+const CRUMPLE = preload("res://scripts/cab_crumple.gd")
 var checks: int = 0
 var failures: int = 0
 
@@ -41,13 +42,18 @@ func _run() -> void:
     var sound: AudioStreamWAV = game.audio.crumple_player.stream
     check(ship.capture_active and cab_texture != null, "Capture snapshots the actual taxi painting for deformation")
     check(game.audio.crumple_player.playing, "Singularity entry starts the dedicated metallic crumple sound")
-    check(sound.get_length() > 1.3 and sound.get_length() < 1.4 and sound.loop_mode == AudioStreamWAV.LOOP_DISABLED, "Crushing audio matches the capture duration without looping")
+    check(is_equal_approx(sound.get_length(), CRUMPLE.DURATION) and sound.loop_mode == AudioStreamWAV.LOOP_DISABLED, "Crushing audio matches the capture duration without looping")
+    check(sound.mix_rate == 48000 and sound.stereo and sound.format == AudioStreamWAV.FORMAT_16_BITS, "Bundled WAV preserves 48 kHz stereo PCM detail")
     var peaks: int = 0
-    for buckle in [0.10, 0.24, 0.42, 0.61, 0.82, 1.05]:
+    for buckle in CRUMPLE.BUCKLE_TIMES:
         var peak: int = 0
         for sample in range(int((buckle + 0.003) * sound.mix_rate), int((buckle + 0.035) * sound.mix_rate)):
-            peak = maxi(peak, absi(sound.data.decode_s16(sample * 2)))
+            peak = maxi(peak, absi(sound.data.decode_s16(sample * 4)))
         peaks += int(peak > 5000)
+        var before: float = CRUMPLE.progress_at(buckle)
+        var after: float = CRUMPLE.progress_at(buckle + CRUMPLE.BUCKLE_DURATION)
+        check(after - before > 0.16, "Each audible crunch advances one visible buckle")
+        check(is_equal_approx(after, CRUMPLE.progress_at(buckle + 0.25)), "Each crumple stage holds before the next crunch")
     check(peaks == 6, "Six substantial metallic buckles are encoded in the audio")
     DirAccess.make_dir_recursive_absolute("res://.development/crumple")
     sound.save_to_wav("res://.development/crumple/tin-can.wav")
@@ -67,7 +73,14 @@ func _run() -> void:
     ship.set_physics_process(false)
     game.audio._process(0)
     check(not game.audio.crumple_player.stream_paused, "Resuming releases the crushing sound")
-    for i in range(21):
+    game.audio.toggle_mute()
+    game.audio._process(0)
+    check(not game.audio.crumple_player.stream_paused, "Mute preserves the sound timeline so unmuting stays synchronized")
+    game.audio.toggle_mute()
+    for i in range(32):
+        ship._physics_process(0.05)
+    check(ship.capture_active and ship.scale == Vector2.ONE and ship.modulate.a == 1.0 and ship.crumple_progress > 0.99, "Fully crushed wreck remains full-sized and opaque before swallowing")
+    for i in range(15):
         ship._physics_process(0.05)
     check(game.lives == 2 and game.screen_state == "life_lost", "Finished crumpling consumes exactly one life")
     check(not game.audio.crumple_player.playing, "Losing the taxi stops the crushing sound")
@@ -102,10 +115,11 @@ func _run() -> void:
         visual.scale = Vector2.ONE * 2.5
         visual.capture_texture = cab_texture
         visual.capture_active = true
-        var sheet := Image.create(960, 160, false, Image.FORMAT_RGBA8)
+        var sheet := Image.create(1680, 160, false, Image.FORMAT_RGBA8)
         var intact: Rect2i
-        for index in range(4):
-            visual.crumple_progress = float(index) / 3
+        var previous_frame := PackedByteArray()
+        for index in range(7):
+            visual.crumple_progress = float(index) / 6
             visual.queue_redraw()
             await process_frame
             await RenderingServer.frame_post_draw
@@ -113,7 +127,10 @@ func _run() -> void:
             var bounds := ink_bounds(frame)
             if index == 0:
                 intact = bounds
-            if index == 3:
+            else:
+                check(frame.get_data() != previous_frame, "Every rendered buckle visibly changes the taxi painting")
+            previous_frame = frame.get_data()
+            if index == 6:
                 check(bounds.size.x < intact.size.x * 0.55 and bounds.size.y > intact.size.y * 0.5, "GPU-rendered cab becomes a folded metal lump rather than a uniformly scaled sprite")
             sheet.blit_rect(frame, Rect2i(Vector2i.ZERO, view.size), Vector2i(index * 240, 0))
         sheet.save_png("res://.development/crumple/stages.png")

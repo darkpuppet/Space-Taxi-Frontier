@@ -159,7 +159,7 @@ func _run() -> void:
     for i in range(12):
         ship._physics_process(0.05)
     check(ship.rotation > 0 and ship.crumple_progress > 0.3 and ship.scale.x > 0.9, "Capture visibly buckles the cab before shrinking it")
-    for i in range(20):
+    for i in range(45):
         ship._physics_process(0.05)
     check(game.lives == 2 and game.screen_state == "life_lost" and paused, "Completed black-hole animation removes exactly one life")
     check(not game.death_quip.is_empty() and game.overlay_copy.text.contains(game.death_quip), "Black-hole deaths also select a random insult")

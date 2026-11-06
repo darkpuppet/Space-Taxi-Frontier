@@ -296,13 +296,16 @@ func _begin_capture(center: Vector2) -> void:
 
 func _animate_capture(dt: float) -> void:
     capture_time += dt
-    var progress: float = clampf(capture_time / 1.35, 0.0, 1.0)
-    crumple_progress = smoothstep(0.08, 0.82, progress)
-    global_position = capture_center + capture_offset.rotated(progress * TAU * 2.5) * pow(1.0 - progress, 1.5)
-    rotation = progress * TAU * 2.0
+    var progress: float = clampf(capture_time / CRUMPLE.DURATION, 0.0, 1.0)
+    var swallow: float = smoothstep(CRUMPLE.SWALLOW_TIME, CRUMPLE.DURATION, capture_time)
+    crumple_progress = CRUMPLE.progress_at(capture_time)
+    # Keep the staged roof collapse, folded bumpers and accordion pleats readable.
+    var orbit: float = progress * 0.38 + swallow * 0.62
+    global_position = capture_center + capture_offset.rotated(orbit * TAU) * lerpf(1.0, 0.0, progress * 0.35 + swallow * 0.65)
+    rotation = progress * 0.65 + swallow * TAU
     # Hold the cab large enough to see each buckle before swallowing the wreck.
-    scale = Vector2.ONE * lerpf(1.0, 0.01, smoothstep(0.68, 1.0, progress))
-    modulate.a = 1.0 - progress * 0.5
+    scale = Vector2.ONE * lerpf(1.0, 0.01, swallow)
+    modulate.a = 1.0 - swallow
     queue_redraw()
     if progress >= 1.0:
         capture_active = false
