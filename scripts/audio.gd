@@ -72,7 +72,7 @@ func _ready() -> void:
     crumple_player.name = "CabCrumple"
     crumple_player.process_mode = Node.PROCESS_MODE_PAUSABLE
     crumple_player.stream = CACHED_CRUMPLE
-    crumple_player.volume_db = -9.0
+    crumple_player.volume_db = -5.0
     add_child(crumple_player)
     crumple_player.bus = "FrontierEffects"
 
@@ -88,7 +88,8 @@ func _process(_dt: float) -> void:
     _update_beam_audio(_dt)
     _update_tow_audio(_dt)
     var speaking: bool = is_instance_valid(radio) and radio.player.playing and not get_tree().paused
-    music.volume_db = move_toward(music.volume_db, -35.0 if speaking else -27.0, _dt * 35.0)
+    var crushing: bool = is_instance_valid(taxi) and taxi.capture_active and taxi.visible
+    music.volume_db = move_toward(music.volume_db, -35.0 if speaking or crushing else -27.0, _dt * 35.0)
     if not engine_playback:
         return
     var active: bool = is_instance_valid(taxi) and taxi.engine_on and not get_tree().paused
@@ -115,7 +116,6 @@ func cue(kind: String) -> void:
         return
     var notes: Array = [440.0, 660.0]
     match kind:
-        "suction": notes = [523.25, 392.0, 293.66, 220.0, 146.83, 73.42]
         "pickup": notes = [392.0, 523.25, 659.25]
         "fare": notes = [523.25, 659.25, 783.99, 1046.5]
         "complete": notes = [392.0, 523.25, 659.25, 783.99, 1046.5, 1318.5]

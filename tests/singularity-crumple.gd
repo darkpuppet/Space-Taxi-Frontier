@@ -37,11 +37,15 @@ func _run() -> void:
     game.taxi.set_physics_process(false)
     game.sector.set_physics_process(false)
     var ship: Node = game.taxi
+    var audio_children: int = game.audio.get_child_count()
     ship._begin_capture(ship.position + Vector2(70, -25))
     var cab_texture: Texture2D = ship.capture_texture
     var sound: AudioStreamWAV = game.audio.crumple_player.stream
     check(ship.capture_active and cab_texture != null, "Capture snapshots the actual taxi painting for deformation")
     check(game.audio.crumple_player.playing, "Singularity entry starts the dedicated metallic crumple sound")
+    check(game.audio.get_child_count() == audio_children, "Capture plays no competing synthesized suction jingle")
+    game.audio._process(1.0)
+    check(game.audio.music.volume_db <= -34.0 and game.audio.crumple_player.volume_db >= -6.0, "Recorded metal crinkling stays audible above the music during capture")
     check(is_equal_approx(sound.get_length(), CRUMPLE.DURATION) and sound.loop_mode == AudioStreamWAV.LOOP_DISABLED, "Crushing audio matches the capture duration without looping")
     check(sound.mix_rate == 48000 and sound.stereo and sound.format == AudioStreamWAV.FORMAT_16_BITS, "Bundled WAV preserves 48 kHz stereo PCM detail")
     var peaks: int = 0
@@ -56,7 +60,17 @@ func _run() -> void:
         check(after - before > 0.16, "Each audible crunch advances one visible buckle")
         var next_buckle: float = CRUMPLE.BUCKLE_TIMES[index + 1] if index + 1 < CRUMPLE.BUCKLE_TIMES.size() else CRUMPLE.SWALLOW_TIME
         check(is_equal_approx(after, CRUMPLE.progress_at(next_buckle - 0.01)), "Each crumple stage holds before the next crunch")
-    check(peaks == 6, "Six substantial metallic buckles are encoded in the audio")
+    check(peaks == 6, "Recorded metal collapses remain audible during all six visual buckles")
+    var continuous_windows: int = 0
+    for window in range(3, 17):
+        var energy: float = 0.0
+        var count: int = int(sound.mix_rate * 0.05)
+        for frame in range(count):
+            var at: int = int(float(window) * 0.1 * sound.mix_rate) + frame
+            var value: float = sound.data.decode_s16(at * 4)
+            energy += value * value
+        continuous_windows += int(sqrt(energy / count) > 500.0)
+    check(continuous_windows == 14, "Natural metal crinkling continues between major buckles without repeated silent gaps")
     var slow: float = CRUMPLE.travel_at(0.30) - CRUMPLE.travel_at(0.20)
     var fast: float = CRUMPLE.travel_at(1.0) - CRUMPLE.travel_at(0.90)
     var fastest: float = CRUMPLE.travel_at(1.90) - CRUMPLE.travel_at(1.80)
@@ -102,6 +116,8 @@ func _run() -> void:
     game.taxi._begin_capture(game.taxi.position + Vector2(50, 0))
     game._return_to_menu()
     check(not game.audio.crumple_player.playing, "Returning to the menu immediately cancels crushing audio")
+    game.audio._process(1.0)
+    check(is_equal_approx(game.audio.music.volume_db, -27.0), "Leaving capture restores normal menu music volume")
     game._new_game()
     game._resume()
     game.taxi.set_physics_process(false)
