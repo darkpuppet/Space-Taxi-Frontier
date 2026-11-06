@@ -7,7 +7,7 @@ const BUCKLE_TIMES: Array[float] = [0.12, 0.62, 0.98, 1.24, 1.43, 1.57]
 const BUCKLE_DURATION: float = 0.085
 const SWALLOW_TIME: float = 1.70
 const DURATION: float = 2.10
-const POP_DURATION: float = 0.18
+const POP_DURATION: float = 0.32
 
 static func progress_at(seconds: float) -> float:
     var crush: float = 0.0
@@ -15,21 +15,27 @@ static func progress_at(seconds: float) -> float:
         crush += smoothstep(onset, onset + BUCKLE_DURATION, seconds) / BUCKLE_TIMES.size()
     return clampf(crush, 0.0, 1.0)
 
-## A tiny white-gold glint and violet halo where the wreck vanishes.
+## A blooming white-gold flash with an expanding ring and rotating rays.
 static func paint_pop(canvas: CanvasItem, age: float) -> void:
     if age < 0.0 or age >= POP_DURATION:
         return
     var progress: float = age / POP_DURATION
     var opacity: float = pow(1.0 - progress, 2.0)
-    var radius: float = lerpf(8.0, 19.0, progress)
+    var radius: float = lerpf(14.0, 36.0, progress)
     for layer in range(5, 0, -1):
         canvas.draw_circle(Vector2.ZERO, radius * float(layer) / 5.0, Color(0.8, 0.55, 1.0, opacity * 0.08))
-    var size: float = lerpf(12.0, 17.0, progress)
+    canvas.draw_arc(Vector2.ZERO, lerpf(10.0, 40.0, progress), 0.0, TAU, 48, Color(0.85, 0.65, 1.0, sin(progress * PI) * 0.75), lerpf(3.0, 0.5, progress), true)
+    for ray in range(8):
+        var direction: Vector2 = Vector2.from_angle(ray * TAU / 8.0 + progress * 0.7)
+        canvas.draw_line(direction * lerpf(6.0, 22.0, progress), direction * lerpf(18.0, 42.0, progress), Color(1.0, 0.85, 0.55, opacity), 2.0, true)
+    canvas.draw_set_transform(Vector2.ZERO, progress * PI * 0.5)
+    var size: float = lerpf(20.0, 30.0, sin(progress * PI))
     var glint := PackedVector2Array([
         Vector2(-size, 0), Vector2(-2, -2), Vector2(0, -size * 0.8), Vector2(2, -2),
         Vector2(size, 0), Vector2(2, 2), Vector2(0, size * 0.8), Vector2(-2, 2)])
     canvas.draw_colored_polygon(glint, Color(1.0, 0.91, 0.68, opacity))
-    canvas.draw_circle(Vector2.ZERO, lerpf(4.0, 1.0, progress), Color(1.0, 1.0, 1.0, opacity))
+    canvas.draw_circle(Vector2.ZERO, lerpf(6.0, 1.0, progress), Color(1.0, 1.0, 1.0, opacity))
+    canvas.draw_set_transform(Vector2.ZERO)
 
 ## Each of the six crunches collapses a different part of the body.
 static func stage(crush: float, index: int) -> float:

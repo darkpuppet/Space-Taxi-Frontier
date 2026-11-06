@@ -93,6 +93,19 @@ func _run() -> void:
     for index in range(30):
         game.taxi._physics_process(1.0 / 60)
     check(game.taxi.position.x > 100.1 and game.taxi.velocity.x > 1.0, "Singularity actually accelerates a distant coasting taxi beyond the former suction range")
+    var dock: Dictionary = game.taxi.pads[0]
+    game.taxi.position = Vector2(float(dock["x"]), float(dock["y"]) - 21.0)
+    game.taxi.velocity = Vector2.ZERO
+    game.taxi.landed_on = int(dock["id"])
+    game.sector.holes[0]["position"] = game.taxi.position + Vector2(100, -100)
+    var docked_position: Vector2 = game.taxi.position
+    for index in range(30):
+        game.taxi._physics_process(1.0 / 60)
+    check(game.taxi.position.is_equal_approx(docked_position) and game.taxi.velocity == Vector2.ZERO, "Singularity cannot drag a supported taxi off a platform")
+    Input.action_press("thrust")
+    game.taxi._physics_process(1.0 / 60)
+    Input.action_release("thrust")
+    check(game.taxi.landed_on == -1 and game.taxi.velocity.x > 1.0, "Suction resumes immediately on takeoff")
     game.sector.holes.clear()
     check(game.sector.field_at(Vector2(100, 250)) == Vector2.ZERO, "Sectors without singularities retain ordinary flight gravity")
     var image: Image = SPRITES.ATLAS.get_image()

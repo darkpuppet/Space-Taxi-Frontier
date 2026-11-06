@@ -147,7 +147,7 @@ func _run() -> void:
     check(ship.capture_time == held, "Pausing freezes the disappearance glint")
     game._resume()
     ship.set_physics_process(false)
-    for i in range(4):
+    for i in range(7):
         ship._physics_process(0.05)
     check(game.lives == 2 and game.screen_state == "life_lost", "Finished crumpling consumes exactly one life")
     check(not game.audio.crumple_player.playing, "Losing the taxi stops the crushing sound")
@@ -209,7 +209,13 @@ func _run() -> void:
         await RenderingServer.frame_post_draw
         var pop: Image = view.get_texture().get_image()
         var core: Color = pop.get_pixel(120, 80)
-        check(core.r > 0.9 and core.g > 0.9 and core.a > 0.5 and ink_bounds(pop).size.x < 100, "GPU-rendered disappearance pop has a small bright core")
+        check(core.r > 0.9 and core.g > 0.9 and core.a > 0.5 and ink_bounds(pop).size.x >= 95, "GPU-rendered disappearance flash has a larger bright core")
+        visual.capture_time = CRUMPLE.DURATION + CRUMPLE.POP_DURATION * 0.45
+        visual.queue_redraw()
+        await process_frame
+        await RenderingServer.frame_post_draw
+        var bloom: Image = view.get_texture().get_image()
+        check(bloom.get_data() != pop.get_data() and ink_bounds(bloom).size.x > ink_bounds(pop).size.x, "Flash expands and changes shape during its animation")
         pop.save_png("res://.development/crumple/disappearance-pop.png")
         visual.capture_time = CRUMPLE.DURATION + CRUMPLE.POP_DURATION + 0.01
         visual.queue_redraw()
