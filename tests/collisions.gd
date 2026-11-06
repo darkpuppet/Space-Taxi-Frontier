@@ -158,7 +158,7 @@ func _run() -> void:
     check(ship.capture_active and game.lives == 3 and not ship.engine_on, "Black-hole entry starts capture even during damage protection")
     for i in range(12):
         ship._physics_process(0.05)
-    check(ship.rotation > 0 and ship.scale.x < 1 and ship.scale.y > ship.scale.x, "Capture spins, shrinks, and stretches the taxi")
+    check(ship.rotation > 0 and ship.crumple_progress > 0.3 and ship.scale.x > 0.9, "Capture visibly buckles the cab before shrinking it")
     for i in range(20):
         ship._physics_process(0.05)
     check(game.lives == 2 and game.screen_state == "life_lost" and paused, "Completed black-hole animation removes exactly one life")

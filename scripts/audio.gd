@@ -19,6 +19,7 @@ var clunk: AudioStreamWAV
 var impact_cooldown: float = 0.0
 var tow_truck: Node2D
 var tow_player: AudioStreamPlayer
+var crumple_player: AudioStreamPlayer
 
 func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
@@ -66,12 +67,22 @@ func _ready() -> void:
     tow_player.volume_db = -20.0
     add_child(tow_player)
     tow_player.bus = "FrontierEffects"
+    crumple_player = AudioStreamPlayer.new()
+    crumple_player.name = "CabCrumple"
+    crumple_player.process_mode = Node.PROCESS_MODE_PAUSABLE
+    crumple_player.stream = _tin_can_crumple()
+    crumple_player.volume_db = -9.0
+    add_child(crumple_player)
+    crumple_player.bus = "FrontierEffects"
 
 func apply_volumes(values: Dictionary) -> void:
     for pair in [["Master", "master"], ["FrontierMusic", "music"], ["FrontierEffects", "effects"], ["FrontierVoices", "voices"]]:
         AudioServer.set_bus_volume_db(AudioServer.get_bus_index(pair[0]), linear_to_db(maxf(0.00001, float(values[pair[1]]))))
 
 func _process(_dt: float) -> void:
+    crumple_player.stream_paused = get_tree().paused or muted
+    if not is_instance_valid(taxi) or not taxi.capture_active or not taxi.visible:
+        stop_crumple()
     impact_cooldown = maxf(0, impact_cooldown - _dt)
     _update_beam_audio(_dt)
     _update_tow_audio(_dt)
@@ -97,6 +108,10 @@ func toggle_mute() -> bool:
     return muted
 
 func cue(kind: String) -> void:
+    if kind == "crumple":
+        crumple_player.play()
+        crumple_player.stream_paused = get_tree().paused or muted
+        return
     var notes: Array = [440.0, 660.0]
     match kind:
         "suction": notes = [523.25, 392.0, 293.66, 220.0, 146.83, 73.42]
@@ -122,6 +137,40 @@ func cue(kind: String) -> void:
     player.bus = "FrontierEffects"
     player.finished.connect(player.queue_free)
     player.play()
+
+func stop_crumple() -> void:
+    crumple_player.stop()
+
+## Hollow sheet-metal buckles, sharp can pops, and short scraping crackles.
+## Cached at startup; local noise never changes gameplay's random market.
+func _tin_can_crumple() -> AudioStreamWAV:
+    const RATE: int = 22050
+    var count: int = int(RATE * 1.35)
+    var data := PackedByteArray()
+    data.resize(count * 2)
+    var rng := RandomNumberGenerator.new()
+    rng.seed = 72193
+    var low_noise: float = 0.0
+    for i in range(count):
+        var t: float = float(i) / RATE
+        var noise: float = rng.randf_range(-1.0, 1.0)
+        low_noise = lerpf(low_noise, noise, 0.22)
+        var sample: float = 0.0
+        for buckle in [0.10, 0.24, 0.42, 0.61, 0.82, 1.05]:
+            var age: float = t - float(buckle)
+            if age < 0.0 or age > 0.24:
+                continue
+            var attack: float = minf(age * 3500.0, 1.0)
+            var modes: float = sin(TAU * 317 * age) * 0.27 + sin(TAU * 839 * age) * 0.18 + sin(TAU * 1423 * age) * 0.12
+            sample += (modes + (noise - low_noise) * 0.5) * exp(-age * 31) * attack
+            var crackle: float = pow(maxf(0.0, sin(age * 390 + sin(age * 127) * 3)), 8.0)
+            sample += noise * crackle * exp(-age * 14) * 0.28 * attack
+        data.encode_s16(i * 2, int(clampf(sample, -0.94, 0.94) * 32767))
+    var stream := AudioStreamWAV.new()
+    stream.format = AudioStreamWAV.FORMAT_16_BITS
+    stream.mix_rate = RATE
+    stream.data = data
+    return stream
 
 ## Speed normal to the surface controls both loudness and the clunk's weight.
 func impact(speed: float) -> void:

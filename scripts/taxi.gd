@@ -1,6 +1,7 @@
 extends CharacterBody2D
 const SPRITES = preload("res://scripts/sprites.gd")
 const ART = preload("res://scripts/game_art.gd")
+const CRUMPLE = preload("res://scripts/cab_crumple.gd")
 
 signal landed(pad_id: int)
 signal flight_motion(start: Vector2, finish: Vector2)
@@ -45,6 +46,8 @@ var capture_active: bool = false
 var capture_time: float = 0.0
 var capture_center := Vector2.ZERO
 var capture_offset := Vector2.ZERO
+var crumple_progress: float = 0.0
+var capture_texture: Texture2D
 var last_damage_reason: String = "HARD IMPACT"
 const BEAM_DAMAGE_PER_SECOND: float = 24.0
 var beam_notice_timer: float = 0.0
@@ -271,6 +274,16 @@ func _begin_capture(center: Vector2) -> void:
     smoke_clock = 0.0
     capture_active = true
     capture_time = 0.0
+    crumple_progress = 0.0
+    var source: Texture2D
+    if damage_stage() == 0:
+        SPRITES._ensure()
+        source = SPRITES.frames[0]
+    else:
+        source = ART.damage_texture(damage_stage())
+    # A cropped texture keeps mesh UVs independent from atlas coordinates.
+    capture_texture = ImageTexture.create_from_image(source.get_image())
+    exhaust.clear()
     capture_center = center
     capture_offset = global_position - center
     if capture_offset.length() < 20.0:
@@ -284,9 +297,11 @@ func _begin_capture(center: Vector2) -> void:
 func _animate_capture(dt: float) -> void:
     capture_time += dt
     var progress: float = clampf(capture_time / 1.35, 0.0, 1.0)
+    crumple_progress = smoothstep(0.08, 0.82, progress)
     global_position = capture_center + capture_offset.rotated(progress * TAU * 2.5) * pow(1.0 - progress, 1.5)
-    rotation = progress * TAU * 4.0
-    scale = Vector2(maxf(0.01, 1.0 - progress), maxf(0.01, (1.0 - progress) * (1.0 + sin(progress * PI) * 2.0)))
+    rotation = progress * TAU * 2.0
+    # Hold the cab large enough to see each buckle before swallowing the wreck.
+    scale = Vector2.ONE * lerpf(1.0, 0.01, smoothstep(0.68, 1.0, progress))
     modulate.a = 1.0 - progress * 0.5
     queue_redraw()
     if progress >= 1.0:
@@ -370,6 +385,9 @@ func _draw() -> void:
         var life: float = float(particle["life"]) / 0.45
         ART.effect(self, ART.Effect.SPARK, Rect2(Vector2(particle["position"]) - global_position - Vector2.ONE * 3, Vector2.ONE * 6), Color(0.38, 0.85, 1.0, life * 0.4))
     draw_set_transform(Vector2.ZERO, visual_tilt, Vector2(facing, 1))
+    if capture_texture != null and (capture_active or crumple_progress > 0.0):
+        CRUMPLE.paint(self, capture_texture, crumple_progress)
+        return
     if engine_on:
         var flame: float = 32.0 + sin(visual_time * 63) * 6.0
         for x in [-14, 14]:

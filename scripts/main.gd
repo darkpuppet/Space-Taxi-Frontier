@@ -181,6 +181,8 @@ func _make_pads() -> Array:
     return sector.pad_layout()
 
 func _start_level(carry_taxi: bool = false) -> void:
+    if is_instance_valid(audio):
+        audio.stop_crumple()
     if is_instance_valid(tow_truck):
         tow_truck.reset()
         tow_truck.queue_free()
@@ -761,6 +763,7 @@ func _open_overlay(title: String, copy: String, action: String) -> void:
         menu_dialogs.show_score_entry()
 
 func _show_main_menu() -> void:
+    audio.stop_crumple()
     aurora_background.visible = false
     environment_layers.visible = false
     audio.radio.reset()
@@ -1237,10 +1240,12 @@ func _on_landed(pad_id: int) -> void:
 
 func _on_black_hole_entered(_center: Vector2) -> void:
     audio.cue("suction")
-    _announce("MY METER'S STILL RUNNING! / Complimentary spaghetti upgrade...")
+    audio.cue("crumple")
+    _announce("MY METER'S STILL RUNNING! / Hey! That's a cab, not a soda can!")
 
 func _on_black_hole_lost() -> void:
-    _lose_life("BLACK HOLE / Your taxi has been upgraded to spaghetti.")
+    audio.stop_crumple()
+    _lose_life("BLACK HOLE / Your taxi has been compacted for recycling.")
 
 func _on_damaged(amount: float) -> void:
     if taxi.last_damage_reason == "ENERGY BEAM":
