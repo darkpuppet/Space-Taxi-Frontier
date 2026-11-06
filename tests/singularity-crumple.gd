@@ -59,7 +59,10 @@ func _run() -> void:
     game.sector.set_physics_process(false)
     var ship: Node = game.taxi
     var audio_children: int = game.audio.get_child_count()
+    ship.rotation = 0.3
+    ship.visual_tilt = 0.1
     ship._begin_capture(ship.position + Vector2(70, -25))
+    check(ship.rotation == 0 and ship.visual_tilt == 0, "Capture immediately straightens the cab without spinning")
     var cab_texture: Texture2D = ship.capture_texture
     var sound: AudioStreamWAV = game.audio.crumple_player.stream
     check(ship.capture_active and cab_texture != null, "Capture snapshots the actual taxi painting for deformation")
@@ -105,6 +108,8 @@ func _run() -> void:
     for i in range(8):
         ship._physics_process(0.05)
     check(ship.crumple_progress > 0.15 and ship.scale.x > 0.99, "Cab folds while still full-sized and readable")
+    var offset: Vector2 = ship.position - ship.capture_center
+    check(ship.rotation == 0 and ship.visual_tilt == 0 and absf(offset.cross(ship.capture_offset)) < 0.01 and offset.dot(ship.capture_offset) > 0, "Upright taxi moves directly inward without orbiting")
     var held: float = ship.capture_time
     game._show_pause()
     ship.set_physics_process(true)
@@ -124,8 +129,10 @@ func _run() -> void:
         ship._physics_process(0.05)
     ship._physics_process(0.025)
     check(ship.capture_active and ship.scale == Vector2.ONE and ship.modulate.a == 1.0 and ship.crumple_progress > 0.99, "Fully crushed wreck remains full-sized and opaque before swallowing")
-    for i in range(9):
+    for i in range(8):
         ship._physics_process(0.05)
+    check(ship.scale.x < 0.02 and ship.modulate.a == 1.0 and ship.rotation == 0 and ship.visual_tilt == 0, "Cab stays upright and opaque until the last tiny sliver crunches to zero")
+    ship._physics_process(0.05)
     check(ship.capture_active and game.lives == 3 and ship.position.is_equal_approx(ship.capture_center) and ship.scale == Vector2.ONE, "A small flash plays at the disappearance point before the life-loss overlay")
     held = ship.capture_time
     game._show_pause()
@@ -191,7 +198,7 @@ func _run() -> void:
                 check(bounds.size.x < intact.size.x * 0.55 and bounds.size.y > intact.size.y * 0.5, "GPU-rendered cab becomes a compact irregular wreck while retaining its crushed body painting")
             sheet.blit_rect(frame, Rect2i(Vector2i.ZERO, view.size), Vector2i(index * 240, 0))
         sheet.save_png("res://.development/crumple/stages.png")
-        visual.capture_time = CRUMPLE.DURATION + 0.02
+        visual.capture_time = CRUMPLE.DURATION
         visual.queue_redraw()
         await process_frame
         await RenderingServer.frame_post_draw

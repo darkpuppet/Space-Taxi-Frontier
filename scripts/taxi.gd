@@ -275,6 +275,8 @@ func _begin_capture(center: Vector2) -> void:
     capture_active = true
     capture_time = 0.0
     crumple_progress = 0.0
+    rotation = 0.0
+    visual_tilt = 0.0
     var source: Texture2D
     if damage_stage() == 0:
         SPRITES._ensure()
@@ -296,11 +298,12 @@ func _begin_capture(center: Vector2) -> void:
 
 func _animate_capture(dt: float) -> void:
     capture_time += dt
+    rotation = 0.0
+    visual_tilt = 0.0
     var progress: float = clampf(capture_time / CRUMPLE.DURATION, 0.0, 1.0)
     if progress >= 1.0:
         # Finish the little glint before the life-loss overlay pauses the world.
         global_position = capture_center
-        rotation = 0.0
         scale = Vector2.ONE
         modulate.a = 1.0
         queue_redraw()
@@ -313,11 +316,10 @@ func _animate_capture(dt: float) -> void:
     crumple_progress = CRUMPLE.progress_at(capture_time)
     # Keep the staged roof collapse, folded bumpers and accordion pleats readable.
     var travel: float = CRUMPLE.travel_at(capture_time)
-    global_position = capture_center + capture_offset.rotated(travel * TAU * 1.4) * (1.0 - travel)
-    rotation = travel * TAU
+    global_position = capture_center + capture_offset * (1.0 - travel)
     # Hold the cab large enough to see each buckle before swallowing the wreck.
-    scale = Vector2.ONE * lerpf(1.0, 0.01, swallow)
-    modulate.a = 1.0 - swallow
+    scale = Vector2.ONE * (1.0 - swallow)
+    modulate.a = 1.0
     queue_redraw()
 
 func _take_damage(amount: float, reason: String = "HARD IMPACT") -> void:

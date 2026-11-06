@@ -11,7 +11,7 @@ const POP_DURATION: float = 0.18
 const FAST_TIME: float = 0.65
 const FASTEST_TIME: float = 1.35
 
-## Three increasingly frantic speeds: a reluctant drift, a spin, then a gulp.
+## Three increasingly frantic speeds: a reluctant drift, a pull, then a gulp.
 static func travel_at(seconds: float) -> float:
     var t: float = clampf(seconds, 0.0, DURATION)
     if t < FAST_TIME:
