@@ -3,6 +3,10 @@ render_mode unshaded;
 
 // Explicit game time freezes the effect during pause and menus.
 uniform float aurora_time = 0.0;
+uniform bool layer_mask_enabled = false;
+uniform bool depth_mask_enabled = false;
+uniform sampler2D depth_mask : filter_nearest, repeat_disable;
+uniform vec4 sky_region = vec4(0.25, 0.03, 0.50, 0.47);
 
 float aurora_mask(vec2 uv, vec3 source) {
     // Follow the painted diagonal sky curtains and their distant lower ribbon.
@@ -32,5 +36,10 @@ void fragment() {
         + sin(UV.x * 59.0 + aurora_time * 0.83) * 0.07;
     color *= 1.0 + shimmer * mask;
     color += vec3(0.015, 0.09, 0.065) * mask * (0.5 + 0.5 * wave);
-    COLOR = vec4(color, original.a);
+    vec2 inset = min(UV - sky_region.xy, sky_region.xy + sky_region.zw - UV);
+    float sky_alpha = smoothstep(0.0, 0.035, min(inset.x, inset.y));
+    if (depth_mask_enabled) {
+        sky_alpha = (1.0 - step(0.1, texture(depth_mask, UV).r)) * mask;
+    }
+    COLOR = vec4(color, original.a * (layer_mask_enabled ? sky_alpha : 1.0));
 }

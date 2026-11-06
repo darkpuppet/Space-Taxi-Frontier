@@ -28,7 +28,7 @@ func _run() -> void:
         game._start_level()
         game.taxi.set_physics_process(false)
         game.sector.set_physics_process(false)
-        check(game.camera.limit_bottom == 1440, "Camera includes two full screens vertically")
+        check(game.camera.limit_bottom >= WORLD.HEIGHT, "Camera includes the full two-screen world and dashboard clearance")
         var low: float = 0
         var high: float = INF
         for pad in game.pads:

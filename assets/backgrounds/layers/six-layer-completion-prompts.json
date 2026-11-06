@@ -1,0 +1,30 @@
+{
+  "tool": "built-in image_gen",
+  "tasks": [
+    {
+      "level": 1,
+      "layer": "far-v3.png",
+      "prompt": "Use case: stylized-concept. Newly paint ONE independent transparent game parallax scenery layer. Original supplied painting is STYLE REFERENCE ONLY. ONLY a few very distant small blue-and-gold orbital antenna platforms and outposts along the lower side edges, at y0.64-0.85, faint and small in perspective. NO Earth, moons, planets, foreground window frame, large station buildings or deck. Cinematic finely detailed painterly look, reference palette and lighting. Full landscape5:3 canvas,1620x972; keep original full scene coordinate frame. All empty space is genuinely transparent alphaZERO. Paint complete hidden surfaces and whole silhouettes. Do not extract or mask original. No background sky, nebula, white fill, haze backdrop, checkerboard, text, borders, panels or atlas. This layer will be placed behind existing structures; avoid recreating the whole reference scene."
+    },
+    {
+      "level": 6,
+      "layer": "distant-v3.png",
+      "prompt": "Use case: stylized-concept. Newly paint ONE independent transparent game parallax scenery layer. Original supplied painting is STYLE REFERENCE ONLY. ONLY a very distant low skyline of tiny navy blue city towers with faint purple cyan lights along bottom20%, softly receding into rain. NO near towers, bridge, water, planets, moons. Cinematic finely detailed painterly look, reference palette and lighting. Full landscape5:3 canvas,1620x972; keep original full scene coordinate frame. All empty space is genuinely transparent alphaZERO. Paint complete hidden surfaces and whole silhouettes. Do not extract or mask original. No background sky, nebula, white fill, haze backdrop, checkerboard, text, borders, panels or atlas. This layer will be placed behind existing structures; avoid recreating the whole reference scene."
+    },
+    {
+      "level": 6,
+      "layer": "middle-v3.png",
+      "prompt": "Use case: stylized-concept. Newly paint ONE independent transparent game parallax scenery layer. Original supplied painting is STYLE REFERENCE ONLY. ONLY a distant middle skyline of slender blue futuristic towers and small connecting gantries along lower left/right sides and low horizon, faint purple cyan window lights. Keep upper70% and center clear. NO foreground towers, bridges spanning entire image, water, planets, moons. Cinematic finely detailed painterly look, reference palette and lighting. Full landscape5:3 canvas,1620x972; keep original full scene coordinate frame. All empty space is genuinely transparent alphaZERO. Paint complete hidden surfaces and whole silhouettes. Do not extract or mask original. No background sky, nebula, white fill, haze backdrop, checkerboard, text, borders, panels or atlas. This layer will be placed behind existing structures; avoid recreating the whole reference scene."
+    },
+    {
+      "level": 18,
+      "layer": "distant-v3.png",
+      "prompt": "Use case: stylized-concept. Newly paint ONE independent transparent game parallax scenery layer. Original supplied painting is STYLE REFERENCE ONLY. ONLY tiny very distant drifting wreck fragments, metal hull panels and broken antenna pieces in sparse clusters around outer sides and bottom20%, barely lit navy blue with faint gold highlights. NO large foreground hull frame, planets, moons, stars. Cinematic finely detailed painterly look, reference palette and lighting. Full landscape5:3 canvas,1620x972; keep original full scene coordinate frame. All empty space is genuinely transparent alphaZERO. Paint complete hidden surfaces and whole silhouettes. Do not extract or mask original. No background sky, nebula, white fill, haze backdrop, checkerboard, text, borders, panels or atlas. This layer will be placed behind existing structures; avoid recreating the whole reference scene."
+    },
+    {
+      "level": 18,
+      "layer": "middle-v3.png",
+      "prompt": "Use case: stylized-concept. Newly paint ONE independent transparent game parallax scenery layer. Original supplied painting is STYLE REFERENCE ONLY. ONLY distant derelict station gantries, broken antenna towers and small fragmented hull platforms along lower left/right edges, blue gunmetal with subtle gold windows. Small structures receding far behind the foreground frame. NO near large curved hull frame, planets, moons, stars. Cinematic finely detailed painterly look, reference palette and lighting. Full landscape5:3 canvas,1620x972; keep original full scene coordinate frame. All empty space is genuinely transparent alphaZERO. Paint complete hidden surfaces and whole silhouettes. Do not extract or mask original. No background sky, nebula, white fill, haze backdrop, checkerboard, text, borders, panels or atlas. This layer will be placed behind existing structures; avoid recreating the whole reference scene."
+    }
+  ]
+}

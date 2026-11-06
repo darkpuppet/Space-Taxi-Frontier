@@ -9,10 +9,10 @@ func _ready() -> void:
     shader_material.shader = preload("res://assets/effects/ice-aurora.gdshader")
     material = shader_material
 
-func configure(level: int, world_size: Vector2, game_time: float) -> void:
+func configure(level: int, world_size: Vector2, game_time: float, source: Texture2D = null) -> void:
     visible = level == 2
     if visible:
-        texture = preload("res://scripts/bitmap_art.gd").background(level)
+        texture = source if source != null else preload("res://scripts/bitmap_art.gd").background(level)
         scale = world_size / texture.get_size()
         advance(game_time)
 

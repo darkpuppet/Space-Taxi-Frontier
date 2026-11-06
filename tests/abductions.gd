@@ -110,6 +110,8 @@ func _run() -> void:
     game.audio.shutdown()
     await create_timer(0.2).timeout
     game.free()
+    # Let the audio and rendering servers release resources before exiting.
+    await create_timer(0.2).timeout
     if FileAccess.file_exists("user://frontier_abduction_test.cfg"):
         DirAccess.remove_absolute("user://frontier_abduction_test.cfg")
     print("Passenger abductions: %d checks, %d failures" % [checks, failures])

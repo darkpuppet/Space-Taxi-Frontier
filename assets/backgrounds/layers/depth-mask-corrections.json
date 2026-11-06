@@ -1,0 +1,13 @@
+{
+  "tool": "built-in image_gen",
+  "tasks": [
+    {
+      "nn": "08",
+      "prompt": "Edit target: Image 2, this existing registered semantic mask. Image 1 is the original painting for exact geometry reference. Preserve all existing mask shapes, geometry, grayscale depth assignments and positions. Correct ONLY erroneously black surface-detail lines inside solid buildings: make the entire large lower-right geodesic dome a solid WHITE silhouette, filling its internal black honeycomb grid and all its panels WHITE, including all enclosed architecture. Also make closed opaque green honeycomb outer wall panels WHITE, but retain genuinely open sky holes and structural gaps BLACK. All building cutouts must be filled shapes without surface texture or drawn black contour lines. Keep small planets #333333, large planets #666666, far islands #999999, mid islands #cccccc, front structures #ffffff, sky #000000. Keep original full 1619x971 landscape framing. No labels, no gradients, no contour marks, no new objects."
+    },
+    {
+      "nn": "15",
+      "prompt": "Edit target: Image 2, this existing registered semantic mask. Image 1 is the original painting for exact geometry reference. Preserve all existing mask silhouettes, coordinates, sizes and flat depth values. Correct ONLY the waterfalls and false interior contour holes: the white waterfalls cascading down from floating islands are REAL foreground objects and must belong to the SAME depth grayscale as their source island, not black sky gaps. Fill every black thin interior line that represents a waterfall channel with its parent island gray or white, extending its flowing silhouette to the visible bottom of each actual waterfall. In particular the huge left-edge and upper-right waterfalls must be WHITE; middle-distance island waterfalls #cccccc. Preserve genuinely open architectural archways and gaps between islands as BLACK. Keep stars/atmosphere black, small moons #333333, large planets #666666, far islands #999999, middle islands #cccccc, closest islands/foliage #ffffff. Full original landscape canvas 1619x971. Flat filled silhouettes only, no texture, no contours, no labels."
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/level.gd" id="1_level"]
+[ext_resource type="PackedScene" path="res://Environment.tscn" id="2_environment"]
+[ext_resource type="Script" path="res://scripts/aurora_background.gd" id="3_aurora"]
+[ext_resource type="Script" path="res://scripts/level_pad.gd" id="4_pad"]
+
+[node name="Level" type="Node2D"]
+script = ExtResource("1_level")
+
+[node name="ArtworkPreview" type="Sprite2D" parent="."]
+z_index = -50
+centered = false
+
+[node name="Environment" parent="." instance=ExtResource("2_environment")]
+
+[node name="Aurora" type="Sprite2D" parent="."]
+script = ExtResource("3_aurora")
+
+[node name="Pads" type="Node2D" parent="."]
+
+[node name="Pad01" type="Marker2D" parent="Pads"]
+script = ExtResource("4_pad")
+pad_id = 1
+
+[node name="Pad02" type="Marker2D" parent="Pads"]
+script = ExtResource("4_pad")
+pad_id = 2
+services = Array[String](["fuel", "repair", "upgrades"])
+
+[node name="Pad03" type="Marker2D" parent="Pads"]
+script = ExtResource("4_pad")
+pad_id = 3
+
+[node name="Pad04" type="Marker2D" parent="Pads"]
+script = ExtResource("4_pad")
+pad_id = 4
+
+[node name="Pad05" type="Marker2D" parent="Pads"]
+script = ExtResource("4_pad")
+pad_id = 5

@@ -1,0 +1,43 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="PackedScene" path="res://levels/level_base.tscn" id="1_level"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/level-12-v1.png" id="2_art"]
+
+
+
+[ext_resource type="Texture2D" path="res://assets/backgrounds/layers/level-12/distant-v2.png" id="plate_0"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/layers/level-12/middle-v2.png" id="plate_1"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/layers/level-12/far-v2.png" id="plate_2"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/layers/level-12/near-v2.png" id="plate_3"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/layers/level-12/front-v2.png" id="plate_4"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/layers/level-12/sky-v1.png" id="plate_sky"]
+
+[node name="Level12" instance=ExtResource("1_level")]
+sector_index = 11
+background_texture = ExtResource("2_art")
+
+[node name="Environment" parent="." index="1"]
+authored_depth_textures = Array[Texture2D]([ExtResource("plate_0"), ExtResource("plate_1"), ExtResource("plate_2"), ExtResource("plate_3"), ExtResource("plate_4")])
+sky_layer_texture = ExtResource("plate_sky")
+
+[node name="Pad01" parent="Pads" index="0"]
+position = Vector2(380, 740)
+pad_width = 185.0
+
+[node name="Pad02" parent="Pads" index="1"]
+position = Vector2(650, 1080)
+pad_width = 205.0
+
+[node name="Pad03" parent="Pads" index="2"]
+position = Vector2(1340, 380)
+pad_width = 165.0
+
+[node name="Pad04" parent="Pads" index="3"]
+position = Vector2(1740, 1300)
+pad_width = 145.0
+
+[node name="Pad05" parent="Pads" index="4"]
+position = Vector2(2120, 980)
+pad_width = 175.0
+
+[editable path="Environment"]

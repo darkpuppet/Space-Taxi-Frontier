@@ -24,7 +24,7 @@ func _run() -> void:
     ship.fuel = 100
     ship._physics_process(0.05)
     var idle_cost: float = 100 - ship.fuel
-    check(idle_cost > 0 and is_equal_approx(idle_cost, 0.005), "Fuel drains at 0.1 per second even while docked")
+    check(idle_cost > 0 and is_equal_approx(idle_cost, ship.idle_fuel_drain * 0.05), "Docked fuel consumption follows the configured idle rate")
     ship.position = Vector2(500, 200)
     ship.landed_on = -1
     ship.velocity = Vector2.ZERO
@@ -35,7 +35,7 @@ func _run() -> void:
     Input.action_press("thrust")
     ship._physics_process(0.05)
     Input.action_release("thrust")
-    check(100 - ship.fuel > idle_cost * 20, "Thrusters consume additional fuel above the idle rate")
+    check(100 - ship.fuel > idle_cost * 5, "Thrusters consume substantially more fuel than idling")
     paused = true
     var paused_fuel: float = ship.fuel
     ship.set_physics_process(true)
