@@ -77,7 +77,24 @@ func _run() -> void:
     for index in range(30):
         game.taxi._physics_process(1.0 / 60)
     check(game.taxi.position.x > 825 and game.taxi.velocity.x > 20, "Black hole accelerates a coasting taxi inward before contact")
-    check(game.sector.field_at(Vector2(0, 0)) == Vector2.ZERO, "Normal space outside black-hole range has no added gravity field")
+    for point in [Vector2.ZERO, Vector2(WORLD.WIDTH, 0), Vector2(0, WORLD.HEIGHT), Vector2(WORLD.WIDTH, WORLD.HEIGHT)]:
+        var pull: Vector2 = game.sector.field_at(point)
+        check(pull.is_finite() and pull.length() > 0, "Singularity pulls from every corner of the playfield")
+        check(pull.normalized().dot((Vector2(1000, 650) - point).normalized()) > 0.999, "Distant pull points toward the singularity")
+    for direction in [Vector2.RIGHT, Vector2.LEFT, Vector2.UP, Vector2.DOWN]:
+        var previous_strength: float = INF
+        for distance in [100.0, 339.0, 340.0, 341.0, 700.0, 1500.0, 2800.0]:
+            var strength: float = game.sector.field_at(Vector2(1000, 650) + direction * distance).length()
+            check(strength > 0 and strength < previous_strength, "Pull diminishes continuously with distance, including across the former cutoff")
+            previous_strength = strength
+    game.taxi.position = Vector2(100, 250)
+    game.taxi.velocity = Vector2.ZERO
+    game.taxi.landed_on = -1
+    for index in range(30):
+        game.taxi._physics_process(1.0 / 60)
+    check(game.taxi.position.x > 100.1 and game.taxi.velocity.x > 1.0, "Singularity actually accelerates a distant coasting taxi beyond the former suction range")
+    game.sector.holes.clear()
+    check(game.sector.field_at(Vector2(100, 250)) == Vector2.ZERO, "Sectors without singularities retain ordinary flight gravity")
     var image: Image = SPRITES.ATLAS.get_image()
     check(image.detect_alpha() != Image.ALPHA_NONE, "Sprite atlas has genuine transparency")
     SPRITES._ensure()
