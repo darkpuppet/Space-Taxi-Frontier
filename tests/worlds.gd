@@ -70,6 +70,10 @@ func _run() -> void:
     for family in [game.sector.planets, game.sector.aliens, game.sector.asteroids, game.sector.gates, game.sector.drones, game.sector.mines, game.sector.meteors, game.sector.beams, game.sector.holes]:
         family.clear()
     game.sector.holes.append({"position": Vector2(1000, 650)})
+    var close_pull: Vector2 = game.sector.field_at(Vector2(1000, 350))
+    check(close_pull.y > game.taxi.lift - game.taxi.gravity, "At 300 units, downward suction overpowers stock hover and demands early avoidance")
+    var approach_pull: Vector2 = game.sector.field_at(Vector2(400, 650))
+    check(approach_pull.x > 85.0 and approach_pull.x < game.taxi.steering, "At 600 units, suction demands steering but allows an escape")
     game.taxi.position = Vector2(820, 650)
     game.taxi.velocity = Vector2.ZERO
     game.taxi.landed_on = -1

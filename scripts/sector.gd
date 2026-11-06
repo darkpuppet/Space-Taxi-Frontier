@@ -109,9 +109,10 @@ func field_at(position: Vector2) -> Vector2:
     for hole in holes:
         # Every singularity contributes across the whole playfield. The softened
         # inverse-square law weakens smoothly with distance without a cutoff.
-        field += _pull(position, hole["position"], 280.0 + float(config["index"]) * 2.0, 240.0)
-    # A stock engine can always overcome the bounded vertical component.
-    return field.limit_length(210.0)
+        field += _pull(position, hole["position"], 500.0 + float(config["index"]) * 3.0, 280.0)
+    # Close approaches can overpower stock lift: steer away before diving in.
+    # Bound combined fields so paired singularities cannot produce extreme spikes.
+    return field.limit_length(450.0)
 
 func _solids() -> Array[Dictionary]:
     var result: Array[Dictionary] = []
