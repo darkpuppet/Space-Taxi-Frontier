@@ -297,6 +297,18 @@ func _begin_capture(center: Vector2) -> void:
 func _animate_capture(dt: float) -> void:
     capture_time += dt
     var progress: float = clampf(capture_time / CRUMPLE.DURATION, 0.0, 1.0)
+    if progress >= 1.0:
+        # Finish the little glint before the life-loss overlay pauses the world.
+        global_position = capture_center
+        rotation = 0.0
+        scale = Vector2.ONE
+        modulate.a = 1.0
+        queue_redraw()
+        if capture_time >= CRUMPLE.DURATION + CRUMPLE.POP_DURATION:
+            capture_active = false
+            input_locked = true
+            black_hole_lost.emit()
+        return
     var swallow: float = smoothstep(CRUMPLE.SWALLOW_TIME, CRUMPLE.DURATION, capture_time)
     crumple_progress = CRUMPLE.progress_at(capture_time)
     # Keep the staged roof collapse, folded bumpers and accordion pleats readable.
@@ -307,10 +319,6 @@ func _animate_capture(dt: float) -> void:
     scale = Vector2.ONE * lerpf(1.0, 0.01, swallow)
     modulate.a = 1.0 - swallow
     queue_redraw()
-    if progress >= 1.0:
-        capture_active = false
-        input_locked = true
-        black_hole_lost.emit()
 
 func _take_damage(amount: float, reason: String = "HARD IMPACT") -> void:
     if invulnerable_timer > 0.0 or amount <= 0.0:
@@ -376,6 +384,9 @@ func _update_damage_smoke(dt: float) -> void:
         })
 
 func _draw() -> void:
+    if capture_texture != null and capture_time >= CRUMPLE.DURATION:
+        CRUMPLE.paint_pop(self, capture_time - CRUMPLE.DURATION)
+        return
     for particle in damage_smoke:
         var progress: float = 1.0 - float(particle["life"]) / float(particle["lifetime"])
         var opacity: float = minf(progress * 10, 1) * pow(1.0 - progress, 1.4)

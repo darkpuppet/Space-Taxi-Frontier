@@ -124,7 +124,18 @@ func _run() -> void:
         ship._physics_process(0.05)
     ship._physics_process(0.025)
     check(ship.capture_active and ship.scale == Vector2.ONE and ship.modulate.a == 1.0 and ship.crumple_progress > 0.99, "Fully crushed wreck remains full-sized and opaque before swallowing")
-    for i in range(15):
+    for i in range(9):
+        ship._physics_process(0.05)
+    check(ship.capture_active and game.lives == 3 and ship.position.is_equal_approx(ship.capture_center) and ship.scale == Vector2.ONE, "A small flash plays at the disappearance point before the life-loss overlay")
+    held = ship.capture_time
+    game._show_pause()
+    ship.set_physics_process(true)
+    await physics_frame
+    await physics_frame
+    check(ship.capture_time == held, "Pausing freezes the disappearance glint")
+    game._resume()
+    ship.set_physics_process(false)
+    for i in range(4):
         ship._physics_process(0.05)
     check(game.lives == 2 and game.screen_state == "life_lost", "Finished crumpling consumes exactly one life")
     check(not game.audio.crumple_player.playing, "Losing the taxi stops the crushing sound")
@@ -180,6 +191,19 @@ func _run() -> void:
                 check(bounds.size.x < intact.size.x * 0.55 and bounds.size.y > intact.size.y * 0.5, "GPU-rendered cab becomes a compact irregular wreck while retaining its crushed body painting")
             sheet.blit_rect(frame, Rect2i(Vector2i.ZERO, view.size), Vector2i(index * 240, 0))
         sheet.save_png("res://.development/crumple/stages.png")
+        visual.capture_time = CRUMPLE.DURATION + 0.02
+        visual.queue_redraw()
+        await process_frame
+        await RenderingServer.frame_post_draw
+        var pop: Image = view.get_texture().get_image()
+        var core: Color = pop.get_pixel(120, 80)
+        check(core.r > 0.9 and core.g > 0.9 and core.a > 0.5 and ink_bounds(pop).size.x < 100, "GPU-rendered disappearance pop has a small bright core")
+        pop.save_png("res://.development/crumple/disappearance-pop.png")
+        visual.capture_time = CRUMPLE.DURATION + CRUMPLE.POP_DURATION + 0.01
+        visual.queue_redraw()
+        await process_frame
+        await RenderingServer.frame_post_draw
+        check(not ink_bounds(view.get_texture().get_image()).has_area(), "The glint fades completely and leaves no taxi painting behind")
         view.free()
     game.audio.shutdown()
     await create_timer(0.2).timeout
