@@ -156,6 +156,7 @@ func _run() -> void:
     ship._physics_process(0.02)
     check(ship.smoke_rate() == 0 and ship.damage_smoke.is_empty(), "Black-hole capture suppresses normal damage smoke")
     check(ship.capture_active and game.lives == 3 and not ship.engine_on, "Black-hole entry starts capture even during damage protection")
+    check(ship.position.is_equal_approx(sector.holes[0]["position"]), "Real collision capture locks the taxi to the singularity center immediately")
     # Allow the opening slow squeeze to give way to the second buckle.
     for i in range(16):
         ship._physics_process(0.05)

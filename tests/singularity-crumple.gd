@@ -61,8 +61,13 @@ func _run() -> void:
     var audio_children: int = game.audio.get_child_count()
     ship.rotation = 0.3
     ship.visual_tilt = 0.1
-    ship._begin_capture(ship.position + Vector2(70, -25))
+    var center: Vector2 = ship.position + Vector2(70, -25)
+    var hole: Dictionary = {"position": center, "home": center, "phase": 0.0, "drift": 60.0, "radius": 18.0}
+    game.sector.holes.append(hole)
+    var contact: Dictionary = game.sector.contact_at(center)
+    ship._begin_capture(contact["center"], contact["hole"])
     check(ship.rotation == 0 and ship.visual_tilt == 0, "Capture immediately straightens the cab without spinning")
+    check(ship.position.is_equal_approx(center), "Capture immediately locks the taxi to the singularity center")
     var cab_texture: Texture2D = ship.capture_texture
     var sound: AudioStreamWAV = game.audio.crumple_player.stream
     check(ship.capture_active and cab_texture != null, "Capture snapshots the actual taxi painting for deformation")
@@ -95,21 +100,18 @@ func _run() -> void:
             energy += value * value
         continuous_windows += int(sqrt(energy / count) > 500.0)
     check(continuous_windows == 14, "Natural metal crinkling continues between major buckles without repeated silent gaps")
-    var slow: float = CRUMPLE.travel_at(0.30) - CRUMPLE.travel_at(0.20)
-    var fast: float = CRUMPLE.travel_at(1.0) - CRUMPLE.travel_at(0.90)
-    var fastest: float = CRUMPLE.travel_at(1.90) - CRUMPLE.travel_at(1.80)
-    check(fast > slow * 2.0 and fastest > fast * 1.4, "Suction escalates through slow, fast and fastest motion")
-    check(is_zero_approx(CRUMPLE.travel_at(0)) and is_equal_approx(CRUMPLE.travel_at(CRUMPLE.DURATION), 1.0), "Accelerating suction travels from entry to the singularity center")
+    check(CRUMPLE.BUCKLE_TIMES[1] - CRUMPLE.BUCKLE_TIMES[0] > CRUMPLE.BUCKLE_TIMES[3] - CRUMPLE.BUCKLE_TIMES[2] and CRUMPLE.BUCKLE_TIMES[3] - CRUMPLE.BUCKLE_TIMES[2] > CRUMPLE.BUCKLE_TIMES[5] - CRUMPLE.BUCKLE_TIMES[4], "Crushing escalates from slow to fast to fastest while anchored")
     check(CRUMPLE.DURATION < 2.2, "Comedic capture finishes more quickly")
     DirAccess.make_dir_recursive_absolute("res://.development/crumple")
     sound.save_to_wav("res://.development/crumple/tin-can.wav")
     ship._begin_capture(ship.position)
     check(ship.capture_time == 0, "Repeated contact cannot restart an active capture")
     for i in range(8):
+        game.sector._physics_process(0.05)
         ship._physics_process(0.05)
+        check(ship.position.is_equal_approx(hole["position"]), "Crushing taxi stays locked to the moving singularity center")
     check(ship.crumple_progress > 0.15 and ship.scale.x > 0.99, "Cab folds while still full-sized and readable")
-    var offset: Vector2 = ship.position - ship.capture_center
-    check(ship.rotation == 0 and ship.visual_tilt == 0 and absf(offset.cross(ship.capture_offset)) < 0.01 and offset.dot(ship.capture_offset) > 0, "Upright taxi moves directly inward without orbiting")
+    check(ship.rotation == 0 and ship.visual_tilt == 0 and not ship.capture_center.is_equal_approx(center), "Taxi remains upright while following singularity drift")
     var held: float = ship.capture_time
     game._show_pause()
     ship.set_physics_process(true)
@@ -134,6 +136,9 @@ func _run() -> void:
     check(ship.scale.x < 0.02 and ship.modulate.a == 1.0 and ship.rotation == 0 and ship.visual_tilt == 0, "Cab stays upright and opaque until the last tiny sliver crunches to zero")
     ship._physics_process(0.05)
     check(ship.capture_active and game.lives == 3 and ship.position.is_equal_approx(ship.capture_center) and ship.scale == Vector2.ONE, "A small flash plays at the disappearance point before the life-loss overlay")
+    game.sector._physics_process(0.01)
+    ship._physics_process(0.01)
+    check(ship.position.is_equal_approx(hole["position"]), "Final spark follows the same moving singularity center")
     held = ship.capture_time
     game._show_pause()
     ship.set_physics_process(true)

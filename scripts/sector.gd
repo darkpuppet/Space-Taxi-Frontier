@@ -237,7 +237,7 @@ func resolve_motion(start: Vector2, finish: Vector2, velocity: Vector2, craft_ra
     for hole in holes:
         var hit: Dictionary = _circle_hit(start, finish, hole["position"], 36.0)
         if not hit.is_empty() and float(hit["time"]) <= earliest_time:
-            return {"captured": true, "center": hole["position"]}
+            return {"captured": true, "center": hole["position"], "hole": hole}
     if earliest.is_empty():
         return {"position": finish, "velocity": velocity, "collided": false}
     var normal: Vector2 = earliest["normal"]
