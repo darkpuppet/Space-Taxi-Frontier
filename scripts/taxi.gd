@@ -300,9 +300,9 @@ func _animate_capture(dt: float) -> void:
     var swallow: float = smoothstep(CRUMPLE.SWALLOW_TIME, CRUMPLE.DURATION, capture_time)
     crumple_progress = CRUMPLE.progress_at(capture_time)
     # Keep the staged roof collapse, folded bumpers and accordion pleats readable.
-    var orbit: float = progress * 0.38 + swallow * 0.62
-    global_position = capture_center + capture_offset.rotated(orbit * TAU) * lerpf(1.0, 0.0, progress * 0.35 + swallow * 0.65)
-    rotation = progress * 0.65 + swallow * TAU
+    var travel: float = CRUMPLE.travel_at(capture_time)
+    global_position = capture_center + capture_offset.rotated(travel * TAU * 1.4) * (1.0 - travel)
+    rotation = travel * TAU
     # Hold the cab large enough to see each buckle before swallowing the wreck.
     scale = Vector2.ONE * lerpf(1.0, 0.01, swallow)
     modulate.a = 1.0 - swallow

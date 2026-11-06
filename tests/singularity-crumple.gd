@@ -45,7 +45,8 @@ func _run() -> void:
     check(is_equal_approx(sound.get_length(), CRUMPLE.DURATION) and sound.loop_mode == AudioStreamWAV.LOOP_DISABLED, "Crushing audio matches the capture duration without looping")
     check(sound.mix_rate == 48000 and sound.stereo and sound.format == AudioStreamWAV.FORMAT_16_BITS, "Bundled WAV preserves 48 kHz stereo PCM detail")
     var peaks: int = 0
-    for buckle in CRUMPLE.BUCKLE_TIMES:
+    for index in range(CRUMPLE.BUCKLE_TIMES.size()):
+        var buckle: float = CRUMPLE.BUCKLE_TIMES[index]
         var peak: int = 0
         for sample in range(int((buckle + 0.003) * sound.mix_rate), int((buckle + 0.035) * sound.mix_rate)):
             peak = maxi(peak, absi(sound.data.decode_s16(sample * 4)))
@@ -53,8 +54,15 @@ func _run() -> void:
         var before: float = CRUMPLE.progress_at(buckle)
         var after: float = CRUMPLE.progress_at(buckle + CRUMPLE.BUCKLE_DURATION)
         check(after - before > 0.16, "Each audible crunch advances one visible buckle")
-        check(is_equal_approx(after, CRUMPLE.progress_at(buckle + 0.25)), "Each crumple stage holds before the next crunch")
+        var next_buckle: float = CRUMPLE.BUCKLE_TIMES[index + 1] if index + 1 < CRUMPLE.BUCKLE_TIMES.size() else CRUMPLE.SWALLOW_TIME
+        check(is_equal_approx(after, CRUMPLE.progress_at(next_buckle - 0.01)), "Each crumple stage holds before the next crunch")
     check(peaks == 6, "Six substantial metallic buckles are encoded in the audio")
+    var slow: float = CRUMPLE.travel_at(0.30) - CRUMPLE.travel_at(0.20)
+    var fast: float = CRUMPLE.travel_at(1.0) - CRUMPLE.travel_at(0.90)
+    var fastest: float = CRUMPLE.travel_at(1.90) - CRUMPLE.travel_at(1.80)
+    check(fast > slow * 2.0 and fastest > fast * 1.4, "Suction escalates through slow, fast and fastest motion")
+    check(is_zero_approx(CRUMPLE.travel_at(0)) and is_equal_approx(CRUMPLE.travel_at(CRUMPLE.DURATION), 1.0), "Accelerating suction travels from entry to the singularity center")
+    check(CRUMPLE.DURATION < 2.2, "Comedic capture finishes more quickly")
     DirAccess.make_dir_recursive_absolute("res://.development/crumple")
     sound.save_to_wav("res://.development/crumple/tin-can.wav")
     ship._begin_capture(ship.position)
@@ -77,8 +85,9 @@ func _run() -> void:
     game.audio._process(0)
     check(not game.audio.crumple_player.stream_paused, "Mute preserves the sound timeline so unmuting stays synchronized")
     game.audio.toggle_mute()
-    for i in range(32):
+    for i in range(25):
         ship._physics_process(0.05)
+    ship._physics_process(0.025)
     check(ship.capture_active and ship.scale == Vector2.ONE and ship.modulate.a == 1.0 and ship.crumple_progress > 0.99, "Fully crushed wreck remains full-sized and opaque before swallowing")
     for i in range(15):
         ship._physics_process(0.05)

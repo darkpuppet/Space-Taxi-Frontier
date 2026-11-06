@@ -3,10 +3,22 @@ extends RefCounted
 const COLUMNS: int = 12
 const ROWS: int = 4
 ## Seconds from capture entry. The offline WAV generator uses this same score.
-const BUCKLE_TIMES: Array[float] = [0.12, 0.46, 0.80, 1.14, 1.48, 1.82]
+const BUCKLE_TIMES: Array[float] = [0.12, 0.62, 0.98, 1.24, 1.43, 1.57]
 const BUCKLE_DURATION: float = 0.085
-const SWALLOW_TIME: float = 2.10
-const DURATION: float = 2.65
+const SWALLOW_TIME: float = 1.70
+const DURATION: float = 2.10
+const FAST_TIME: float = 0.65
+const FASTEST_TIME: float = 1.35
+
+## Three increasingly frantic speeds: a reluctant drift, a spin, then a gulp.
+static func travel_at(seconds: float) -> float:
+    var t: float = clampf(seconds, 0.0, DURATION)
+    if t < FAST_TIME:
+        return t * 0.16
+    if t < FASTEST_TIME:
+        return FAST_TIME * 0.16 + (t - FAST_TIME) * 0.48
+    var covered: float = FAST_TIME * 0.16 + (FASTEST_TIME - FAST_TIME) * 0.48
+    return covered + (t - FASTEST_TIME) * (1.0 - covered) / (DURATION - FASTEST_TIME)
 
 static func progress_at(seconds: float) -> float:
     var crush: float = 0.0

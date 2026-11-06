@@ -156,7 +156,8 @@ func _run() -> void:
     ship._physics_process(0.02)
     check(ship.smoke_rate() == 0 and ship.damage_smoke.is_empty(), "Black-hole capture suppresses normal damage smoke")
     check(ship.capture_active and game.lives == 3 and not ship.engine_on, "Black-hole entry starts capture even during damage protection")
-    for i in range(12):
+    # Allow the opening slow squeeze to give way to the second buckle.
+    for i in range(16):
         ship._physics_process(0.05)
     check(ship.rotation > 0 and ship.crumple_progress > 0.3 and ship.scale.x > 0.9, "Capture visibly buckles the cab before shrinking it")
     for i in range(45):
