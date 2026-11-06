@@ -156,10 +156,12 @@ func _run() -> void:
     ship._physics_process(0.02)
     check(ship.smoke_rate() == 0 and ship.damage_smoke.is_empty(), "Black-hole capture suppresses normal damage smoke")
     check(ship.capture_active and game.lives == 3 and not ship.engine_on, "Black-hole entry starts capture even during damage protection")
-    for i in range(12):
+    check(ship.position.is_equal_approx(sector.holes[0]["position"]), "Real collision capture locks the taxi to the singularity center immediately")
+    # Allow the opening slow squeeze to give way to the second buckle.
+    for i in range(16):
         ship._physics_process(0.05)
-    check(ship.rotation > 0 and ship.crumple_progress > 0.3 and ship.scale.x > 0.9, "Capture visibly buckles the cab before shrinking it")
-    for i in range(20):
+    check(ship.rotation == 0 and ship.visual_tilt == 0 and ship.crumple_progress > 0.3 and ship.scale.x > 0.9, "Capture visibly buckles the upright cab before shrinking it")
+    for i in range(45):
         ship._physics_process(0.05)
     check(game.lives == 2 and game.screen_state == "life_lost" and paused, "Completed black-hole animation removes exactly one life")
     check(not game.death_quip.is_empty() and game.overlay_copy.text.contains(game.death_quip), "Black-hole deaths also select a random insult")

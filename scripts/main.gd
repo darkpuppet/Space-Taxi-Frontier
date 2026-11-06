@@ -1239,7 +1239,6 @@ func _on_landed(pad_id: int) -> void:
     _refresh_ui()
 
 func _on_black_hole_entered(_center: Vector2) -> void:
-    audio.cue("suction")
     audio.cue("crumple")
     _announce("MY METER'S STILL RUNNING! / Hey! That's a cab, not a soda can!")
 

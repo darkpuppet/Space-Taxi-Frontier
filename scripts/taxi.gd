@@ -45,7 +45,7 @@ var landing_vertical: float = 225.0
 var capture_active: bool = false
 var capture_time: float = 0.0
 var capture_center := Vector2.ZERO
-var capture_offset := Vector2.ZERO
+var capture_hole: Dictionary = {}
 var crumple_progress: float = 0.0
 var capture_texture: Texture2D
 var last_damage_reason: String = "HARD IMPACT"
@@ -163,7 +163,7 @@ func _advance_physics(dt: float) -> void:
     if is_instance_valid(environment):
         var collision: Dictionary = environment.resolve_motion(old_pos, global_position, velocity)
         if collision.get("captured", false):
-            _begin_capture(collision["center"])
+            _begin_capture(collision["center"], collision["hole"])
             return
         global_position = collision["position"]
         velocity = collision["velocity"]
@@ -267,7 +267,7 @@ func support_fraction(pad: Dictionary, craft_x: float) -> float:
 func impact_damage(speed: float) -> float:
     return ceilf(clampf((speed - 45.0) * 0.09, 0.0, 45.0))
 
-func _begin_capture(center: Vector2) -> void:
+func _begin_capture(center: Vector2, hole: Dictionary = {}) -> void:
     if capture_active or input_locked:
         return
     damage_smoke.clear()
@@ -275,6 +275,8 @@ func _begin_capture(center: Vector2) -> void:
     capture_active = true
     capture_time = 0.0
     crumple_progress = 0.0
+    rotation = 0.0
+    visual_tilt = 0.0
     var source: Texture2D
     if damage_stage() == 0:
         SPRITES._ensure()
@@ -285,9 +287,8 @@ func _begin_capture(center: Vector2) -> void:
     capture_texture = ImageTexture.create_from_image(source.get_image())
     exhaust.clear()
     capture_center = center
-    capture_offset = global_position - center
-    if capture_offset.length() < 20.0:
-        capture_offset = Vector2(45, 0)
+    capture_hole = hole
+    global_position = capture_center
     engine_on = false
     thrust_level = 0.0
     velocity = Vector2.ZERO
@@ -296,18 +297,29 @@ func _begin_capture(center: Vector2) -> void:
 
 func _animate_capture(dt: float) -> void:
     capture_time += dt
-    var progress: float = clampf(capture_time / 1.35, 0.0, 1.0)
-    crumple_progress = smoothstep(0.08, 0.82, progress)
-    global_position = capture_center + capture_offset.rotated(progress * TAU * 2.5) * pow(1.0 - progress, 1.5)
-    rotation = progress * TAU * 2.0
-    # Hold the cab large enough to see each buckle before swallowing the wreck.
-    scale = Vector2.ONE * lerpf(1.0, 0.01, smoothstep(0.68, 1.0, progress))
-    modulate.a = 1.0 - progress * 0.5
-    queue_redraw()
+    rotation = 0.0
+    visual_tilt = 0.0
+    # Follow the same singularity as it drifts, including during the final spark.
+    if not capture_hole.is_empty():
+        capture_center = capture_hole["position"]
+    global_position = capture_center
+    var progress: float = clampf(capture_time / CRUMPLE.DURATION, 0.0, 1.0)
     if progress >= 1.0:
-        capture_active = false
-        input_locked = true
-        black_hole_lost.emit()
+        # Finish the little glint before the life-loss overlay pauses the world.
+        scale = Vector2.ONE
+        modulate.a = 1.0
+        queue_redraw()
+        if capture_time >= CRUMPLE.DURATION + CRUMPLE.POP_DURATION:
+            capture_active = false
+            input_locked = true
+            black_hole_lost.emit()
+        return
+    var swallow: float = smoothstep(CRUMPLE.SWALLOW_TIME, CRUMPLE.DURATION, capture_time)
+    crumple_progress = CRUMPLE.progress_at(capture_time)
+    # Hold the cab large enough to see each buckle before swallowing the wreck.
+    scale = Vector2.ONE * (1.0 - swallow)
+    modulate.a = 1.0
+    queue_redraw()
 
 func _take_damage(amount: float, reason: String = "HARD IMPACT") -> void:
     if invulnerable_timer > 0.0 or amount <= 0.0:
@@ -373,6 +385,9 @@ func _update_damage_smoke(dt: float) -> void:
         })
 
 func _draw() -> void:
+    if capture_texture != null and capture_time >= CRUMPLE.DURATION:
+        CRUMPLE.paint_pop(self, capture_time - CRUMPLE.DURATION)
+        return
     for particle in damage_smoke:
         var progress: float = 1.0 - float(particle["life"]) / float(particle["lifetime"])
         var opacity: float = minf(progress * 10, 1) * pow(1.0 - progress, 1.4)

@@ -107,8 +107,9 @@ func _pull(position: Vector2, center: Vector2, strength: float, scale_radius: fl
 func field_at(position: Vector2) -> Vector2:
     var field := Vector2.ZERO
     for hole in holes:
-        var distance: float = position.distance_to(hole["position"])
-        field += _pull(position, hole["position"], 280.0 + float(config["index"]) * 2.0, 140.0) * (1.0 - smoothstep(90.0, 340.0, distance))
+        # Every singularity contributes across the whole playfield. The softened
+        # inverse-square law weakens smoothly with distance without a cutoff.
+        field += _pull(position, hole["position"], 280.0 + float(config["index"]) * 2.0, 140.0)
     # A stock engine can always overcome the bounded vertical component.
     return field.limit_length(210.0)
 
@@ -236,7 +237,7 @@ func resolve_motion(start: Vector2, finish: Vector2, velocity: Vector2, craft_ra
     for hole in holes:
         var hit: Dictionary = _circle_hit(start, finish, hole["position"], 36.0)
         if not hit.is_empty() and float(hit["time"]) <= earliest_time:
-            return {"captured": true, "center": hole["position"]}
+            return {"captured": true, "center": hole["position"], "hole": hole}
     if earliest.is_empty():
         return {"position": finish, "velocity": velocity, "collided": false}
     var normal: Vector2 = earliest["normal"]
