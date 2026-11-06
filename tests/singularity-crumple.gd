@@ -27,6 +27,27 @@ func ink_bounds(pixels: Image) -> Rect2i:
     return bounds
 
 func _run() -> void:
+    var roof: Vector2 = CRUMPLE.point(Vector2(0.5, 0.0), 1.0 / 6.0)
+    check(roof.y > CRUMPLE.point(Vector2(0.5, 0.0), 0.0).y + 8.0, "First crush caves the cabin roof inward")
+    check(CRUMPLE.point(Vector2(1.0, 0.5), 2.0 / 6.0).x < CRUMPLE.point(Vector2(1.0, 0.5), 1.0 / 6.0).x - 12.0, "Second crush folds the nose toward the cabin")
+    check(is_equal_approx(CRUMPLE.point(Vector2(0.0, 0.5), 2.0 / 6.0).x, -37.0), "Front impact leaves the rear for its own crushing stage")
+    check(CRUMPLE.point(Vector2(0.0, 0.5), 3.0 / 6.0).x > -25.0, "Third crush collapses the engine housing from the rear")
+    check(CRUMPLE.point(Vector2(0.5, 1.0), 4.0 / 6.0).y < CRUMPLE.point(Vector2(0.5, 1.0), 3.0 / 6.0).y - 5.0, "Fourth crush buckles the undercarriage upward")
+    # A crushed shell has a few broad dents, not repeating sawtooth pleats.
+    for step in range(1, 7):
+        for y in [0.0, 0.5, 1.0]:
+            var turns: int = 0
+            var previous_slope: float = 0.0
+            var previous: Vector2 = CRUMPLE.point(Vector2(0.0, y), float(step) / 6.0)
+            for column in range(1, CRUMPLE.COLUMNS + 1):
+                var point: Vector2 = CRUMPLE.point(Vector2(float(column) / CRUMPLE.COLUMNS, y), float(step) / 6.0)
+                var slope: float = point.y - previous.y
+                if absf(slope) > 0.1:
+                    if previous_slope * slope < 0.0:
+                        turns += 1
+                    previous_slope = slope
+                previous = point
+            check(turns <= 3, "Body panels form localized dents without regular accordion pleats")
     var game: Node = load("res://Main.tscn").instantiate()
     game.save_file = "user://frontier_crumple_test.cfg"
     root.add_child(game)
@@ -156,7 +177,7 @@ func _run() -> void:
                 check(frame.get_data() != previous_frame, "Every rendered buckle visibly changes the taxi painting")
             previous_frame = frame.get_data()
             if index == 6:
-                check(bounds.size.x < intact.size.x * 0.55 and bounds.size.y > intact.size.y * 0.5, "GPU-rendered cab becomes a folded metal lump rather than a uniformly scaled sprite")
+                check(bounds.size.x < intact.size.x * 0.55 and bounds.size.y > intact.size.y * 0.5, "GPU-rendered cab becomes a compact irregular wreck while retaining its crushed body painting")
             sheet.blit_rect(frame, Rect2i(Vector2i.ZERO, view.size), Vector2i(index * 240, 0))
         sheet.save_png("res://.development/crumple/stages.png")
         view.free()
