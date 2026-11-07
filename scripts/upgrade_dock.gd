@@ -31,5 +31,5 @@ static func draw(canvas: CanvasItem, pad: Dictionary, clock: float, fuel_price: 
     var subtitle: String = "FUEL + REPAIR"
     var subtitle_width: float = font.get_string_size(subtitle, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x
     canvas.draw_string(font, Vector2(center.x - subtitle_width * 0.5, center.y + 79), subtitle, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, VIOLET)
-    var price_sign := Rect2(Vector2(left - 18, center.y - 136), Vector2(144, 144))
+    var price_sign := Rect2(Vector2(left + width - 126, center.y - 136), Vector2(144, 144))
     preload("res://scripts/fuel_sign.gd").draw(canvas, price_sign, fuel_price)
