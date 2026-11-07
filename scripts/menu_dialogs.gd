@@ -190,10 +190,10 @@ func show_workshop() -> void:
     preload("res://scripts/bitmap_art.gd").prepare_props()
     workshop_buttons.clear()
     var items := [
-        ["Engine", 400, 4, "More thrust and steering power.", game.engine_level],
-        ["Stabilizers", 350, 5, "Stronger brakes and more forgiving landings.", game.stabilizer_level],
-        ["Fuel tank", 300, 8, "Adds 40 fuel capacity and 40 fuel.", game.tank_level],
-        ["Hull repair", 75, 7, "Restores up to 40 hull points (maximum 100).", 0]
+        ["Engine", 400, preload("res://assets/sprites/shop-rocket-engine-v1.png"), "More thrust and steering power.", game.engine_level],
+        ["Stabilizers", 350, preload("res://assets/sprites/shop-stabilizers-v1.png"), "Stronger brakes and more forgiving landings.", game.stabilizer_level],
+        ["Fuel tank", 300, preload("res://scripts/bitmap_art.gd").props[8], "Adds 40 fuel capacity and 40 fuel.", game.tank_level],
+        ["Hull repair", 75, preload("res://scripts/bitmap_art.gd").props[7], "Restores up to 40 hull points (maximum 100).", 0]
     ]
     for index in range(items.size()):
         var item: Array = items[index]
@@ -207,7 +207,7 @@ func show_workshop() -> void:
             game._purchase_upgrade(index + 1)
             show_workshop()
             notice.text = game.banner.text)
-        button.icon = preload("res://scripts/bitmap_art.gd").props[item[2]]
+        button.icon = item[2]
         button.expand_icon = true
         button.add_theme_constant_override("icon_max_width", 64)
         button.add_theme_constant_override("h_separation", 18)
