@@ -10,7 +10,8 @@ static func draw(canvas: CanvasItem, rect: Rect2, price: int) -> void:
     canvas.draw_texture_rect(ART, rect, false)
     # Register the digits with the blank window painted into the sign sprite.
     var digit_size: Vector2 = rect.size * Vector2(0.105, 0.165)
-    var origin: Vector2 = rect.position + rect.size * Vector2(0.375, 0.355)
+    var origin: Vector2 = rect.position + rect.size * Vector2(0.43, 0.355)
+    preload("res://scripts/credit_mark.gd").draw(canvas, rect.position + rect.size * Vector2(0.345, 0.4375), digit_size.y, LIT)
     var value: String = "%02d" % clampi(price, 0, 99)
     for index in range(2):
         _digit(canvas, Rect2(origin + Vector2(index * digit_size.x * 1.4, 0), digit_size), value.unicode_at(index) - 48)
