@@ -510,18 +510,19 @@ func _dashboard_tab(row: HBoxContainer, title: String) -> VBoxContainer:
     tab.add_child(contents)
     var plaque := PanelContainer.new()
     plaque.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-    var nameplate := _style(Color("d8bd7b"), Color("735c32"))
-    nameplate.content_margin_left = 10
-    nameplate.content_margin_right = 10
-    nameplate.content_margin_top = 2
-    nameplate.content_margin_bottom = 2
-    nameplate.set_corner_radius_all(2)
-    nameplate.shadow_color = Color("00000065")
-    nameplate.shadow_size = 2
-    nameplate.shadow_offset = Vector2(0, 1)
+    plaque.custom_minimum_size = Vector2(128, 28)
+    var nameplate := StyleBoxTexture.new()
+    nameplate.texture = preload("res://assets/sprites/dashboard-riveted-plaque-v1.tres")
+    nameplate.content_margin_left = 23
+    nameplate.content_margin_right = 23
+    nameplate.content_margin_top = 5
+    nameplate.content_margin_bottom = 5
     plaque.add_theme_stylebox_override("panel", nameplate)
     contents.add_child(plaque)
     var caption := _label(title, 11, Color("302712"))
+    caption.add_theme_color_override("font_shadow_color", Color("eed99f"))
+    caption.add_theme_constant_override("shadow_offset_x", 0)
+    caption.add_theme_constant_override("shadow_offset_y", 1)
     caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     plaque.add_child(caption)
     return contents

@@ -17,6 +17,8 @@ The dashboard fascia is 150 pixels tall with 104-pixel gauges, three counters wi
 
 Instrument artwork lives in `assets/sprites/dashboard-1960s-v1.png`; the yellow fascia is drawn from `assets/sprites/dashboard-yellow-v1.png`. Edit prompts are recorded alongside the atlases. Gauge faces and needles are separate atlas regions so gameplay values remain dynamic. The previous atlases remain available.
 
+The label plaques use `assets/sprites/dashboard-riveted-plaque-v1.png`, with its transparent padding trimmed non-destructively by the companion `.tres` atlas region. Each brass/chrome sprite has two large metal rivet heads and contact shadows. Runtime lettering stays between the rivets with a subtle engraved highlight. Built-in imagegen prompt: "One blank vintage automotive nameplate, wide brushed brass, beveled chrome rim, chamfered corners, two large silver rivets at the ends with recessed rings and contact shadows, empty engraving area, hand-painted game sprite, transparent background, no text or scenery, readable at 110 by 24 pixels."
+
 ## Distance scale
 
 The taxi sprite is 74 world pixels long. We assume a 4.5-meter taxi as a design scale, giving 4.5 / 74 = 0.06081081 meters per world pixel. A kilometer is therefore 16,444.444 world pixels, or 222.222 taxi lengths. This uses world coordinates, so resizing the window does not change mileage.
