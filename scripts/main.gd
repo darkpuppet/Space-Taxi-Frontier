@@ -51,9 +51,6 @@ var help_button: Button
 var fuel_readout: Label
 var health_readout: Label
 var fare_readout: Label
-var fare_state: Label
-var shift_readout: Label
-var odometer: Label
 var distance_meters: float = 0.0
 const DASHBOARD_HEIGHT: float = 150.0
 var fuel_bar: ProgressBar
@@ -359,8 +356,6 @@ func _process(dt: float) -> void:
         fuel_readout.text = "FUEL  %03d / %03d" % [ceili(taxi.fuel), int(taxi.fuel_capacity)]
         health_readout.text = "HEALTH  %d%%" % ceili(taxi.hull)
         telemetry.text = "₡%06d" % credits
-        odometer.text = "%08.3f km" % (floorf(distance_meters) / 1000.0)
-        shift_readout.text = "SECTOR %02d / LIVES %d" % [level + 1, lives]
         status.text = "FUEL %03d   /   HULL %03d" % [ceili(taxi.fuel), ceili(taxi.hull)]
         upgrades.visible = taxi.landed_on == 2 and not game_over
         radar.taxi_position = taxi.position
@@ -407,7 +402,6 @@ func _process(dt: float) -> void:
     if message_timer > 0.0:
         message_timer -= dt
     fare_readout.text = "₡%04d" % (_current_fare() if passenger_onboard else 0)
-    fare_state.text = "TO PAD %02d" % destination_pad if passenger_onboard else "FOR HIRE"
     banner.modulate.a = minf(1.0, maxf(message_timer, 0.0))
     queue_redraw()
 
@@ -512,6 +506,25 @@ func _dashboard_module(row: HBoxContainer) -> VBoxContainer:
     inset.add_child(contents)
     return contents
 
+func _dashboard_tab(row: HBoxContainer, title: String) -> VBoxContainer:
+    var tab := PanelContainer.new()
+    tab.name = title.capitalize() + "Tab"
+    var trim := _style(Color("b9c4bf"), Color("718481"))
+    trim.content_margin_left = 6
+    trim.content_margin_right = 6
+    trim.content_margin_top = 4
+    trim.content_margin_bottom = 4
+    trim.set_corner_radius_all(6)
+    tab.add_theme_stylebox_override("panel", trim)
+    row.add_child(tab)
+    var contents := VBoxContainer.new()
+    contents.add_theme_constant_override("separation", 2)
+    tab.add_child(contents)
+    var caption := _label(title, 12, Color("192f32"))
+    caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    contents.add_child(caption)
+    return contents
+
 func _show_help() -> void:
     if screen_state != "playing":
         return
@@ -561,38 +574,30 @@ func _build_ui() -> void:
     fuel_readout.visible = false
     gauges.add_child(fuel_readout)
     fuel_bar = _dashboard_gauge(Color("73e0d3"))
+    fuel_bar.custom_minimum_size.x = 158
     gauges.add_child(fuel_bar)
     health_readout = _label("HEALTH", 13, Color("ffac78"))
     health_readout.visible = false
     gauges.add_child(health_readout)
     hull_bar = _dashboard_gauge(Color("ffac78"))
+    hull_bar.custom_minimum_size.x = 194
     gauges.add_child(hull_bar)
-    var meter := _dashboard_module(row)
-    meter.custom_minimum_size.x = 128
-    meter.add_child(_label("FARE", 12, Color("d4ddd9")))
+    var money_tabs := HBoxContainer.new()
+    money_tabs.name = "MoneyTabs"
+    money_tabs.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+    money_tabs.position = Vector2(18, -DASHBOARD_HEIGHT - 70)
+    money_tabs.add_theme_constant_override("separation", 0)
+    root.add_child(money_tabs)
+    var meter := _dashboard_tab(money_tabs, "FARE")
     fare_readout = preload("res://scripts/mechanical_counter.gd").new()
     fare_readout.currency = true
     fare_readout.text = "₡0000"
     meter.add_child(fare_readout)
-    fare_state = _label("FOR HIRE", 12, Color("7d9aa9"))
-    meter.add_child(fare_state)
-    var account := _dashboard_module(row)
-    account.custom_minimum_size.x = 164
-    account.add_child(_label("ACCOUNT", 12, Color("d4ddd9")))
+    var account := _dashboard_tab(money_tabs, "BALANCE")
     telemetry = preload("res://scripts/mechanical_counter.gd").new()
     telemetry.currency = true
     telemetry.digits = 8
     account.add_child(telemetry)
-    shift_readout = _label("", 12, Color("7d9aa9"))
-    account.add_child(shift_readout)
-    var distance_panel := _dashboard_module(row)
-    distance_panel.add_child(_label("ODOMETER / km", 12, Color("d4ddd9")))
-    odometer = preload("res://scripts/mechanical_counter.gd").new()
-    odometer.digits = 7
-    odometer.decimal_places = 3
-    odometer.text = "0000.000 km"
-    distance_panel.add_child(odometer)
-    distance_panel.add_child(_label("TOTAL DISTANCE", 11, Color("7d9aa9")))
     var route := _dashboard_module(row)
     route.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
     objective = _label("", 13, Color("73e0d3"))
@@ -880,7 +885,6 @@ func _lose_life(reason: String = "TAXI DESTROYED") -> void:
         loss_copy += "\n\n" + death_quip
     lives = maxi(0, lives - 1)
     telemetry.text = "₡%06d" % credits
-    shift_readout.text = "SECTOR %02d / LIVES %d" % [level + 1, lives]
     game_over = true
     taxi.input_locked = true
     taxi.engine_on = false

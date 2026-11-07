@@ -48,7 +48,7 @@ func _run() -> void:
     game.fuel_bar.value = 70
     check(game.health_readout.text == "HEALTH  65%" and game.hull_bar.value == 65, "Health gauge shows remaining hull")
     check(game.telemetry.text == "₡%06d" % -300, "Account balance displays debt")
-    check(game.fare_readout.text == "₡0000" and game.fare_state.text == "FOR HIRE", "Empty taxi has no active fare")
+    check(game.fare_readout.text == "₡0000", "Empty taxi has no active fare")
     game.taxi.landed_on = int(game.dispatcher.waiting[0]["source"])
     game._board_passenger()
     game.trip_time = 12
@@ -88,7 +88,6 @@ func _run() -> void:
     game._load_game()
     check(is_equal_approx(game.distance_meters, driven_distance), "Distance survives a career save and load")
     game._process(0)
-    check(game.odometer.text == "%08.3f km" % (floorf(driven_distance) / 1000.0), "Odometer displays kilometers with meter precision")
     check(is_equal_approx(game.WORLD.meters(74.0), 4.5), "One taxi length equals 4.5 meters")
     check(is_equal_approx(game.WORLD.meters(game.WORLD.WORLD_PIXELS_PER_KILOMETER), 1000.0), "One kilometer matches calibrated ship scale")
     var legacy := ConfigFile.new()
@@ -114,6 +113,10 @@ func _run() -> void:
     await process_frame
     var bounds: Rect2 = game.dashboard.get_global_rect()
     check(bounds.position.y >= 570 and bounds.size.y <= 150 and bounds.end.y <= 720 and bounds.end.x <= 1280, "Slim dashboard stays within 150 pixels at bottom of viewport")
+    var fare_tab: Rect2 = game.fare_readout.get_parent().get_parent().get_global_rect()
+    var balance_tab: Rect2 = game.telemetry.get_parent().get_parent().get_global_rect()
+    check(fare_tab.end.y <= game.fuel_bar.get_global_rect().position.y and balance_tab.end.y <= game.hull_bar.get_global_rect().position.y, "Fare and balance tabs sit above the gauges")
+    check(is_equal_approx(fare_tab.get_center().x, game.fuel_bar.get_global_rect().get_center().x) and is_equal_approx(balance_tab.get_center().x, game.hull_bar.get_global_rect().get_center().x), "Money tabs align with their gauges")
     check(game.help_button.get_global_rect().end.x <= bounds.end.x, "Help icon fits inside dashboard")
     check(game.radar.visible and not game.controls.visible and not game.mission_panel.visible, "Dash phone stays visible while detailed help remains hidden")
     var phone: Rect2 = game.radar.get_global_rect()
