@@ -78,6 +78,8 @@ func _run() -> void:
     game._unhandled_key_input(key(KEY_1))
     check(game.engine_level == 1 and game.credits == 600, "Service upgrade charges credits and updates the taxi")
     game.taxi.fuel = 0.0
+    for step in range(40):
+        game.taxi._physics_process(1.0 / 60)
     game._unhandled_key_input(key(KEY_T))
     for step in range(2400):
         game.tow_truck.advance(1.0 / 60)

@@ -191,8 +191,8 @@ func _run() -> void:
                 refueling = false
             if trace >= 0 and step % 120 == 0:
                 print("TRACE %.1fs / target %d / fares %d / pos %s / fuel %.1f / hull %.0f" % [elapsed, target_id, game.fares_in_level, ship.position, ship.fuel, ship.hull])
-            if ship.fuel <= 0 and ship.position.y > WORLD.FLOOR - 40:
-                break
+            # An empty taxi must fall, settle, and finish automatic recovery.
+            # Reaching the ground without fuel is no longer a failed flight.
             if step % 180 == 0:
                 await process_frame
         release_controls()

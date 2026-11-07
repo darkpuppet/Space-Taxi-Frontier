@@ -83,8 +83,33 @@ func _run() -> void:
     game.passenger_onboard = true
     game.destination_pad = int(rider["destination"])
     var original_position: Vector2 = ship.position
+    ship.environment = null
+    ship.pads = []
+    ship.invulnerable_timer = 100.0
+    Input.action_press("thrust")
+    Input.action_press("brake")
     ship._physics_process(0.05)
-    check(game.tow_truck.state == "approach" and ship.input_locked, "Running dry during physics automatically summons the truck")
+    check(game.tow_truck.state == "idle" and not ship.input_locked and ship.position.y > original_position.y and ship.velocity.y > 300, "Empty taxi keeps falling under gravity before recovery")
+    check(not ship.engine_on and game.credits == 100, "Empty thrusters cannot fire and tow is not charged while falling")
+    game._request_tow()
+    check(game.tow_truck.state == "idle", "Manual call cannot freeze an empty taxi in midair")
+    Input.action_release("thrust")
+    Input.action_release("brake")
+    game._show_pause()
+    var falling_position: Vector2 = ship.position
+    var rest_time: float = ship.recovery_rest_time
+    game._process(1.0)
+    check(ship.position == falling_position and ship.recovery_rest_time == rest_time and game.tow_truck.state == "idle", "Pause holds the fall and pending recovery")
+    game._resume()
+    for step in range(1800):
+        ship._physics_process(1.0 / 60)
+        if ship.input_locked:
+            break
+    original_position = ship.position
+    ship.environment = game.sector
+    ship.pads = game.pads
+    check(is_equal_approx(ship.position.y, ship.floor_height - 21) and game.tow_truck.pickup == ship.position, "Truck targets the final resting point on the ground")
+    check(game.tow_truck.state == "approach" and ship.input_locked, "Automatic truck arrives only after the cab settles")
     check(game.tow_truck.sprite is Sprite2D and game.tow_truck.sprite.visible and game.tow_truck.sprite.hframes == 4, "Truck uses a visible four-frame sprite sheet")
     check(game.tow_truck.sprite.vframes == 2 and game.tow_truck.sprite.frame_coords.y == 1, "Approach uses the powered-flight sprite animation")
     var sprite_frame: int = game.tow_truck.sprite.frame
@@ -93,7 +118,7 @@ func _run() -> void:
     var clunker: AudioStreamWAV = game.audio.tow_player.stream
     check(clunker.data.size() == 88200 and clunker.loop_mode == AudioStreamWAV.LOOP_FORWARD and clunker.loop_end == 44100, "Clunker is a two-second looping 16-bit engine recording")
     check(clunker.data != game.audio.clunk.data, "Engine rumble is distinct from the impact clunk")
-    check(ship.position == original_position and ship.velocity == Vector2.ZERO, "Rescue secures taxi before it can hit hazards")
+    check(ship.position == original_position and ship.velocity == Vector2.ZERO, "Rescue secures the settled taxi")
     check(game.credits == -200 and game.lives == 3, "Tow costs exactly 300 credits, including debt, without losing a life")
     game._request_automatic_tow()
     game._request_tow()
@@ -166,9 +191,12 @@ func _run() -> void:
     check(ship.landed_on == 2 and ship.position == Vector2(game.pads[1]["x"], float(game.pads[1]["y"]) - 21), "Taxi is set down on the actual fuel platform")
     check(ship.fuel == 45 and ship.hull == 63 and not ship.input_locked and game.last_landed_pad == 2, "Recovery restores controls and starter fuel, preserving hull")
     check(game.passenger_onboard and game.dispatcher.active == rider, "Tow preserves the passenger and their destination")
-    ship.position = Vector2(800, 400)
-    ship.landed_on = -1
+    ship.position = Vector2(game.pads[0]["x"], float(game.pads[0]["y"]) - 21)
+    ship.landed_on = 1
     ship.fuel = 0
+    ship.recovery_rest_time = 0.0
+    for step in range(40):
+        ship._physics_process(1.0 / 60)
     game._process(0)
     check(game.tow_truck.state == "approach" and game.credits == -500, "Empty tanks remain recoverable after the manual allowance is spent")
     finish_tow()

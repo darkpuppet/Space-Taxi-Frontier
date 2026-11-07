@@ -1152,10 +1152,14 @@ func _request_automatic_tow() -> void:
     if taxi.landed_on == 2 and credits > 0:
         fuel_session_complete = false
         return
+    if taxi.recovery_rest_time < taxi.RECOVERY_REST_SECONDS:
+        return
     _request_tow(true)
 
 func _request_tow(automatic: bool = false) -> void:
     if screen_state != "playing" or get_tree().paused or game_over or explosion_active or taxi.hull <= 0 or taxi.capture_active or taxi.input_locked:
+        return
+    if taxi.fuel <= 0.0 and taxi.recovery_rest_time < taxi.RECOVERY_REST_SECONDS:
         return
     if not automatic and not tow_available:
         _announce("BUBBA / Used your call-out already. I'll still come if you run dry!")

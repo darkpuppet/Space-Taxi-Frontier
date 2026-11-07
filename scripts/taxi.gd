@@ -33,6 +33,8 @@ var floor_height: float = 660.0
 var invulnerable_timer: float = 0.0
 var bounce_timer: float = 0.0
 var input_locked: bool = false
+const RECOVERY_REST_SECONDS: float = 0.5
+var recovery_rest_time: float = 0.0
 var visual_time: float = 0.0
 var visual_tilt: float = 0.0
 var facing: float = 1.0
@@ -58,6 +60,10 @@ func _physics_process(dt: float) -> void:
     var start: Vector2 = global_position
     var driving: bool = not input_locked and not capture_active and hull > 0
     _advance_physics(dt)
+    if fuel <= 0.0 and not input_locked and not capture_active and hull > 0 and velocity.length() < 2.0 and start.distance_to(global_position) < 0.1:
+        recovery_rest_time += clampf(dt, 0.0, 0.05)
+    else:
+        recovery_rest_time = 0.0
     if driving and not input_locked and not capture_active and hull > 0:
         distance_travelled.emit(start.distance_to(global_position))
 
@@ -92,7 +98,7 @@ func _advance_physics(dt: float) -> void:
         if input_locked:
             queue_redraw()
             return
-    var axis: float = Input.get_axis("move_left", "move_right")
+    var axis: float = Input.get_axis("move_left", "move_right") if fuel > 0.0 else 0.0
     if absf(axis) > 0.05:
         facing = signf(axis)
     var up: bool = Input.is_action_pressed("thrust")
@@ -235,7 +241,10 @@ func _advance_physics(dt: float) -> void:
     if global_position.y > floor_height - 21.0:
         global_position.y = floor_height - 21.0
         var ground_speed: float = maxf(0.0, velocity.y)
-        velocity = Vector2(velocity.x * 0.65, -maxf(35.0, ground_speed * 0.48))
+        if fuel <= 0.0 and ground_speed < 80.0:
+            velocity = Vector2.ZERO
+        else:
+            velocity = Vector2(velocity.x * 0.65, -maxf(35.0, ground_speed * 0.48))
         if bounce_timer <= 0.0:
             solid_impact.emit(ground_speed)
             _take_damage(impact_damage(ground_speed), "GROUND STRIKE")
