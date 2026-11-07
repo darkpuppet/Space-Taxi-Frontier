@@ -498,20 +498,32 @@ func _dashboard_tab(row: HBoxContainer, title: String) -> VBoxContainer:
     var tab := PanelContainer.new()
     tab.name = title.capitalize() + "Tab"
     tab.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-    var trim := _style(Color("b9c4bf"), Color("718481"))
+    var trim := StyleBoxEmpty.new()
     trim.content_margin_left = 6
     trim.content_margin_right = 6
     trim.content_margin_top = 4
     trim.content_margin_bottom = 4
-    trim.set_corner_radius_all(6)
     tab.add_theme_stylebox_override("panel", trim)
     row.add_child(tab)
     var contents := VBoxContainer.new()
-    contents.add_theme_constant_override("separation", 2)
+    contents.add_theme_constant_override("separation", 4)
     tab.add_child(contents)
-    var caption := _label(title, 12, Color("192f32"))
+    var plaque := PanelContainer.new()
+    plaque.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+    var nameplate := _style(Color("d8bd7b"), Color("735c32"))
+    nameplate.content_margin_left = 10
+    nameplate.content_margin_right = 10
+    nameplate.content_margin_top = 2
+    nameplate.content_margin_bottom = 2
+    nameplate.set_corner_radius_all(2)
+    nameplate.shadow_color = Color("00000065")
+    nameplate.shadow_size = 2
+    nameplate.shadow_offset = Vector2(0, 1)
+    plaque.add_theme_stylebox_override("panel", nameplate)
+    contents.add_child(plaque)
+    var caption := _label(title, 11, Color("302712"))
     caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    contents.add_child(caption)
+    plaque.add_child(caption)
     return contents
 
 func _show_help() -> void:
