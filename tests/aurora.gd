@@ -48,6 +48,37 @@ func _run() -> void:
             var preview_dir: String = argument.trim_prefix("--preview-dir=")
             check(first.save_png(preview_dir.path_join("aurora-before.png")) == OK, "Save initial aurora preview")
             check(second.save_png(preview_dir.path_join("aurora-after.png")) == OK, "Save animated aurora preview")
+    # Exercise the actual repainted sky used by level 3, not just legacy art.
+    backdrop.configure(2, Vector2(1280, 720), 4.0, load("res://assets/backgrounds/layers/level-03/sky-v1.png"))
+    backdrop.material.set_shader_parameter("repainted_sky", true)
+    var waving: Image = await capture()
+    backdrop.material.set_shader_parameter("wave_strength", 0.0)
+    var still_curtains: Image = await capture()
+    backdrop.advance(12.0)
+    var recolored: Image = await capture()
+    var moved_pixels: int = 0
+    var hue_pixels: int = 0
+    var clear_sky_changes: int = 0
+    for y in range(720):
+        for x in range(1280):
+            if waving.get_pixel(x, y) != still_curtains.get_pixel(x, y):
+                moved_pixels += 1
+            var before: Color = still_curtains.get_pixel(x, y)
+            var after: Color = recolored.get_pixel(x, y)
+            if absf(before.h - after.h) > 0.06 and before.v > 0.15 and after.v > 0.15:
+                hue_pixels += 1
+            if x > 1000 and y < 180 and before != after:
+                clear_sky_changes += 1
+    check(moved_pixels > 2000, "Level 3's current sky has visible waving independent of color cycling")
+    check(hue_pixels > 2000, "Aurora changes hue rather than only pulsing brightness")
+    check(clear_sky_changes == 0, "Sky outside the aurora remains stationary and keeps its colors")
+    backdrop.material.set_shader_parameter("wave_strength", 1.0)
+    var waving_later: Image = await capture()
+    for argument in OS.get_cmdline_user_args():
+        if argument.begins_with("--preview-dir="):
+            var preview_dir: String = argument.trim_prefix("--preview-dir=")
+            waving.save_png(preview_dir.path_join("aurora-level-03-before.png"))
+            waving_later.save_png(preview_dir.path_join("aurora-level-03-after.png"))
     backdrop.free()
     var game: Node = load("res://Main.tscn").instantiate()
     game.save_file = PROFILE + ".cfg"

@@ -145,6 +145,7 @@ func configure(data: Dictionary, activity: RefCounted, aurora_sprite: Sprite2D, 
         aurora.reparent(animated_elements, false)
     aurora.z_index = -2
     aurora.material.set_shader_parameter("layer_mask_enabled", true)
+    aurora.material.set_shader_parameter("repainted_sky", not authored_depth_textures.is_empty())
     aurora.material.set_shader_parameter("depth_mask_enabled", depth_mask != null)
     if depth_mask != null:
         aurora.material.set_shader_parameter("depth_mask", depth_mask)
