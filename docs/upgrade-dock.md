@@ -2,6 +2,8 @@
 
 **PAD 02** is the upgrade dock in every sector. It has its own violet armored deck, cyan runway lighting, yellow safety markings, animated guide chevrons, and a hanging **02 / UPGRADES** sign. A violet boxed **UP** marker identifies it on radar. The existing fuel pump and workshop equipment remain on the dock.
 
+Landing displays a small **PRESS ENTER TO OPEN UPGRADE SHOP** prompt (or **PRESS X** with a controller). Opening the shop pauses flight and fueling. Each selectable row shows the upgrade name, price, item sprite, current/next tier and a short description. Maxed upgrades, full hull and insufficient credits are identified in the row. Sprites reuse the existing prop atlas. Use arrow keys, rebound flight direction keys, D-pad or stick to select; Enter/Space or controller A purchases. Selection stays on the purchased item while the balance and status refresh. Escape/B returns to Pause. The existing 1–4 purchase shortcuts remain available while docked.
+
 Land there to refuel and access the existing upgrade keys:
 
 | Key | Purchase | Cost |

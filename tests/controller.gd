@@ -101,9 +101,35 @@ func _run() -> void:
     check(game.taxi.landed_on == 2 and game.taxi.fuel == 55, "Tow delivers the taxi before the workshop can open")
     await tap(JOY_BUTTON_X)
     check(paused and game.menu_dialogs.tab == "Workshop", "X at PAD 02 opens the controller workshop")
+    check(game.upgrades.text.contains("PRESS X"), "Fuel-pad prompt names the controller shop button")
+    for shop_button in game.menu_dialogs.workshop_buttons:
+        check(shop_button.icon != null and shop_button.text.contains("₡") and shop_button.text.contains("\n"), "Every upgrade has an item sprite, price and description")
+    if OS.get_cmdline_user_args().has("--shop-preview"):
+        await process_frame
+        await RenderingServer.frame_post_draw
+        root.get_texture().get_image().save_png("res://.development/upgrade-shop.png")
     await tap(JOY_BUTTON_A)
     check(game.engine_level == 1 and game.credits == 300, "A purchases the focused workshop upgrade exactly once")
+    await tap(JOY_BUTTON_DPAD_RIGHT)
+    await tap(JOY_BUTTON_DPAD_DOWN)
+    check(game.menu_dialogs.workshop_selection == 2, "Direction controls select the tank upgrade")
+    await tap(JOY_BUTTON_A)
+    check(game.tank_level == 1 and game.credits == 0 and game.taxi.fuel_capacity == 180, "Action purchases the selected tank at its displayed price")
+    check(game.menu_dialogs.workshop_selection == 2 and root.gui_get_focus_owner() == game.menu_dialogs.workshop_buttons[2], "Purchase preserves the selected upgrade")
+    await tap(JOY_BUTTON_A)
+    check(game.tank_level == 1 and game.credits == 0, "Insufficient funds cannot purchase another upgrade")
     await tap(JOY_BUTTON_B)
+    game._resume()
+    var shop_key := InputEventKey.new()
+    shop_key.pressed = true
+    shop_key.physical_keycode = KEY_ENTER
+    game._input(shop_key)
+    game._unhandled_key_input(shop_key)
+    check(paused and game.menu_dialogs.visible and game.upgrades.text.contains("ENTER"), "Keyboard Enter opens the shop and updates the landing prompt")
+    shop_key.physical_keycode = game.preferences.keys["brake"]
+    game.menu_dialogs._input(shop_key)
+    check(game.menu_dialogs.workshop_selection == 1, "Keyboard flight directions navigate the shop")
+    game.menu_dialogs.close()
     game.retry_button.grab_focus()
     await tap(JOY_BUTTON_A)
     check(game.menu_dialogs.tab == "Retry" and game.lives == 3, "Controller retry asks for confirmation before using a life")

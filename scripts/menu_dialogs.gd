@@ -11,6 +11,8 @@ var score_name: LineEdit
 var replace_score_name: bool = false
 var score_board: Control
 var panel: PanelContainer
+var workshop_selection: int = 0
+var workshop_buttons: Array[Button] = []
 
 func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
@@ -178,16 +180,54 @@ func _delete_name() -> void:
     replace_score_name = false
 
 func show_workshop() -> void:
+    if not is_instance_valid(game.taxi) or game.taxi.landed_on != 2 or game.game_over:
+        return
+    if tab != "Workshop" or not visible:
+        workshop_selection = 0
     tab = "Workshop"
     _clear("UPGRADE WORKSHOP")
     content.add_child(game._label("BALANCE ₡%d / HULL %d / FUEL %d" % [game.credits, ceili(game.taxi.hull), ceili(game.taxi.fuel)], 20, Color("73e0d3")))
-    for item in [["Engine / ₡400", 1], ["Stabilizers / ₡350", 2], ["Fuel tank / ₡300", 3], ["Repair 40 hull / ₡75", 4]]:
-        content.add_child(_button(item[0], func() -> void:
-            game._purchase_upgrade(item[1])
+    preload("res://scripts/bitmap_art.gd").prepare_props()
+    workshop_buttons.clear()
+    var items := [
+        ["Engine", 400, 4, "More thrust and steering power.", game.engine_level],
+        ["Stabilizers", 350, 5, "Stronger brakes and more forgiving landings.", game.stabilizer_level],
+        ["Fuel tank", 300, 8, "Adds 40 fuel capacity and 40 fuel.", game.tank_level],
+        ["Hull repair", 75, 7, "Restores up to 40 hull points (maximum 100).", 0]
+    ]
+    for index in range(items.size()):
+        var item: Array = items[index]
+        var status: String = "Mk %d → %d" % [item[4], mini(4, item[4] + 1)] if index < 3 else "HULL %d / 100" % ceili(game.taxi.hull)
+        if (index < 3 and item[4] >= 4) or (index == 3 and game.taxi.hull >= 100):
+            status = "MAXED" if index < 3 else "HULL FULL"
+        elif game.credits < item[1]:
+            status += " / NEED ₡%d MORE" % (item[1] - game.credits)
+        var button := _button("%s / ₡%d / %s\n%s" % [item[0], item[1], status, item[3]], func() -> void:
+            workshop_selection = index
+            game._purchase_upgrade(index + 1)
             show_workshop()
-            notice.text = game.banner.text))
-    notice.text = "Choose an upgrade with D-pad / stick and A. B returns to Pause."
-    content.get_child(1).grab_focus()
+            notice.text = game.banner.text)
+        button.icon = preload("res://scripts/bitmap_art.gd").props[item[2]]
+        button.expand_icon = true
+        button.add_theme_constant_override("icon_max_width", 64)
+        button.add_theme_constant_override("h_separation", 18)
+        button.custom_minimum_size = Vector2(660, 80)
+        button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+        button.add_theme_font_size_override("font_size", 16)
+        button.focus_entered.connect(func() -> void: workshop_selection = index)
+        content.add_child(button)
+        workshop_buttons.append(button)
+    for index in range(workshop_buttons.size()):
+        var button: Button = workshop_buttons[index]
+        var previous: NodePath = button.get_path_to(workshop_buttons[posmod(index - 1, 4)])
+        var next: NodePath = button.get_path_to(workshop_buttons[(index + 1) % 4])
+        button.focus_neighbor_top = previous
+        button.focus_neighbor_left = previous
+        button.focus_neighbor_bottom = next
+        button.focus_neighbor_right = next
+    notice.text = "DIRECTIONS select / A or ENTER buy / B or ESC back"
+    back_button.text = "BACK / ESC / B"
+    workshop_buttons[workshop_selection].grab_focus()
 
 func show_retry() -> void:
     tab = "Retry"
@@ -221,6 +261,18 @@ func show_scores() -> void:
     back_button.grab_focus()
 
 func _input(event: InputEvent) -> void:
+    if visible and tab == "Workshop" and event is InputEventKey and event.pressed and not event.echo:
+        # Honor the pilot's rebound flight directions as well as UI arrows and D-pad.
+        var direction: int = 0
+        if event.physical_keycode in [game.preferences.keys["move_left"], game.preferences.keys["thrust"]]:
+            direction = -1
+        elif event.physical_keycode in [game.preferences.keys["move_right"], game.preferences.keys["brake"]]:
+            direction = 1
+        if direction != 0:
+            workshop_selection = posmod(workshop_selection + direction, 4)
+            workshop_buttons[workshop_selection].grab_focus()
+            get_viewport().set_input_as_handled()
+            return
     if not visible or binding.is_empty() or not event is InputEventKey or not event.pressed or event.echo:
         return
     get_viewport().set_input_as_handled()

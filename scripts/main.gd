@@ -637,8 +637,8 @@ func _build_ui() -> void:
     radar.mouse_filter = Control.MOUSE_FILTER_IGNORE
     radar.visible = false
     root.add_child(radar)
-    upgrades = _label("UPGRADE DOCK / 1 Engine ₡400 | 2 Stabilizers ₡350
-3 Tank ₡300 | 4 Repair ₡75", 14, Color("73e0d3"))
+    upgrades = _label("FUEL PAD / PRESS ENTER TO OPEN UPGRADE SHOP", 16, Color("73e0d3"))
+    upgrades.add_theme_stylebox_override("normal", _style(Color("0c1a29"), Color("73e0d3")))
     upgrades.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
     upgrades.position = Vector2(-700, -220)
     upgrades.visible = false
@@ -1217,7 +1217,7 @@ func _on_landed(pad_id: int) -> void:
         fuel_meter = 0.0
         fuel_session_complete = taxi.fuel >= taxi.fuel_capacity
         taxi.fuel_service_active = credits > 0 or fuel_session_complete
-        _announce("FUEL / ₡%d per unit. Park to fill; take off to stop. 1-4 for upgrades." % fuel_price)
+        _announce("FUEL / ₡%d per unit. Park to fill. %s opens the upgrade shop." % [fuel_price, "X" if controller_active else "ENTER"])
     if mission_done:
         return
     if passenger_onboard and pad_id == destination_pad:
@@ -1315,7 +1315,7 @@ func _update_control_hints() -> void:
         overlay_copy.text = overlay_copy.text.replace(previous, current)
         resume_button.text = resume_button.text.replace("/ ENTER", "/ A") if controller_active else resume_button.text.replace("/ A", "/ ENTER")
     if is_instance_valid(upgrades):
-        upgrades.text = "UPGRADE DOCK / X OPENS WORKSHOP" if controller_active else "UPGRADE DOCK / 1 Engine ₡400 | 2 Stabilizers ₡350\n3 Tank ₡300 | 4 Repair ₡75"
+        upgrades.text = "FUEL PAD / PRESS %s TO OPEN UPGRADE SHOP" % ("X" if controller_active else "ENTER")
 
 func _unhandled_key_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F1:
@@ -1350,6 +1350,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
     if event.physical_keycode == KEY_R:
         _show_pause()
         menu_dialogs.show_retry()
+    elif event.physical_keycode == KEY_ENTER and taxi.landed_on == 2 and not game_over:
+        _show_pause()
+        menu_dialogs.show_workshop()
+        get_viewport().set_input_as_handled()
     elif taxi.landed_on == 2 and not game_over and event.physical_keycode in [KEY_1, KEY_2, KEY_3, KEY_4]:
         _purchase_upgrade(int(event.physical_keycode) - KEY_1 + 1)
 
