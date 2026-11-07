@@ -11,6 +11,7 @@ $checks = @(
     @{ Name = 'singularity-crumple'; Args = '--path . --rendering-driver opengl3 --audio-driver Dummy --position -32000,-32000 --script tests/singularity-crumple.gd --quit-after 3000' },
     @{ Name = 'background-traffic'; Args = '--path . --rendering-driver opengl3 --audio-driver Dummy --position -32000,-32000 --script tests/background-traffic.gd --quit-after 3000' },
     @{ Name = 'aurora'; Args = '--path . --rendering-driver opengl3 --audio-driver Dummy --position -32000,-32000 --script tests/aurora.gd --quit-after 3000' },
+    @{ Name = 'rain'; Args = '--headless --path . --script tests/rain.gd --quit-after 3000' },
     @{ Name = 'tombstone-dissolve'; Args = '--path . --rendering-driver opengl3 --audio-driver Dummy --position -32000,-32000 --script tests/tombstone-dissolve.gd --quit-after 3000' },
     @{ Name = 'dispatch-radio'; Args = '--headless --path . --script tests/dispatch-radio.gd --quit-after 3000' },
     @{ Name = 'abductions'; Args = '--headless --path . --script tests/abductions.gd --quit-after 3000' },

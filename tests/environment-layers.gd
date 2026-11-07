@@ -85,7 +85,7 @@ func _run() -> void:
         game.sector.set_physics_process(false)
         game._process(0)
         layers = game.environment_layers
-        check(layers.get_parent() == game.sector and layers.get_child_count() == 6, "Each sector owns exactly six scenic layers without stacking")
+        check(layers.get_parent() == game.sector and layers.get_child_count() == (8 if index == 5 else 6), "Each sector owns six scenic layers plus only Level 6's two rain layers without stacking")
         check(layers.planet_scenery.texture != null and layers.buildings.texture != null, "Every sector supplies its source artwork")
         check(layers.depth_mask == null and layers.authored_depth_textures.size() == 5, "Every sector owns five repainted plates without masks")
         check(layers.depth_planes.size() == 5, "Five independent depth planes sit above the slowly moving sky")

@@ -59,6 +59,7 @@ var sky_source: Texture2D
 var sky_crop: Rect2
 var animated_texture: Texture2D
 var layer_textures: Dictionary = {}
+var rain_layers: Array[Node2D] = []
 
 func _ready() -> void:
     static_sky = Node2D.new()
@@ -129,6 +130,17 @@ func configure(data: Dictionary, activity: RefCounted, aurora_sprite: Sprite2D, 
         _configure_depth_planes(source)
     else:
         _configure_legacy_planes(source)
+    if level == 5 and rain_layers.is_empty():
+        for foreground in [false, true]:
+            var rain: Node2D = preload("res://scripts/rain_layer.gd").new()
+            rain.name = "ForegroundRain" if foreground else "MiddleRain"
+            # Middle rain sits behind near scenery; foreground rain crosses the front plate.
+            rain.z_index = -19 if foreground else -29
+            add_child(rain)
+            rain.configure(Vector2(WORLD.WIDTH, WORLD.HEIGHT), foreground)
+            rain_layers.append(rain)
+    for rain in rain_layers:
+        rain.visible = level == 5
     if aurora.get_parent() != animated_elements:
         aurora.reparent(animated_elements, false)
     aurora.z_index = -2
@@ -257,6 +269,8 @@ func _process(_dt: float) -> void:
         return
     var center: Vector2 = camera.get_screen_center_position()
     var view_size: Vector2 = get_viewport_rect().size / camera.zoom
+    for index in range(rain_layers.size()):
+        rain_layers[index].position = parallax_offset(center, Vector2.ONE if index == 1 else middle_planet_scroll_scale)
     static_sky.position = center - view_size * 0.5
     static_sky.scale = Vector2.ONE / camera.zoom
     if parallax_enabled:
