@@ -51,6 +51,7 @@ var help_button: Button
 var fuel_readout: Label
 var health_readout: Label
 var fare_readout: Label
+var odometer: Label
 var distance_meters: float = 0.0
 const DASHBOARD_HEIGHT: float = 150.0
 var fuel_bar: ProgressBar
@@ -356,6 +357,7 @@ func _process(dt: float) -> void:
         fuel_readout.text = "FUEL  %03d / %03d" % [ceili(taxi.fuel), int(taxi.fuel_capacity)]
         health_readout.text = "HEALTH  %d%%" % ceili(taxi.hull)
         telemetry.text = "₡%06d" % credits
+        odometer.text = "%08.3f km" % (floorf(distance_meters) / 1000.0)
         status.text = "FUEL %03d   /   HULL %03d" % [ceili(taxi.fuel), ceili(taxi.hull)]
         upgrades.visible = taxi.landed_on == 2 and not game_over
         radar.taxi_position = taxi.position
@@ -492,23 +494,10 @@ func _dashboard_gauge(color: Color) -> ProgressBar:
     gauge.custom_minimum_size = Vector2(104, 104)
     return gauge
 
-func _dashboard_module(row: HBoxContainer) -> VBoxContainer:
-    var inset := PanelContainer.new()
-    var trim := _style(Color("101416"), Color("899597"))
-    trim.set_corner_radius_all(3)
-    trim.content_margin_left = 6
-    trim.content_margin_right = 6
-    trim.content_margin_top = 6
-    trim.content_margin_bottom = 6
-    inset.add_theme_stylebox_override("panel", trim)
-    row.add_child(inset)
-    var contents := VBoxContainer.new()
-    inset.add_child(contents)
-    return contents
-
 func _dashboard_tab(row: HBoxContainer, title: String) -> VBoxContainer:
     var tab := PanelContainer.new()
     tab.name = title.capitalize() + "Tab"
+    tab.size_flags_vertical = Control.SIZE_SHRINK_CENTER
     var trim := _style(Color("b9c4bf"), Color("718481"))
     trim.content_margin_left = 6
     trim.content_margin_right = 6
@@ -574,38 +563,40 @@ func _build_ui() -> void:
     fuel_readout.visible = false
     gauges.add_child(fuel_readout)
     fuel_bar = _dashboard_gauge(Color("73e0d3"))
-    fuel_bar.custom_minimum_size.x = 158
     gauges.add_child(fuel_bar)
     health_readout = _label("HEALTH", 13, Color("ffac78"))
     health_readout.visible = false
     gauges.add_child(health_readout)
     hull_bar = _dashboard_gauge(Color("ffac78"))
-    hull_bar.custom_minimum_size.x = 194
     gauges.add_child(hull_bar)
-    var money_tabs := HBoxContainer.new()
-    money_tabs.name = "MoneyTabs"
-    money_tabs.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
-    money_tabs.position = Vector2(18, -DASHBOARD_HEIGHT - 70)
-    money_tabs.add_theme_constant_override("separation", 0)
-    root.add_child(money_tabs)
-    var meter := _dashboard_tab(money_tabs, "FARE")
+    var meter := _dashboard_tab(row, "FARE")
     fare_readout = preload("res://scripts/mechanical_counter.gd").new()
     fare_readout.currency = true
     fare_readout.text = "₡0000"
     meter.add_child(fare_readout)
-    var account := _dashboard_tab(money_tabs, "BALANCE")
+    var account := _dashboard_tab(row, "BALANCE")
     telemetry = preload("res://scripts/mechanical_counter.gd").new()
     telemetry.currency = true
     telemetry.digits = 8
     account.add_child(telemetry)
-    var route := _dashboard_module(row)
-    route.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    var mileage := _dashboard_tab(row, "ODOMETER / km")
+    odometer = preload("res://scripts/mechanical_counter.gd").new()
+    odometer.digits = 7
+    odometer.decimal_places = 3
+    odometer.text = "0000.000 km"
+    mileage.add_child(odometer)
+    # Dispatch remains on the phone and in the handbook, without a dash box.
     objective = _label("", 13, Color("73e0d3"))
     objective.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    route.add_child(objective)
+    objective.visible = false
+    root.add_child(objective)
     navigation = _label("", 12, Color("a6cedb"))
     navigation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    route.add_child(navigation)
+    navigation.visible = false
+    root.add_child(navigation)
+    var instrument_space := Control.new()
+    instrument_space.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    row.add_child(instrument_space)
     help_button = Button.new()
     help_button.text = "?"
     help_button.tooltip_text = "Controls and shift information (F1)"
