@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="3100" height="1740" viewBox="0 0 3100 1740">
+<title>Level 05 - FIRST CONTACT layout</title>
+<g id="page" inkscape:groupmode="layer" inkscape:label="Page and legend">
+<rect width="3100" height="1740" fill="white"/>
+<text x="80.0" y="65.0" font-family="sans-serif" font-size="36" fill="#263445">LEVEL 05 / FIRST CONTACT</text>
+<text x="80.0" y="105.0" font-family="sans-serif" font-size="23" fill="#263445">2400 x 1440 world units | origin at upper left | X right, Y down | 100-unit grid</text>
+</g>
+<g id="world" transform="translate(80 160)">
+<defs><clipPath id="world-clip"><rect width="2400" height="1440"/></clipPath></defs>
+<g id="grid" inkscape:groupmode="layer" inkscape:label="Grid and world boundary">
+<path d="M 0 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<text x="-12.0" y="-16.0" font-family="sans-serif" font-size="19" fill="#263445">0</text>
+<path d="M 100 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<path d="M 200 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<text x="188.0" y="-16.0" font-family="sans-serif" font-size="19" fill="#263445">200</text>
+<path d="M 300 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<path d="M 400 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<text x="388.0" y="-16.0" font-family="sans-serif" font-size="19" fill="#263445">400</text>
+<path d="M 500 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<path d="M 600 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<text x="588.0" y="-16.0" font-family="sans-serif" font-size="19" fill="#263445">600</text>
+<path d="M 700 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<path d="M 800 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<text x="788.0" y="-16.0" font-family="sans-serif" font-size="19" fill="#263445">800</text>
+<path d="M 900 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<path d="M 1000 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<text x="988.0" y="-16.0" font-family="sans-serif" font-size="19" fill="#263445">1000</text>
+<path d="M 1100 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<path d="M 1200 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<text x="1188.0" y="-16.0" font-family="sans-serif" font-size="19" fill="#263445">1200</text>
+<path d="M 1300 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<path d="M 1400 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<text x="1388.0" y="-16.0" font-family="sans-serif" font-size="19" fill="#263445">1400</text>
+<path d="M 1500 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<path d="M 1600 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<text x="1588.0" y="-16.0" font-family="sans-serif" font-size="19" fill="#263445">1600</text>
+<path d="M 1700 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<path d="M 1800 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<text x="1788.0" y="-16.0" font-family="sans-serif" font-size="19" fill="#263445">1800</text>
+<path d="M 1900 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<path d="M 2000 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<text x="1988.0" y="-16.0" font-family="sans-serif" font-size="19" fill="#263445">2000</text>
+<path d="M 2100 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<path d="M 2200 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<text x="2188.0" y="-16.0" font-family="sans-serif" font-size="19" fill="#263445">2200</text>
+<path d="M 2300 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<path d="M 2400 0 V 1440" stroke="#e3e7ec" fill="none"/>
+<text x="2388.0" y="-16.0" font-family="sans-serif" font-size="19" fill="#263445">2400</text>
+<path d="M 0 0 H 2400" stroke="#e3e7ec" fill="none"/>
+<text x="-62.0" y="7.0" font-family="sans-serif" font-size="19" fill="#263445">0</text>
+<path d="M 0 100 H 2400" stroke="#e3e7ec" fill="none"/>
+<path d="M 0 200 H 2400" stroke="#e3e7ec" fill="none"/>
+<text x="-62.0" y="207.0" font-family="sans-serif" font-size="19" fill="#263445">200</text>
+<path d="M 0 300 H 2400" stroke="#e3e7ec" fill="none"/>
+<path d="M 0 400 H 2400" stroke="#e3e7ec" fill="none"/>
+<text x="-62.0" y="407.0" font-family="sans-serif" font-size="19" fill="#263445">400</text>
+<path d="M 0 500 H 2400" stroke="#e3e7ec" fill="none"/>
+<path d="M 0 600 H 2400" stroke="#e3e7ec" fill="none"/>
+<text x="-62.0" y="607.0" font-family="sans-serif" font-size="19" fill="#263445">600</text>
+<path d="M 0 700 H 2400" stroke="#e3e7ec" fill="none"/>
+<path d="M 0 800 H 2400" stroke="#e3e7ec" fill="none"/>
+<text x="-62.0" y="807.0" font-family="sans-serif" font-size="19" fill="#263445">800</text>
+<path d="M 0 900 H 2400" stroke="#e3e7ec" fill="none"/>
+<path d="M 0 1000 H 2400" stroke="#e3e7ec" fill="none"/>
+<text x="-62.0" y="1007.0" font-family="sans-serif" font-size="19" fill="#263445">1000</text>
+<path d="M 0 1100 H 2400" stroke="#e3e7ec" fill="none"/>
+<path d="M 0 1200 H 2400" stroke="#e3e7ec" fill="none"/>
+<text x="-62.0" y="1207.0" font-family="sans-serif" font-size="19" fill="#263445">1200</text>
+<path d="M 0 1300 H 2400" stroke="#e3e7ec" fill="none"/>
+<path d="M 0 1400 H 2400" stroke="#e3e7ec" fill="none"/>
+<text x="-62.0" y="1407.0" font-family="sans-serif" font-size="19" fill="#263445">1400</text>
+<rect width="2400" height="1440" fill="none" stroke="#536174" stroke-width="3"/></g>
+<g id="movement" inkscape:groupmode="layer" inkscape:label="Movement guides - center ranges, not collision extents">
+<g clip-path="url(#world-clip)">
+<rect id="scout-1-range" x="385.0" y="295.0" width="290.0" height="110.0" fill="none" stroke="#b74135" stroke-width="2" stroke-dasharray="10 8"/>
+<rect id="gate-1-range" x="1031.0" y="590.0" width="18.0" height="160.0" fill="none" stroke="#ad6c13" stroke-width="2" stroke-dasharray="10 8"/>
+</g></g>
+<g id="platforms" inkscape:groupmode="layer" inkscape:label="Platforms - move each labelled group">
+<g id="P1" inkscape:label="P1 platform; width 220; []" transform="translate(240.0 1290.0)"><title>P1 platform; width 220; []</title>
+<rect x="-110.0" y="0" width="220.0" height="27" fill="#21766d" fill-opacity="0.18" stroke="#21766d" stroke-width="2"/><path d="M -110.0 0 H 110.0" stroke="#21766d" stroke-width="5"/>
+<text x="-110.0" y="-40.0" font-family="sans-serif" font-size="25" fill="#21766d">P1</text>
+<text x="-110.0" y="-12.0" font-family="sans-serif" font-size="20" fill="#263445">(240, 1290)  w=220</text>
+</g>
+<g id="P2" inkscape:label="P2 platform; width 240; [&quot;fuel&quot;, &quot;repair&quot;, &quot;upgrades&quot;]" transform="translate(800.0 730.0)"><title>P2 platform; width 240; [&quot;fuel&quot;, &quot;repair&quot;, &quot;upgrades&quot;]</title>
+<rect x="-120.0" y="0" width="240.0" height="27" fill="#7451a8" fill-opacity="0.18" stroke="#7451a8" stroke-width="2"/><path d="M -120.0 0 H 120.0" stroke="#7451a8" stroke-width="5"/>
+<text x="-120.0" y="-40.0" font-family="sans-serif" font-size="25" fill="#7451a8">P2 / SERVICES</text>
+<text x="-120.0" y="-12.0" font-family="sans-serif" font-size="20" fill="#263445">(800, 730)  w=240</text>
+</g>
+<g id="P3" inkscape:label="P3 platform; width 200; []" transform="translate(1190.0 1080.0)"><title>P3 platform; width 200; []</title>
+<rect x="-100.0" y="0" width="200.0" height="27" fill="#21766d" fill-opacity="0.18" stroke="#21766d" stroke-width="2"/><path d="M -100.0 0 H 100.0" stroke="#21766d" stroke-width="5"/>
+<text x="-100.0" y="-40.0" font-family="sans-serif" font-size="25" fill="#21766d">P3</text>
+<text x="-100.0" y="-12.0" font-family="sans-serif" font-size="20" fill="#263445">(1190, 1080)  w=200</text>
+</g>
+<g id="P4" inkscape:label="P4 platform; width 180; []" transform="translate(1840.0 370.0)"><title>P4 platform; width 180; []</title>
+<rect x="-90.0" y="0" width="180.0" height="27" fill="#21766d" fill-opacity="0.18" stroke="#21766d" stroke-width="2"/><path d="M -90.0 0 H 90.0" stroke="#21766d" stroke-width="5"/>
+<text x="-90.0" y="-40.0" font-family="sans-serif" font-size="25" fill="#21766d">P4</text>
+<text x="-90.0" y="-12.0" font-family="sans-serif" font-size="20" fill="#263445">(1840, 370)  w=180</text>
+</g>
+<g id="P5" inkscape:label="P5 platform; width 210; []" transform="translate(2200.0 930.0)"><title>P5 platform; width 210; []</title>
+<rect x="-105.0" y="0" width="210.0" height="27" fill="#21766d" fill-opacity="0.18" stroke="#21766d" stroke-width="2"/><path d="M -105.0 0 H 105.0" stroke="#21766d" stroke-width="5"/>
+<text x="-105.0" y="-40.0" font-family="sans-serif" font-size="25" fill="#21766d">P5</text>
+<text x="-105.0" y="-12.0" font-family="sans-serif" font-size="20" fill="#263445">(2200, 930)  w=210</text>
+</g>
+</g>
+<g id="asteroids" inkscape:groupmode="layer" inkscape:label="Asteroids">
+<g id="A1" inkscape:label="A1 asteroids" transform="translate(970.0 540.0)"><title>A1 asteroids</title>
+<circle r="28" fill="white" stroke="#ad6c13" stroke-width="3"/>
+<text x="32.0" y="-18.0" font-family="sans-serif" font-size="24" fill="#ad6c13">A1</text>
+</g>
+</g>
+<g id="gates" inkscape:groupmode="layer" inkscape:label="Gates">
+<g id="G1" inkscape:label="G1 gates" transform="translate(1040.0 670.0)"><title>G1 gates</title>
+<rect x="-9" y="-48" width="18" height="96" fill="#f4e0be" stroke="#ad6c13" stroke-width="3"/>
+<text x="32.0" y="-18.0" font-family="sans-serif" font-size="24" fill="#ad6c13">G1</text>
+</g>
+</g>
+<g id="mines" inkscape:groupmode="layer" inkscape:label="Mines">
+</g>
+<g id="beams" inkscape:groupmode="layer" inkscape:label="Beams">
+</g>
+<g id="holes" inkscape:groupmode="layer" inkscape:label="Holes">
+</g>
+<g id="aliens" inkscape:groupmode="layer" inkscape:label="Aliens">
+<g id="S1" inkscape:label="S1 aliens" transform="translate(530.0 350.0)"><title>S1 aliens</title>
+<circle r="24" fill="white" stroke="#b74135" stroke-width="3"/>
+<text x="32.0" y="-18.0" font-family="sans-serif" font-size="24" fill="#b74135">S1</text>
+</g>
+</g>
+<g id="drones" inkscape:groupmode="layer" inkscape:label="Drones">
+</g>
+<g id="meteors" inkscape:groupmode="layer" inkscape:label="Meteors">
+</g>
+</g>
+<g id="notes" inkscape:groupmode="layer" inkscape:label="Legend, object coordinates and notes">
+<text x="2540.0" y="185.0" font-family="sans-serif" font-size="22" fill="#263445">KEY</text>
+<text x="2540.0" y="219.0" font-family="sans-serif" font-size="22" fill="#263445">P  Platform (top = landing height)</text>
+<text x="2540.0" y="253.0" font-family="sans-serif" font-size="22" fill="#263445">S  Scout     D  Hunter drone</text>
+<text x="2540.0" y="287.0" font-family="sans-serif" font-size="22" fill="#263445">A  Asteroid  G  Moving gate</text>
+<text x="2540.0" y="321.0" font-family="sans-serif" font-size="22" fill="#263445">N  Mine      B  Electric beam</text>
+<text x="2540.0" y="355.0" font-family="sans-serif" font-size="22" fill="#263445">W  Gravity well   M  Meteor</text>
+<text x="2540.0" y="389.0" font-family="sans-serif" font-size="22" fill="#263445"></text>
+<text x="2540.0" y="423.0" font-family="sans-serif" font-size="22" fill="#263445">MOVEMENT GUIDES</text>
+<text x="2540.0" y="457.0" font-family="sans-serif" font-size="22" fill="#263445">Dashed boxes: center ranges.</text>
+<text x="2540.0" y="491.0" font-family="sans-serif" font-size="22" fill="#263445">Drones: nominal patrol only;</text>
+<text x="2540.0" y="525.0" font-family="sans-serif" font-size="22" fill="#263445">can pursue and avoid docks/exit.</text>
+<text x="2540.0" y="559.0" font-family="sans-serif" font-size="22" fill="#263445">Meteor trace: first 10 seconds;</text>
+<text x="2540.0" y="593.0" font-family="sans-serif" font-size="22" fill="#263445">wraps at flight-lane edges.</text>
+<text x="2540.0" y="627.0" font-family="sans-serif" font-size="22" fill="#263445">Wells pull across the whole world.</text>
+<text x="2540.0" y="661.0" font-family="sans-serif" font-size="22" fill="#263445">Beam: on 3.0-4.8s of each 6s.</text>
+<text x="2540.0" y="695.0" font-family="sans-serif" font-size="22" fill="#263445"></text>
+<text x="2540.0" y="729.0" font-family="sans-serif" font-size="22" fill="#263445">INITIAL CENTERS (X, Y)</text>
+<text x="2540.0" y="763.0" font-family="sans-serif" font-size="22" fill="#263445">A1   (970, 540)</text>
+<text x="2540.0" y="793.0" font-family="sans-serif" font-size="22" fill="#263445">G1   (1040, 670)</text>
+<text x="2540.0" y="823.0" font-family="sans-serif" font-size="22" fill="#263445">S1   (530, 350)</text>
+<text x="80.0" y="1650.0" font-family="sans-serif" font-size="22" fill="#263445">Object positions: configure() snapshot before the first physics tick. Movement guides describe subsequent behavior.</text>
+<text x="80.0" y="1685.0" font-family="sans-serif" font-size="22" fill="#263445">Editable layout proposal: SVG edits do not change the game until applied to its level scenes / hazard configuration.</text>
+</g></svg>
